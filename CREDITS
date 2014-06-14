@@ -1,0 +1,14 @@
+
+Main Author: Vaggelis Koutroumpas (vaggelis _at_ koutroumpas.gr)
+
+Also used code and libraries from:
+
+jQuery Library http://jquery.com/
+jQuery-UI Library http://jqueryui.com/
+jQuery Migrate https://github.com/jquery/jquery-migrate/
+jQuery Tipsy http://onehackoranother.com/projects/jquery/tipsy/
+
+PHP Pear Net_DNS Library http://pear.php.net/package/Net_DNS
+All icons used are in the public domain http://www.iconfinder.com
+Parts of code for updating the TLDs SOA Serial are borrowed from Poweradmin http://www.poweradmin.org
+Sessions management in MySQL borrowed from http://phpsecurity.org/code/ch08-2

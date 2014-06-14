@@ -2,8 +2,22 @@
 /*-----------------------------------------------------------------------------
 * Domain Registry Control Panel                                               *
 *                                                                             *
-* Developed by Vaggelis Koutroumpas - vaggelis@koutroumpas.gr                 *
-* www.koutroumpas.gr  (c)2014                                                 * 
+* Main Author: Vaggelis Koutroumpas vaggelis@koutroumpas.gr (c)2014 for AWMN  *
+* Credits: see CREDITS file                                                   *
+*                                                                             *
+* This program is free software: you can redistribute it and/or modify        *
+* it under the terms of the GNU General Public License as published by        * 
+* the Free Software Foundation, either version 3 of the License, or           *
+* (at your option) any later version.                                         *
+*                                                                             *
+* This program is distributed in the hope that it will be useful,             *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of              *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                *
+* GNU General Public License for more details.                                *
+*                                                                             *
+* You should have received a copy of the GNU General Public License           *
+* along with this program. If not, see <http://www.gnu.org/licenses/>.*       *                                                                      *
+*                                                                             *
 *-----------------------------------------------------------------------------*/
 
 require("includes/config.php");
@@ -17,14 +31,6 @@ admin_auth();
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 <head>
-<!-- 
-*******************************************************************************
-* Domain Registry Control Panel                                               *
-*                                                                             *
-* Developed by Vaggelis Koutroumpas - vaggelis at koutroumpas.gr              *
-* www.koutroumpas.gr  (c)<?=date("Y");?>                                                 * 
-*******************************************************************************
--->
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title><?=$maintitle_title;?> - <?=$CONF['APP_NAME'];?> - <?=$_SERVER['HTTP_HOST'];?></title>
 <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon" />

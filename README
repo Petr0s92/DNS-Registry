@@ -1,0 +1,12 @@
+DNS Registry Control Panel
+
+A simple control panel to allow users to register domains on private TLDs.
+
+This system is only a Registry providing delegations to nameservers for each domain registered.
+
+
+The zones are written on a MySQL Database and served via PowerDNS with it's MySQL Backend.
+The db schema is almost identical to that of PowerDNS and Poweradmin.
+
+
+See CREDITS for other software used in this system.
