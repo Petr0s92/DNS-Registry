@@ -65,7 +65,7 @@ if ($_GET['domain']){
     </noscript>
     <!-- NO JAVASCRIPT NOTIFICATION END -->
     
-    <h2 id="login_title">Validating Domain <strong class='blue'><?=$d;?></strong></h2>
+    <h2 id="validate_title">Validating Domain <strong class='blue'><?=$d;?></strong></h2>
     <br />        
     <table align="center">
     	<tr>
@@ -208,7 +208,6 @@ if ($_GET['domain']){
 												}else{
 													echo "<br />\n";
 												}
-												
 											}
 											
 										}elseif($NS_TOTAL > count($NS)-2){
@@ -258,9 +257,8 @@ if ($_GET['domain']){
 								
 				echo "</div>\n";
 				echo "\n\n<hr><br />\n\n\n";
-				
-				
-    		}
+			
+			}
     		
     		echo "<div style='margin-left:40px;'>\n";
 			if (count($all_domain_errors) || $r==0){
@@ -286,19 +284,23 @@ if ($_GET['domain']){
 					}else{
 						echo "<h3>(!) Your domain could not be enabled. Please contact support.</h3>\n";					
 					}			
-					
 				}
-				
-				
 			}
     		echo "</div>\n";
-	        
-    		?>
+	        ?>
     		</div>
     		</td>
     	</tr>
-    
+		<tr>
+			<td>
+				<div id="validate_credits">
+					<a href="http://www.code.ath/public" target="_blank">Domain Registry Control Panel</a>
+    			</div>
+            </td>
+		</tr>    
     </table>
+    <br />
+    <br />
 
 </body>
 </html>

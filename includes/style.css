@@ -723,3 +723,12 @@ p.notification_fail    { background:#faf9f6 url(../images/ico_inactive.png) 5px 
     -border-radius: 5px;
     font-size:14px 
 }
+
+#validate_title { 
+    text-align:center; 
+    margin:50px auto 0 auto; 
+    display:block;    
+    float:none;
+}
+
+#validate_credits { width:100%; margin:0 auto; font-size:11px; text-align:right; height:30px; line-height:30px}
