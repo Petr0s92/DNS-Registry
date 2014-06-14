@@ -7,25 +7,25 @@ PEAR Net_DNS 1.0.7
 
 Installation:
 
-First create a database to be used by PowerDNS and DNS Registry Control Panel.
+First create a database and credentials to be used by PowerDNS and the DNS Registry Control Panel.
 Import the db_schema.sql schema into the newly created database.
 
 Copy all files to a web accessible directory. Eg: /dns
 
 Edit includes/config.php.sample and add the MySQL Credentials.
+Save as config.php
 
 Visit http://your_domain/dns
-Login with
+Login with:
 Username: admin
 Password: admin
+
 
 Go to the `Settings` section to configure some general settings of the system before start using it.
 
 Then you go to TLDs to insert the TLDs you want to manage with this control panel.
 
-
-You have to manually create and configure the TLD zone on PowerDNS server.
-
+You have to manually create and configure the TLD zone(s) on PowerDNS server.
 
 This control panel only abstracts the PowerDNS database into users and delegated domains for easier management of a private TLD.
 
