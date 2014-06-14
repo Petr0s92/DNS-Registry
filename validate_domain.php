@@ -16,15 +16,15 @@
 * GNU General Public License for more details.                                *
 *                                                                             *
 * You should have received a copy of the GNU General Public License           *
-* along with this program. If not, see <http://www.gnu.org/licenses/>.*       *                                                                      *
+* along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *                                                                             *
 *-----------------------------------------------------------------------------*/
-
 
 require("includes/config.php");
 require("includes/functions.php");
 require_once 'Net/DNS.php';
 
+// Protect page from anonymous users
 admin_auth();
 
 $maintitle_title = "Validate Zone";
@@ -39,6 +39,7 @@ if ($_GET['domain']){
 	$d = mysql_real_escape_string($_GET['domain'], $db);
 }else{
 	header ("Location: ./index.php");
+    exit();
 }
 
 

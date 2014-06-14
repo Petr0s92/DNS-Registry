@@ -16,7 +16,7 @@
 * GNU General Public License for more details.                                *
 *                                                                             *
 * You should have received a copy of the GNU General Public License           *
-* along with this program. If not, see <http://www.gnu.org/licenses/>.*       *                                                                      *
+* along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *                                                                             *
 *-----------------------------------------------------------------------------*/
 
@@ -26,7 +26,7 @@ require("includes/functions.php");
 
 if (admin_logged()) {
     header("Location: index.php");
-    exit;
+    exit();
 } 
 
 if (isset ($_GET['action']) && $_GET['action'] == "register") {
@@ -79,6 +79,7 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
         if ($INSERT){
         	admin_login($_POST['username'], $_POST['password'], '1');
         	header ("Location: index.php");
+        	exit();
         }else{
             $error_occured = TRUE;
         }

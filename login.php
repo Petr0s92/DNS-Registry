@@ -16,7 +16,7 @@
 * GNU General Public License for more details.                                *
 *                                                                             *
 * You should have received a copy of the GNU General Public License           *
-* along with this program. If not, see <http://www.gnu.org/licenses/>.*       *                                                                      *
+* along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *                                                                             *
 *-----------------------------------------------------------------------------*/
 
@@ -29,11 +29,11 @@ if (admin_logged()) {
         admin_logout();
         if ($return = $_GET['return']){
             header("Location: ".urldecode($return));
-            exit;
+            exit();
         }
     } else {
         header("Location: index.php");
-        exit;
+        exit();
     }    
 } 
 

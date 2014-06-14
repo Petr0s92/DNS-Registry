@@ -16,7 +16,7 @@
 * GNU General Public License for more details.                                *
 *                                                                             *
 * You should have received a copy of the GNU General Public License           *
-* along with this program. If not, see <http://www.gnu.org/licenses/>.*       *                                                                      *
+* along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *                                                                             *
 *-----------------------------------------------------------------------------*/
 
@@ -35,6 +35,7 @@ if ($_GET['domain']){
 	$d_vars = "&domain=".$d	;
 }else{
 	header ("Location: ./index.php");
+	exit();
 }
 
    
@@ -66,7 +67,8 @@ if ($_SESSION['admin_level'] == 'user'){
 
 $SELECT_DOMAIN = mysql_query("SELECT name FROM `".$mysql_table."` WHERE name = '".$d."' AND type = 'NS' " . $user_id, $db);
 if (!mysql_num_rows($SELECT_DOMAIN)){
-	Header ("Location: ./index.php?section=domains");
+	header ("Location: ./index.php?section=domains");
+    exit();
 }
 $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 

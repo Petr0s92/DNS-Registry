@@ -16,7 +16,7 @@
 * GNU General Public License for more details.                                *
 *                                                                             *
 * You should have received a copy of the GNU General Public License           *
-* along with this program. If not, see <http://www.gnu.org/licenses/>.*       *                                                                      *
+* along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *                                                                             *
 *-----------------------------------------------------------------------------*/
 
@@ -26,6 +26,7 @@ admin_auth();
 // Access is only allowed for admin users
 if ($_SESSION['admin_level'] != 'admin'){
 	header ("Location: index.php");
+    exit();
 }
 
 //Define current page data

@@ -16,7 +16,7 @@
 * GNU General Public License for more details.                                *
 *                                                                             *
 * You should have received a copy of the GNU General Public License           *
-* along with this program. If not, see <http://www.gnu.org/licenses/>.*       *                                                                      *
+* along with this program. If not, see <http://www.gnu.org/licenses/>.        *
 *                                                                             *
 *-----------------------------------------------------------------------------*/
 
@@ -167,7 +167,7 @@ function admin_auth($level = 'admin', $login_page = "login.php", $access_denied_
     
     if (!admin_logged()) {
         header("Location: " . $login_page);
-        exit;
+        exit();
     } else {
 
         $USERS_SELECT = @mysql_query("SELECT Admin_level, active FROM `users` WHERE id='".addslashes($_SESSION['admin_id'])."' LIMIT 1",$db);
@@ -175,14 +175,14 @@ function admin_auth($level = 'admin', $login_page = "login.php", $access_denied_
         if (!$USERS['active']){ 
             admin_logout();
             header("Location: ./" . $login_page);
-            exit;
+            exit();
         }
         
         $_SESSION['admin_access'] = $USERS['Admin_level'];
         
         if ($_SESSION['admin_access'] == 'editor' && $level != 'editor') {
             header("Location: ./" . $access_denied_page);
-            exit;
+            exit();
         }
         
     }
