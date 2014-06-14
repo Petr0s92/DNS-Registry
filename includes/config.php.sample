@@ -1,0 +1,14 @@
+<?php
+/*-----------------------------------------------------------------------------
+* Domain Registry Control Panel                                               *
+*                                                                             *
+* Developed by Vaggelis Koutroumpas - vaggelis@koutroumpas.gr                 *
+* www.koutroumpas.gr  (c)2014                                                 * 
+*-----------------------------------------------------------------------------*/
+
+$CONF['db_host']    = "localhost";
+$CONF['db_user']    = "username";
+$CONF['db_pass']    = "password";
+$CONF['db']         = "database";
+
+?>
