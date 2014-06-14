@@ -147,11 +147,12 @@ if ($_GET['domain']){
 																				
 											echo "<img src='images/ico_valid.png' align='absmiddle' > <strong class='blue'>NS</strong> records check <strong class='green'>[OK]</strong><br /><br />\n";
 											
+											$glue_errors = array(); 
+							                
 											$SELECT_DOMAIN_NS_GLUES = mysql_query("SELECT content FROM records WHERE name = '".$d."' AND type = 'NS' ORDER BY content ASC", $db);
     										while($DOMAIN_NS_GLUES = mysql_fetch_array($SELECT_DOMAIN_NS_GLUES)){
     				                    
-												$glue_errors = false; 
-							                    $local_ns_found = false;
+												$local_ns_found = false;
 								                
 								                //Check if db NS record is part of the domain (so that we need to check it's A/Glue records)
 												$dbns_parts = explode(".", $DOMAIN_NS_GLUES['content']);
@@ -170,6 +171,7 @@ if ($_GET['domain']){
 														$SELECT_NS_PARENT_IP = mysql_query("SELECT content FROM records WHERE name = '".$NS_PARENT['content']."' AND type = 'A' ", $db);
 			                                            $NS_PARENT_IP = mysql_fetch_array($SELECT_NS_PARENT_IP);
 														$RESOLVER_IP = $NS_PARENT_IP['content'];
+														$RESOLVER_NAME = $NS_PARENT['content'];
 														if ($local_ns_found){
 															break;
 														}
@@ -186,26 +188,23 @@ if ($_GET['domain']){
 												//print_r($response);
 												//echo "</pre>";
 												
-													
-												
-			                                    $SELECT_NS_GLUE = mysql_query("SELECT content FROM records WHERE name = '".$DOMAIN_NS_GLUES['content']."' AND type = 'A' ", $db);
+												$SELECT_NS_GLUE = mysql_query("SELECT content FROM records WHERE name = '".$DOMAIN_NS_GLUES['content']."' AND type = 'A' ", $db);
 												$NS_GLUE = mysql_fetch_array($SELECT_NS_GLUE);							
 												
 												if ($response->header->rcode != 'NXDOMAIN'){
 													if ($response->answer[0]->address == $NS_GLUE['content']){
 														echo "<img src='images/ico_valid.png' align='absmiddle' > Glue <strong class='blue'>".$NS_GLUE['content']."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong>  check <strong class='green'>[OK]</strong><br />\n";
-														
 													}else{
 														echo "<img src='images/ico_invalid.png' align='absmiddle' > Glue response: <strong class='red'>".$response->answer[0]->address."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong> does not match the glue record in registry (<strong class='blue'>".$NS_GLUE['content']."</strong>)<br />\n";
-														$glue_errors = true;
+														$glue_errors[] = true;
 													}
 												}else{
 													echo "<img src='images/ico_invalid.png' align='absmiddle' > Glue <strong class='blue'>".$NS_GLUE['content']."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong> does not exist (<strong class='red'>NXDOMAIN</strong>)<br />\n";
-													$glue_errors = true;
+													$glue_errors[] = true;
 												}
 												
 												if ($RESOLVER_IP != $NS_IP['content']){
-												    echo "<span class='small' style='margin-left: 20px;'>(Real NS questioned: ".$RESOLVER_IP.")</span><br /><br />\n";
+												    echo "<span class='small' style='margin-left: 20px;'>(Authoritative NS for ".$DOMAIN_NS_GLUES['content']." > ".$RESOLVER_IP." - ".$RESOLVER_NAME.")</span><br /><br />\n";
 												}else{
 													echo "<br />\n";
 												}
@@ -250,7 +249,7 @@ if ($_GET['domain']){
 					$domain_errors[] = true;
 				}
 				
-				if ($glue_errors  == false && count($domain_errors) == 0){
+				if (count($glue_errors)  == false && count($domain_errors) == 0){
 					echo "\n<h3><img src='images/ico_valid_medium.png' align='absmiddle' > Domain <strong class='blue'>".$d."</strong> passed validation on NS: <strong class='blue'>".$DOMAIN_NS['content']." (".$NS_IP['content'].")</strong></h3>\n";
 				}else{
 					echo "\n<h3><img src='images/ico_invalid_medium.png' align='absmiddle' > Domain <strong class='blue'>".$d."</strong> failed validation on NS: <strong class='red'>".$DOMAIN_NS['content']." (".$NS_IP['content'].")</strong></h3>\n";
