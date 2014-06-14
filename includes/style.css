@@ -711,3 +711,15 @@ p.notification_fail    { background:#faf9f6 url(../images/ico_inactive.png) 5px 
 .red {color:red;}
 .green {color:green;}
 .blue {color:#4565D1;}
+
+#validate_form { 
+    width:100%; 
+    margin:15px auto 0 auto; 
+    padding:15px 15px; 
+    border:1px solid #dedbce; 
+    background:#fff; -moz-border-radius: 5px; 
+    border-radius: 5px;
+    -webkit-border-radius: 5px; 
+    -border-radius: 5px;
+    font-size:14px 
+}

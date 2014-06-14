@@ -73,12 +73,12 @@ $maintitle_title = "Login";
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?=$maintitle_title;?> - <?=$CONF['APP_NAME'];?></title>
+<title><?=$CONF['APP_NAME'];?> | <?=$maintitle_title;?></title>
 <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon" />
 
 <!-- INCLUDE STYLES & JAVASCRIPTS -->
 <link href="./includes/css.php" rel="stylesheet" type="text/css"  media="screen" />
-<script type="text/javascript" src="./includes/js.php?login=1"></script> 
+<script type="text/javascript" src="./includes/js.php"></script> 
 <!-- INCLUDE STYLES & JAVASCRIPTS END -->
 
 <script type="text/javascript">
@@ -130,11 +130,9 @@ $(function() {
         <div class="clr">&nbsp;</div>
 
     </form>
-    <?/*
     <div id="login_credits">
-        Developed by <a href="http://www.cha0s.awmn/" target="_blank">Cha0s #2331</a>
+        <a href="http://www.code.ath/public" target="_blank">Domain Registry Control Panel
     </div>
-    */?>
     
     <div id="forgot_dialog" title="Did you forget your password?" style="display:none">
         <p>If you lost your password contact the Administrator on this email: <br /><br /><a href="mailto:<?=$CONF['MAIL_SUPPORT']?>"><?=$CONF['MAIL_SUPPORT']?></a>.</p>

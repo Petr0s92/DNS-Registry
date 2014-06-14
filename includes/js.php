@@ -46,9 +46,6 @@ foreach($js_files AS $key => $file) {
 
 ?>
 
-<?if (!isset($_GET['login'])){?>
-
-
 $(function() {
     $('.tip_north').tipsy({gravity: 'n', fade: true});
     $('.tip_south').tipsy({gravity: 's', fade: true});
@@ -60,5 +57,3 @@ $(function() {
     $('.tip').tipsy();
         
 });   
-
-<?}?>

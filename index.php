@@ -32,7 +32,7 @@ admin_auth();
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?=$maintitle_title;?> - <?=$CONF['APP_NAME'];?> - <?=$_SERVER['HTTP_HOST'];?></title>
+<title><?=$CONF['APP_NAME'];?> | <?=$maintitle_title;?> | <?=$_SERVER['HTTP_HOST'];?></title>
 <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon" />
 <!-- INCLUDE STYLES & JAVASCRIPTS -->
 <link href="./includes/css.php" rel="stylesheet" type="text/css"  media="screen" />
@@ -156,7 +156,7 @@ admin_auth();
 
 	<!-- FOOTER START -->
 	<div id="footer">
-		<span style="float:right">Domain Registry Control Panel &copy; <?=date("Y")?>.</span>
+		<span style="float:right"><a href="http://www.code.ath/public" target="_blank">Domain Registry Control Panel</a> &copy; <?=date("Y")?>.</span>
 		<?=$CONF['APP_NAME'];?>
 	
 	</div>

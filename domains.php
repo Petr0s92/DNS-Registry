@@ -238,7 +238,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 
     if (mysql_num_rows($SELECT_DOMAIN)){
 
-	    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `disabled` = '".$option."' WHERE `name` LIKE '%".$DOMAIN['name']."' ".$user_id,$db);
+	    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `disabled` = '".$option."' WHERE `name` = '".$DOMAIN['name']."' ".$user_id,$db);
+	    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `disabled` = '".$option."' WHERE `name` LIKE '%.".$DOMAIN['name']."' ".$user_id,$db);
 		
 		$soa_update = update_soa_serial_byid($DOMAIN['domain_id']);
 		
