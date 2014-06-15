@@ -40,11 +40,9 @@ while ($SETTINGS = mysql_fetch_array($SELECT_SETTINGS)){
 }
 
 //Start gzip compression & session
-if(php_sapi_name() != "cli" && stristr($_SERVER['PHP_SELF'], "js.php") == FALSE) {
-	require ("sessions.php");
-	ob_start();
-	session_start();
-}
+require ("sessions.php");
+ob_start();
+session_start();
 
 
 //Set global var $SECTION
@@ -61,7 +59,7 @@ if (isset($SECTION) && $SECTION == 'domains'){
     $maintitle_title = 'Manage Domain Nameservers';
 }elseif (isset($SECTION) && $SECTION == 'nameservers'){
     $maintitle_class = 'maintitle_nameservers';
-    $maintitle_title = 'Nameservers Registration';
+    $maintitle_title = 'Nameservers Registration (Glue Records)';
 }elseif (isset($SECTION) && $SECTION == 'tlds'){
     $maintitle_class = 'maintitle_tlds';
     $maintitle_title = 'Allowed Top Level Domains (TLDs)';
@@ -83,7 +81,7 @@ if (isset($SECTION) && $SECTION == 'domains'){
 
 // create sessions - cookie
 function admin_create_sessions($id,$username,$password,$remember, $help, $level){
-    global $CONF;
+    global $CONF, $db;
     
     //session_register();
     $_SESSION['admin_id'] = $id;
@@ -91,9 +89,10 @@ function admin_create_sessions($id,$username,$password,$remember, $help, $level)
     $_SESSION['admin_md5part'] = substr(md5($password),0,10);
     $_SESSION['admin_help'] = $help;
     $_SESSION['admin_level'] = $level;
-    
-    if(isset($remember))
-    {
+
+	mysql_query("UPDATE users SET last_login = UNIX_TIMESTAMP(), last_ip = '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'  WHERE id = '" . $id ."'", $db);
+	    
+    if(isset($remember)){
         setcookie($CONF['COOKIE_NAME'], $_SESSION['admin_id'] . "||" . $_SESSION['admin_username']  ."||" . $_SESSION['admin_md5part']. "||" . $_SESSION['admin_help'], time()+60*60*24*15, "/");
         return;
     }
@@ -122,7 +121,6 @@ function admin_logout(){
 	global $CONF;
 		
     session_unset();
-    session_destroy();
     setcookie ($CONF['COOKIE_NAME'], "",time()-60*60*24*15, "/");
 }
 
@@ -131,7 +129,14 @@ function admin_logged(){
     global $db, $CONF;
 
     if(isset($_SESSION['admin_username']) && isset($_SESSION['admin_md5part'])) {
-        return true;
+        $USER_SELECT = @mysql_query("SELECT * FROM `users` WHERE id='".$_SESSION['admin_id']."' AND username='".$_SESSION['admin_username']."' AND active='1' LIMIT 1",$db);
+        $USER_CHECK = @mysql_num_rows($USER_SELECT);
+        if ($USER_CHECK) {
+                return true;
+        } else {
+            admin_logout();
+            return false;
+        }
     } elseif(isset($_COOKIE[$CONF['COOKIE_NAME']])) {
         $cookie = explode("||", $_COOKIE[$CONF['COOKIE_NAME']]);
         $USER_SELECT = @mysql_query("SELECT * FROM `users` WHERE id='".addslashes($cookie[0])."' AND username='".addslashes($cookie[1])."' AND active='1' LIMIT 1",$db);
@@ -147,6 +152,7 @@ function admin_logged(){
             return false;
         }
     } else {
+        admin_logout();
         return false;
     }
 }
@@ -162,14 +168,14 @@ function admin_logged(){
 // custom parameters:
 // admin_auth(9, "login.php", "access_denied.php");
                                                                          
-function admin_auth($level = 'admin', $login_page = "login.php", $access_denied_page = "access_denied.php"){
+function admin_auth($login_page = "login.php", $access_denied_page = "access_denied.php"){
     global $db, $CONF;
     
     if (!admin_logged()) {
         header("Location: " . $login_page);
         exit();
     } else {
-
+        /*
         $USERS_SELECT = @mysql_query("SELECT Admin_level, active FROM `users` WHERE id='".addslashes($_SESSION['admin_id'])."' LIMIT 1",$db);
         $USERS = @mysql_fetch_array($USERS_SELECT);
         if (!$USERS['active']){ 
@@ -184,6 +190,8 @@ function admin_auth($level = 'admin', $login_page = "login.php", $access_denied_
             header("Location: ./" . $access_denied_page);
             exit();
         }
+        */
+        return true;
         
     }
 
@@ -356,6 +364,12 @@ function update_soa_serial ($tld){
 	
 	return update_soa_serial_byid($TLD['id']);  
 	
-}  
+}
+
+// DETECT IF GIVEN IP IS IN GIVEN IP-RANGE
+function netMatch ($CIDR,$IP) {
+    list ($net, $mask) = explode ('/', $CIDR);
+    return ( ip2long ($IP) & ~((1 << (32 - $mask)) - 1) ) == ip2long ($net);
+} 
   
 ?>

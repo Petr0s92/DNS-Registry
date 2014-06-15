@@ -69,8 +69,9 @@ if (isset ($_GET['action']) && $_GET['action'] == "login") {
 $maintitle_title = "Login";
 
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title><?=$CONF['APP_NAME'];?> | <?=$maintitle_title;?></title>
@@ -113,6 +114,9 @@ $(function() {
     <form id="login_form" name="login_form" method="POST" action="./login.php?action=login&return=<?=$return?>">
         <h1>Login</h1>
         
+        <?if ($_GET['saved_success'] == '1'){?>
+			<p id="login_message">Your account details have been updated.<br/>Please login again.</p>			
+        <?}?>
         <? if (isset ($msg)) { ?><p id="login_message"><?=$msg?></p><? } ?>
 
         <label for="username">Username:</label>
@@ -125,8 +129,10 @@ $(function() {
         <div class="clr">&nbsp;</div>
 
         <input type="submit" name="go" id="go" value="Login" class="button_primary" />
-    
+        
+        <?if ( netMatch($CONF['REG_ALLOWED_IPS'], $_SERVER['REMOTE_ADDR'])){?>  
         <a href="register.php" id="login_message" style="padding-left:10px">Click here to register a new account</a>
+        <?}?>
         <div class="clr">&nbsp;</div>
 
     </form>

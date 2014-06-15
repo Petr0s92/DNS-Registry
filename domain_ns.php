@@ -170,8 +170,15 @@ if ($_POST['action'] == "add" ) {
     }
     
     $_POST['content'] = trim($_POST['content']);
-	if (!mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['content'])."' AND type = 'A' ",$db))){
-	    $errors['content'] = "The nameserver you entered is not registered with this system." ;
+	if (!mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['content'])."' AND type = 'A' AND user_id > 0 ",$db))){
+	    if ($DOMAIN['user_id'] == $_SESSION['admin_id']){
+	    	
+	    	$ns_part = explode(".", $_POST['content']);
+	    	$ns = $ns_part[0];
+	    	
+			$create_link = " <a href='index.php?section=nameservers&action=add&domain=".mysql_escape_string($_GET['domain'])."&ns=".$ns."&domain_id=".$_GET['id']."' >Click here to register it now</a>";
+	    }
+	    $errors['content'] = "The nameserver you entered is not registered with this system." . $create_link;
 	} 
     if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `content` = '".mysql_escape_string($_POST['content'])."' AND type = 'NS' AND `name` = '".mysql_escape_string($_GET['domain']). "' ".$user_id,$db))){
 	    $errors['content'] = "The nameserver you entered is already configured for this domain" ;
@@ -225,19 +232,26 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
         $errors['domain'] = "Missing domain";
         $domain = "";
     } else {
-        $SELECT_DOMAIN = mysql_query("SELECT name, created FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_GET['domain'])."' AND type = 'NS' " . $user_id ,$db);
+        $SELECT_DOMAIN = mysql_query("SELECT name, created, user_id FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_GET['domain'])."' AND type = 'NS' AND user_id > 0 " . $user_id ,$db);
         $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
         if (!$DOMAIN['name']){
         	$errors['domain'] = "Missing domain";	
 		}else{
 			$DOMAIN_parts = explode("." ,$DOMAIN['name']);
 			$TLD = $DOMAIN_parts[1];
-		}
+		} 
     }
     
     $_POST['content'] = trim($_POST['content']);
-	if (!mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['content'])."' AND type = 'A' ",$db))){
-	    $errors['content'] = "The nameserver you entered is not registered with this system." ;
+	if (!mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['content'])."' AND type = 'A' AND user_id > 0 ",$db))){
+	    if ($DOMAIN['user_id'] == $_SESSION['admin_id']){
+	    	
+	    	$ns_part = explode(".", $_POST['content']);
+	    	$ns = $ns_part[0];
+	    	
+			$create_link = " <a href='index.php?section=nameservers&action=add&domain=".mysql_escape_string($_GET['domain'])."&ns=".$ns."&domain_id=".$_GET['id']."' >Click here to register it now</a>";
+	    }
+	    $errors['content'] = "The nameserver you entered is not registered with this system." . $create_link;
 	}
 	if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `content` = '".mysql_escape_string($_POST['content'])."' AND type = 'NS' AND `name` = '".mysql_escape_string($_GET['domain']). "' ".$user_id,$db))){
 	    $errors['content'] = "The nameserver you entered is already configured for this domain" ;
@@ -311,8 +325,8 @@ if ($_GET['action'] == "delete" && $_POST['id']){
                     // Hide/Show the ADD Form
                     $( "#button" ).click(function() {
                         $( "#toggler" ).toggle( "blind", options, 500, function (){
-                            
-                        } );
+                        	$('#content').focus();
+    				    } );
                         return false;
                     });
 
@@ -323,8 +337,6 @@ if ($_GET['action'] == "delete" && $_POST['id']){
                             //if ( $('#toggle_state').val('1') )
                             $('#toggle_state').val('1');
 
-                            
-                            
                         } );
                         return false;
                     });
@@ -332,7 +344,8 @@ if ($_GET['action'] == "delete" && $_POST['id']){
                     //Init
                     <?if ($_POST['action'] || $_GET['action'] == 'edit' || $_GET['action'] == 'add'){?>
                         $( "#toggler" ).show();
-                    <?}else{?>
+                        $('#content').focus();
+    				<?}else{?>
                         $( "#toggler" ).hide();
                     <?}?>
                     $( "#toggler2" ).show();
@@ -410,7 +423,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
                     <div id="toggler">
                     
                         <!-- ADD/EDIT DOMAIN NAMESERVERS START -->
-                        <? if (!empty($errors)) { ?>
+                        <? if (count($errors) > 0) { ?>
                             <div id="errors">
                                 <p>Please check:</p>
                                 <ul>

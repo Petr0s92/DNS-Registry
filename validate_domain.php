@@ -59,6 +59,15 @@ if ($_GET['domain']){
 
 <body id="login" style="height: auto;">
 
+	<script>
+	$(function() {
+	   //CLOSE WINDOW
+	   $('a.close').click(function () {
+	        parent.jQuery.colorbox.close();
+	   });
+	});
+	</script>
+
     <!-- NO JAVASCRIPT NOTIFICATION START -->
     <noscript>
         <div class="maintitle_nojs">This site needs Javascript enabled to function properly!</div>
@@ -78,8 +87,8 @@ if ($_GET['domain']){
 			$resolver->usevc = 0; // Force the use of TCP instead of UDP
 			$resolver->port = 53; // DNS Server port
 			$resolver->recurse = 0; // Disable recursion
-			$resolver->retry = 2; // How long to wait for answer
-			$resolver->retrans = 2; // How many times to retry for answer
+			$resolver->retry = $CONF['DNS_VALIDATE_WAIT']; // How long to wait for answer
+			$resolver->retrans = $CONF['DNS_VALIDATE_RETRY']; // How many times to retry for answer
 
     		$SELECT_DOMAIN_NS = mysql_query("SELECT content FROM records WHERE name = '".$d."' AND type = 'NS' ".$user_id." ORDER BY content ASC", $db);
     		$r=0;
@@ -286,6 +295,7 @@ if ($_GET['domain']){
 					}			
 				}
 			}
+			echo "<strong><a href='javascript:void(0)' class='close'>Close window</a></strong>";
     		echo "</div>\n";
 	        ?>
     		</div>

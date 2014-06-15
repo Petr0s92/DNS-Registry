@@ -30,7 +30,7 @@ if ($_SESSION['admin_level'] != 'admin'){
 
 //Define current page data
 $mysql_table = 'users';
-$sorting_array = array("id", "username", "fullname", "description", "email", "Admin_level", "active");
+$sorting_array = array("id", "username", "fullname", "description", "email", "Admin_level", "active", "created", "last_login");
 
 // ----------------------------------------------------------------------
 
@@ -153,8 +153,14 @@ if ($_POST['action'] == "add" ) {
         }    
     }
     
-    if (!$_POST['Admin_level']) { $errors['admin_level'] = "Please select a User Access Level" ; }
-    
+    if (!$_POST['Admin_level']) { 
+    	$errors['admin_level'] = "Please select a User Access Level" ; 
+    }
+	
+	$_POST['nodeid'] = (int)$_POST['nodeid'];    
+    if ($_POST['nodeid'] <1){ 
+    	$errors['admin_level'] = "Please enter your NodeID #" ; 
+    }
     
     $_POST['email'] = trim($_POST['email']);
     if ($_POST['Email']){
@@ -167,13 +173,14 @@ if ($_POST['action'] == "add" ) {
     
     if (count($errors) == 0) {
         
-        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (username, password, email, fullname, description, Admin_level, Help, active) VALUES (      
+        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (username, password, email, fullname, description, Admin_level, nodeid, Help, active) VALUES (      
             '" . addslashes($_POST['username']) . "',
             '" . md5($_POST['password']) . "',
             '" . addslashes($_POST['email']) . "',
             '" . addslashes($_POST['fullname']) . "',
             '" . addslashes($_POST['description']) . "',
             '" . addslashes($_POST['Admin_level']) . "',
+            '" . addslashes($_POST['nodeid']) . "',
             '1',
             '1'
         )", $db);
@@ -215,7 +222,14 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
         }
     }
     
-    if (!$_POST['Admin_level']) { $errors['admin_level'] = "Please select a User Access Level" ; }
+    if (!$_POST['Admin_level']) { 
+    	$errors['admin_level'] = "Please select a User Access Level" ; 
+    }
+    
+    $_POST['nodeid'] = (int)$_POST['nodeid'];    
+    if ($_POST['nodeid'] <1){ 
+    	$errors['admin_level'] = "Please enter your NodeID #" ; 
+    }
     
     
     $_POST['email'] = trim($_POST['email']);
@@ -235,6 +249,7 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
             fullname = '" . addslashes($_POST['fullname']) . "',
             description = '" . addslashes($_POST['description']) . "',
             Admin_level = '" . addslashes($_POST['Admin_level']) . "',
+            nodeid = '" . addslashes($_POST['nodeid']) . "',
             Help = '" . addslashes($_POST['Help']) . "'
             
             WHERE id= '" . $_POST['id'] . "'",$db);
@@ -263,6 +278,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     $id = addslashes(str_replace ("tr-", "", $_POST['id']));
     
     $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
+    $DELETE = mysql_query("DELETE FROM records WHERE `user_id`= '".$id."' " ,$db);
     
     if ($DELETE){
         ob_end_clean();
@@ -304,12 +320,13 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     // most effect types need no options passed by default
                     var options = {};    
                     
-                    // Hide/Show the ADD Form
+                                        // Hide/Show the ADD Form
                     $( "#button" ).click(function() {
-                        $( "#toggler" ).toggle( "blind", options, 500, function (){} );
+                        $( "#toggler" ).toggle( "blind", options, 500, function (){
+                        	$('#username').focus();
+    				    } );
                         return false;
                     });
-
                     // Hide/Show the RESULTS Table
                     $( "#button2" ).click(function() {
                         $( "#toggler2" ).toggle( "blind", options, 500, function (){
@@ -321,6 +338,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     //Init
                     <?if ($_POST['action'] || $_GET['action'] == 'edit' || $_GET['action'] == 'add'){?>
                         $( "#toggler" ).show();
+                        $('#username').focus();
                     <?}else{?>
                         $( "#toggler" ).hide();
                     <?}?>
@@ -330,6 +348,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     //TIPSY for the ADD Form
                     $('#username').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#fullname').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#nodeid').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#description').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#email').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#password').tipsy({trigger: 'focus', gravity: 'w', fade: true});
@@ -342,7 +361,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     //DELETE RECORD
                     $('a.delete').click(function () {
                         var record_id = $(this).attr('rel');
-                        if(confirm('Are you sure you want to delete this record?\n\rThis action cannot be undone!')){
+                        if(confirm('Are you sure you want to delete this record?\n\rWARNING!!! THIS ACTION WILL DELETE ALL ASSOCIATED DOMAINS AND NAMESERVERS WITH THIS USER!!!\n\rThis action cannot be undone!')){
                             if (record_id == 'tr-1'){
                                 alert('You cannot delete the first user of the system');
                             }else{
@@ -402,6 +421,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                 $("a.close_notification").click(function() {
                     var bar_class = $(this).attr('rel');
                     //alert(bar_class);
+
                     $('.'+bar_class).hide();
                     return false;
                 });
@@ -419,7 +439,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                 <div class="mainsubtitle_bg">
                     <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List Users</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add">Add New User</a><?}else{?><a href="javascript: void(0)" id="button">Add New User</a><?}?></div>
                 </div> 
-                            
+                 
+                 <br />           
                     
                     <? if ($_GET['saved_success']) { ?>
                         <p class="success"><span style="float: right;"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_east<?}?> close_notification" rel="success" title="Close notification bar"><span>Close Notification Bar</span></a></span>
@@ -435,7 +456,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     <div id="toggler">
                     
                         <!-- ADD/EDIT USERS START -->
-                        <? if (!empty($errors)) { ?>
+                        <? if (count($errors) > 0) { ?>
                             <div id="errors">
                                 <p>Please check:</p>
                                 <ul>
@@ -460,7 +481,12 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                             </p>
                                             
                                             <p>
-                                                <label for="username">Fullname</label>
+                                                <label for="nodeid" class="required">NodeID #</label>
+                                                <input type="text" name="nodeid" id="nodeid" title="Enter the NodeID #" value="<? if ($_GET['action'] == "edit"){ echo stripslashes($RESULT['nodeid']);}elseif($_POST['nodeid']){ echo $_POST['nodeid']; } ?>">
+                                            </p>
+                                            
+                                            <p>
+                                                <label for="fullname">Fullname</label>
                                                 <input type="text" name="fullname" id="fullname" title="Enter the Fullname" value="<? if ($_GET['action'] == "edit"){ echo stripslashes($RESULT['fullname']);}elseif($_POST['fullname']){ echo $_POST['fullname']; } ?>">
                                             </p>
                                             
@@ -572,9 +598,13 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <table width="100%" border="0" cellspacing="2" cellpadding="5">
                       <tr>
                         <th><?=create_sort_link("username","Username");?></th>
+                        <th><?=create_sort_link("nodeid","NodeID");?></th>
                         <th><?=create_sort_link("fullname", "Fullname");?></th>
-                        <th><?=create_sort_link("description", "Description");?></th>
+                        <th>Total Domains</th>
                         <th><?=create_sort_link("email", "Email");?></th>
+                        <th><?=create_sort_link("registered", "Registered");?></th>
+                        <th><?=create_sort_link("last_login", "Last Login");?></th>
+                        <th><?=create_sort_link("last_ip", "Last IP");?></th>
                         <th><?=create_sort_link("Admin_level", "Admin_level");?></th>
                         <th><?=create_sort_link("active", "Active");?></th>
                         <th>Actions</th>
@@ -587,9 +617,13 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap><a href="index.php?section=<?=$SECTION;?>&action=edit&id=<?=$LISTING['id'];?>" title="Edit user" class="<?if (staff_help()){?>tip_south<?}?>"><?=$LISTING['username'];?></a></td>
-                        <td nowrap><?=$LISTING['fullname'];?></td>
-                        <td nowrap><?=$LISTING['description'];?></td>
+                        <td >#<?=$LISTING['nodeid'];?></td>
+                        <td ><?=$LISTING['fullname'];?></td>
+                        <td  align="center"><?= mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'NS' AND user_id = '".$LISTING['id']."' GROUP BY name ", $db));?></td>
                         <td align="center"><a href="mailto:<?=$LISTING['email'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Send Email to user"><?=$LISTING['email'];?></a></td>
+                        <td nowrap align="center" ><?=date("d-m-Y g:i a", $LISTING['registered']);?></td>
+                        <td nowrap align="center" ><?=date("d-m-Y g:i a", $LISTING['last_login']);?></td>
+                        <td align="center" ><?=$LISTING['last_ip'];?></td>
                         <td align="center" ><?=$LISTING['Admin_level'];?></td>
                         <td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>

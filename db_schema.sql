@@ -113,7 +113,10 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (4, 'APP_URL', 'https://your-domain.tld', 'Full URL to Control Panel (without trailing slash)', 'panel'),
 (5, 'COOKIE_NAME', 'mydnsregistry', 'Cookie name for panel', 'panel'),
 (6, 'REG_ALLOWED_IPS', '10.0.0.0/8', 'Allowed IPs for open registration. Type ''any'' to allow all IPs.', 'panel'),
-(7, 'RECORDS_TTL', '86400', 'TTL Used for NS & A (glue) records in TLD zone.', 'general');
+(7, 'RECORDS_TTL', '86400', 'TTL Used for NS & A (glue) records in TLD zone.', 'general'),
+(8, 'DNS_VALIDATE_WAIT', '2', 'How long the domain validator should wait for a reply from the nameserver (seconds)', 'panel'),
+(9, 'DNS_VALIDATE_RETRY', '2', 'How many times the domain validator should try to get a reply from a nameserver', 'panel');
+
 
 
 -- --------------------------------------------------------
@@ -141,10 +144,12 @@ CREATE TABLE IF NOT EXISTS `tlds` (
   `name` varchar(255) NOT NULL,
   `type` enum('auth','hosted') NOT NULL,
   `active` enum('1','0') NOT NULL,
+  `default` enum('1','0') NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_index` (`name`),
   KEY `active` (`active`),
-  KEY `type` (`type`)
+  KEY `type` (`type`),
+  KEY `default` (`default`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
 -- --------------------------------------------------------
@@ -182,6 +187,10 @@ CREATE TABLE IF NOT EXISTS `users` (
   `use_ldap` int(1) NOT NULL,
   `Admin_level` enum('admin','user') NOT NULL DEFAULT 'user',
   `Help` enum('1','0') NOT NULL DEFAULT '1',
+  `registered` int(10) NOT NULL,
+  `last_login` int(10) NOT NULL,
+  `last_ip` varchar(15) NOT NULL,
+  `nodeid` int(10) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `Admin_level` (`Admin_level`,`Help`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;

@@ -31,7 +31,7 @@ if ($_SESSION['admin_level'] != 'admin'){
 
 //Define current page data
 $mysql_table = 'tlds';
-$sorting_array = array("id", "name", "active");
+$sorting_array = array("id", "name", "active", "default");
 
 $action_title = "All TLDs"; 
     
@@ -42,7 +42,7 @@ if ($q) {
 	$search_vars .= "&q=$q"; 
 	$action_title = "Search: " . $q;
 }
-$search_query = "WHERE ($mysql_table.name LIKE '%$q%' OR $mysql_table.active LIKE '%$q%' )";
+$search_query = "WHERE ($mysql_table.name LIKE '%$q%' OR $mysql_table.active LIKE '%$q%'  OR $mysql_table.default LIKE '%$q%' )";
 
 
 // Sorting
@@ -181,6 +181,24 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
     exit();
 }
 
+// SET DEFAULT TLD
+if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'])){
+    $id = addslashes($_POST['id']);
+    $option = addslashes($_POST['option']);
+
+    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `default` = '".$option."' WHERE `id`= '".$id."'",$db);
+    
+    if ($UPDATE) {
+        //print_r($_GET);
+        ob_clean();
+        echo "ok";
+    }else{
+        ob_clean();
+        echo "An error has occured.";
+    }
+    exit();
+}
+
 
 ?>
 
@@ -192,7 +210,9 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     
                     // Hide/Show the ADD Form
                     $( "#button" ).click(function() {
-                        $( "#toggler" ).toggle( "blind", options, 500, function (){} );
+                        $( "#toggler" ).toggle( "blind", options, 500, function (){
+                        	$('#name').focus();
+    				    } );
                         return false;
                     });
 
@@ -207,6 +227,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     //Init
                     <?if ($_POST['action'] || $_GET['action'] == 'edit' || $_GET['action'] == 'add'){?>
                         $( "#toggler" ).show();
+                        $('#name').focus();
                     <?}else{?>
                         $( "#toggler" ).hide();
                     <?}?>
@@ -268,6 +289,32 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         return false;
                     });
     
+                    
+                    //SET DEFAULT FLAG
+                    $('a.toggle_default').click(function () {
+                        if ($(this).hasClass('activated')){    
+                            var option = '0';
+                        } else if ($(this).hasClass('deactivated')){
+                            var option = '1';
+                        }
+                        var myItem = $(this);
+                        var record_id = $(this).attr('rel');
+                        $.post("index.php?section=<?=$SECTION;?>&action=toggle_default", {
+                            id: record_id,
+                            option: option
+                        }, function(response){
+	                        if (response == "ok"){
+	                            $(myItem).toggleClass('activated');
+	                            $(myItem).toggleClass('deactivated');
+	                        }else{
+	                            $("#notification_fail_response").html('An error occured.' );
+	                            $('.notification_fail').show();
+	                            //alert(response);
+	                        }
+                        });
+                        return false;
+                    });
+    
     
                 //CLOSE THE NOTIFICATION BAR
                 $("a.close_notification").click(function() {
@@ -308,7 +355,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     <div id="toggler">
                     
                         <!-- ADD TLDS START -->
-                        <? if (!empty($errors)) { ?>
+                        <? if (count($errors) > 0) { ?>
                             <div id="errors">
                                 <p>Please check:</p>
                                 <ul>
@@ -323,7 +370,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                      <div class="columns">
                                         <div class="colx2-left">
                                             <p>
-                                                <label for="Username" class="required">TLD Name</label>
+                                                <label for="name" class="required">TLD Name</label>
                                                 <input type="text" name="name" id="name" title="Enter the TLD Name" value="<? if($_POST['name']){ echo $_POST['name']; } ?>">
                                             </p>
                                         </div>
@@ -384,6 +431,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <table width="100%" border="0" cellspacing="2" cellpadding="5">
                       <tr>
                         <th><?=create_sort_link("name","TLD Name");?></th>
+                        <th><?=create_sort_link("default","Default TLD");?></th>
                         <th><?=create_sort_link("active", "Active");?></th>
                         <th>Actions</th>
                       </tr>
@@ -395,6 +443,9 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap><?=$LISTING['name'];?></td>
+                        <td align="center" >
+                            <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_default <? if ($LISTING['default'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Set Default TLD"><span>Set Default</span></a>
+                        </td>
                         <td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
                         </td>

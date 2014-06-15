@@ -359,8 +359,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     // Hide/Show the ADD Form
                     $( "#button" ).click(function() {
                         $( "#toggler" ).toggle( "blind", options, 500, function (){
-                            
-                        } );
+                        	$('#name').focus();
+    				    } );
                         return false;
                     });
 
@@ -377,10 +377,17 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         return false;
                     });
                     
+                    
+					<?if ($_GET['ns']){?>
+					$('#content').focus();
+    				<?}?>                    
+
+                    
                     //Init
                     <?if ($_POST['action'] || $_GET['action'] == 'edit' || $_GET['action'] == 'add'){?>
                         $( "#toggler" ).show();
-                    <?}else{?>
+                       	$('#content').focus();
+    				<?}else{?>
                         $( "#toggler" ).hide();
                     <?}?>
                     $( "#toggler2" ).show();
@@ -393,7 +400,6 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     $('#content').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     <?}?>
                     
-
                     //DELETE RECORD
                     $('a.delete').click(function () {
                         var record_id = $(this).attr('rel');
@@ -472,7 +478,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                 <div id="main_content">
                 
                 <div class="mainsubtitle_bg">
-                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List all Nameservers</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add">Add New Nameserver</a><?}else{?><a href="javascript: void(0)" id="button">Add New Nameserver</a><?}?></div>
+                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List all Nameservers</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add">Add New Nameserver</a><?}else{?><a href="javascript: void(0)" id="button">Add New Nameserver</a><?}?><?if ($_GET['ns'] && $_GET['domain'] && $_GET['domain_id']){?> | <a href="index.php?section=domain_ns&domain=<?=$_GET['domain'];?>&action=edit&id=<?=$_GET['domain_id'];?>">Back to Domain edit</a><?}?></div>
                 </div> 
                             
                 <br />
@@ -491,7 +497,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     <div id="toggler">
                     
                         <!-- ADD/EDIT NAMESERVERS START -->
-                        <? if (!empty($errors)) { ?>
+                        <? if (count($errors) > 0) { ?>
                             <div id="errors">
                                 <p>Please check:</p>
                                 <ul>
@@ -520,7 +526,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                             		
                                             	?>
                                                 <label for="name" class="required">Nameserver Name</label>
-                                                <input type="text" name="name" size="4" id="name" title="Enter name for your nameserver. Eg: ns1" value="<? if ($_GET['action'] == "edit"){ echo stripslashes($NS_NAME);}elseif($_POST['name']){ echo $_POST['name']; } ?>">
+                                                <input type="text" name="name" size="4" id="name" title="Enter name for your nameserver. Eg: ns1" value="<? if ($_GET['action'] == "edit"){ echo stripslashes($NS_NAME);}elseif($_POST['name']){ echo $_POST['name']; }elseif ($_GET['ns']){echo $_GET['ns'];} ?>">
                                                 <?if ($_GET['action'] == 'edit'){?>
                                                 <input type="hidden" name="domain" id="domain" value="<?=$NS_DOMAIN;?>" />
                                                 <?}?>
@@ -530,7 +536,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 													$SELECT_DOMAINS = mysql_query("SELECT name FROM `".$mysql_table."` WHERE type = 'NS' ". $user_id . " GROUP BY `name` ORDER BY name ASC", $db);
 													while ($DOMAIN = mysql_fetch_array($SELECT_DOMAINS)){
 													?>                                                    
-                                                    <option value="<?=$DOMAIN['name'];?>"   <? if ($_POST['domain'] == $DOMAIN['name']){ echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $DOMAIN['name'] == $NS_DOMAIN) { echo "selected=\"selected\""; }?> ><?=$DOMAIN['name'];?></option>
+                                                    <option value="<?=$DOMAIN['name'];?>"   <? if ($_POST['domain'] == $DOMAIN['name']){ echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $DOMAIN['name'] == $NS_DOMAIN) { echo "selected=\"selected\""; }elseif ($_GET['domain'] == $DOMAIN['name']){ echo "selected=\"selected\"";}?> >.<?=$DOMAIN['name'];?></option>
 													<?}?>                                                    
                                                     
                                                 </select>
@@ -623,6 +629,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <tr>
                         <th><?=create_sort_link("name","Nameserver Name");?></th>
                         <th><?=create_sort_link("content", "IP Address (Glue)");?></th>
+                        <th>Serving Domains</th>
                         <?if ($_SESSION['admin_level'] == 'admin'){?>
                         <th><?=create_sort_link("disabled", "Active");?></th>
                         <?}?>
@@ -633,10 +640,20 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       $i=-1;
                       while($LISTING = mysql_fetch_array($SELECT_RESULTS)){
                       $i++;
+                      
+                      
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap><a href="index.php?section=<?=$SECTION;?>&action=edit&id=<?=$LISTING['id'];?><?=$sort_vars;?><?=$search_vars;?>" title="Edit Nameserver" class="<?if (staff_help()){?>tip_south<?}?>"><?=$LISTING['name'];?></a></td>
                         <td align="center" ><?=$LISTING['content'];?></td>
+                        <td>| 
+                        <?
+                        $SELECT_DOMAINS = mysql_query("SELECT name FROM records WHERE content = '".$LISTING['name']."' AND type = 'NS' ", $db);
+                      	while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
+						?>
+							<strong><?=$DOMAINS['name'];?></strong> |  
+						<?}?>
+                        </td>													
                         <?if ($_SESSION['admin_level'] == 'admin'){?>
                         <td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['disabled'] != '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>

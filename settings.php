@@ -108,6 +108,7 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
                     //Init
                     <?if ($_POST['action'] || $_GET['action'] == 'edit'){?>
                         $( "#toggler" ).show();
+                        $('#Value').focus();
                     <?}else{?>
                         $( "#toggler" ).hide();
                     <?}?>
@@ -160,7 +161,7 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
                     <div id="toggler">
                     
                         <!-- EDIT SETTINGS START -->
-                        <? if (!empty($errors)) { ?>
+                        <? if (count($errors) > 0) { ?>
                             <div id="errors">
                                 <p>Please check:</p>
                                 <ul>

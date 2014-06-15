@@ -23,11 +23,17 @@
 require("includes/config.php");
 require("includes/functions.php");
 
+// Check if visitor's IP is in the allowed range for free registration
+if ( !netMatch($CONF['REG_ALLOWED_IPS'], $_SERVER['REMOTE_ADDR'])){
+	header("Location: index.php");
+	exit();
+}  
 
 if (admin_logged()) {
     header("Location: index.php");
     exit();
-} 
+}
+ 
 
 if (isset ($_GET['action']) && $_GET['action'] == "register") {
 	
@@ -51,6 +57,11 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
         }    
     }
     
+    $_POST['nodeid'] = (int)$_POST['nodeid'];    
+    if ($_POST['nodeid'] <1){ 
+    	$errors['admin_level'] = "Please enter your NodeID #" ; 
+    }    
+    
     $_POST['email'] = trim($_POST['email']);
     if ($_POST['email']){
         if (!preg_match("/^([a-zA-Z0-9]+([\.+_-][a-zA-Z0-9]+)*)@(([a-zA-Z0-9]+((\.|[-]{1,2})[a-zA-Z0-9]+)*)\.[a-zA-Z]{2,7})$/", $_POST['email'])) {
@@ -67,13 +78,16 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
     
     if (count($errors) == 0) {
         
-        $INSERT = mysql_query("INSERT INTO `users` (username, password, email, Admin_level, Help, active) VALUES (      
-            '" . addslashes($_POST['username']) . "',
+        $INSERT = mysql_query("INSERT INTO `users` (username, password, email, nodeid, fullname, Admin_level, Help, active, registered) VALUES (      
+            '" . mysql_real_escape_string($_POST['username']) . "',
             '" . md5($_POST['password']) . "',
-            '" . addslashes($_POST['email']) . "',
+            '" . mysql_real_escape_string($_POST['email']) . "',
+            '" . mysql_real_escape_string($_POST['nodeid']) . "',
+            '" . mysql_real_escape_string($_POST['fullname']) . "',
             'user',
             '1',
-            '1'
+            '1',
+            UNIX_TIMESTAMP()
         )", $db);
 
         if ($INSERT){
@@ -91,8 +105,9 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
 $maintitle_title = "Register";
 
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title><?=$CONF['APP_NAME'];?> | <?=$maintitle_title;?></title>
@@ -121,12 +136,12 @@ $(function() {
 
     <h1 id="login_title"><a href="index.php"><img src="images/logo.png" alt="<?=$CONF['APP_NAME'];?>" /></a></h1>
 	
-    <form id="login_form" name="login_form" method="POST" action="<?=$CONF['APP_URL'];?>/register.php?action=register">
+    <form id="login_form" name="login_form" method="POST" action="./register.php?action=register">
         <h1>Register new account</h1>
 		
 		<? if (isset ($error_occured)) { ?><p id="login_message">An error occured!</p><? } ?>
 
-        <? if (!empty($errors)) { ?>
+        <? if (count($errors) > 0) { ?>
             <div id="errors">
                 <p>Please check:</p>
                 <ul>
@@ -135,13 +150,17 @@ $(function() {
             </div>
         <? } ?> 		
 		
-        <label for="username">Username:</label>
+        <label for="username" class="required">Username:</label>
         <input name="username" id="username" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['username']?>" />
-        <label for="password">Password: </label>
+        <label for="nodeid" class="required">NodeID #:</label>
+        <input name="nodeid" id="nodeid" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['nodeid']?>" />
+        <label for="fullname">Fullname:</label>
+        <input name="fullname" id="fullname" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['fullname']?>" />
+        <label for="password" class="required">Password: </label>
         <input name="password" id="password" type="password" size="20" maxlength="20" class="input_field" />
         <label for="password2">Password (repeat): </label>
         <input name="password2" id="password2" type="password" size="20" maxlength="20" class="input_field" />
-        <label for="email">Email:</label>
+        <label for="email" class="required">Email:</label>
         <input name="email" id="email" type="text" size="20" maxlength="255" class="input_field" value="<?=$_POST['email']?>" />
         
         <div class="clr">&nbsp;</div>

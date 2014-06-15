@@ -274,8 +274,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     // Hide/Show the ADD Form
                     $( "#button" ).click(function() {
                         $( "#toggler" ).toggle( "blind", options, 500, function (){
-                            
-                        } );
+                        	$('#name').focus();
+    				    } );
                         return false;
                     });
 
@@ -406,7 +406,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     <div id="toggler">
                     
                         <!-- ADD DOMAIN START -->
-                        <? if (!empty($errors)) { ?>
+                        <? if (count($errors) > 0) { ?>
                             <div id="errors">
                                 <p>Please check:</p>
                                 <ul>
@@ -431,19 +431,20 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                                 <select name="tld" id="tld" title="Select TLD" >
                                                     <option value="" selected="selected">--Select--</option>
 													<? 
-													$SELECT_TLDs = mysql_query("SELECT name FROM tlds WHERE active ='1' ORDER BY name ASC", $db);
+													$SELECT_TLDs = mysql_query("SELECT name, `default` AS def FROM tlds WHERE active ='1' ORDER BY name ASC", $db);
+													echo mysql_error();
 													while ($TLDs = mysql_fetch_array($SELECT_TLDs)){
 														$SELECT_DOMAIN_ID = mysql_query("SELECT id FROM domains WHERE name = '".$TLDs['name']."' ", $db);
 														$DOMAIN_ID = mysql_fetch_array($SELECT_DOMAIN_ID);
+														print_r($TLDs);
 													?>                                                    
-                                                    <option value="<?=$DOMAIN_ID['id'];?>"   <? if ($_POST['tld'] == $DOMAIN_ID['id']){ echo "selected=\"selected\""; }?> ><?=$TLDs['name'];?></option>
+                                                    <option value="<?=$DOMAIN_ID['id'];?>"   <? if ($_POST['tld'] == $DOMAIN_ID['id']){ echo "selected=\"selected\""; }elseif ($TLDs['def'] == '1'){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
 													<?}?>                                                    
                                                     
                                                 </select>
                                                 
                                             </p>
                                             
-                                        
                                         </div>
                                         <div class="colx2-right">
                                             
@@ -566,7 +567,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 								$r=0;					  
 					  			$SELECT_NAMESERVERS = mysql_query("SELECT content, id FROM `".$mysql_table."` WHERE name = '".$LISTING['name']."' AND type = 'NS' ", $db);
 					  			while ($NAMESERVERS = mysql_fetch_array($SELECT_NAMESERVERS)){
-					  				$SELECT_GLUE = mysql_query("SELECT id, user_id FROM `".$mysql_table."` WHERE name = '".$NAMESERVERS['content']."' AND type = 'A'", $db);
+					  				$SELECT_GLUE = mysql_query("SELECT id, user_id, content FROM `".$mysql_table."` WHERE name = '".$NAMESERVERS['content']."' AND type = 'A'", $db);
 					  				$GLUE = mysql_fetch_array($SELECT_GLUE);
 					  	  		$r++;
 						  		?>
@@ -579,7 +580,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 										<?if ($NAMESERVERS['content']=='unconfigured'){?>
 										<span class="red alert_ico"><strong style="font-family: monospace"><a href="index.php?section=domain_ns&domain=<?=$LISTING['name'];?>&action=edit&id=<?=$NAMESERVERS['id'];?>" title="Configure this Domain's Nameserver" <?if (staff_help()){?>class="tip_south"<?}?> ><?=$NAMESERVERS['content'];?></a></strong></span>
 										<?}else{?>
-										<span class="<?if ($NAMESERVERS['content']=='unconfigured'){echo "red alert_ico";}else{ echo "blue";} ?>"><strong style="font-family: monospace"><?=$NAMESERVERS['content'];?></strong></span>
+										<span class="<?if ($NAMESERVERS['content']=='unconfigured'){echo "red alert_ico";}else{ echo "blue";} ?>"><strong style="font-family: monospace"><?=$NAMESERVERS['content'];?></strong></span> <span class="small" style="font-family: monospace">(<?=$GLUE['content'];?>)</span>
 										<?}?> 
 									</td>
                         	    </tr>
@@ -608,7 +609,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <?}?>
                         <td align="center" nowrap="nowrap">
                             <a href="validate_domain.php?domain=<?=$LISTING['name'];?>" rel="validate_group" title="Validate your DNS Server configuration to enable domain <?=$LISTING['name'];?>" class="<?if (staff_help()){?>tip_south<?}?> validate validate_domain"><span>Validate Domain</span></a> &nbsp; 
-                            <a href="index.php?section=domain_ns&amp;domain=<?=$LISTING['name'];?>" title="Configure Domain Nameserver" class="<?if (staff_help()){?>tip_south<?}?> setns"><span>Set Nameserver</span></a> &nbsp; 
+                            <a href="index.php?section=domain_ns&amp;domain=<?=$LISTING['name'];?>" title="Configure Domain Nameserver" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Set Nameserver</span></a> &nbsp; 
                             <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
                         </td>
                       </tr>
