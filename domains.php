@@ -265,7 +265,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                 $(function() {
                 	
                 	
-                	$(".validate_domain").colorbox({iframe:true, width:"85%", height:"90%", fastIframe:true});
+                	$(".validate_domain").colorbox({iframe:true, width:"85%", height:"90%", fastIframe:false, current: "Domain {current} of {total}" });
                 
                 	
                 	// most effect types need no options passed by default
@@ -607,7 +607,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <td align="center" nowrap><a href="index.php?section=users&action=edit&id=<?=$LISTING['user_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="View User details"><?=$DOMAIN_USER['username'];?></a></td>
                         <?}?>
                         <td align="center" nowrap="nowrap">
-                            <a href="validate_domain.php?domain=<?=$LISTING['name'];?>" title="Click here to validate your DNS Server configuration to enable your domain" class="<?if (staff_help()){?>tip_south<?}?> validate validate_domain"><span>Validate Domain</span></a> &nbsp; 
+                            <a href="validate_domain.php?domain=<?=$LISTING['name'];?>" rel="validate_group" title="Validate your DNS Server configuration to enable domain <?=$LISTING['name'];?>" class="<?if (staff_help()){?>tip_south<?}?> validate validate_domain"><span>Validate Domain</span></a> &nbsp; 
                             <a href="index.php?section=domain_ns&amp;domain=<?=$LISTING['name'];?>" title="Configure Domain Nameserver" class="<?if (staff_help()){?>tip_south<?}?> setns"><span>Set Nameserver</span></a> &nbsp; 
                             <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
                         </td>
