@@ -77,9 +77,9 @@ if ($_GET['domain']){
 			$resolver->debug = 0; // Turn on debugging output to show the query
 			$resolver->usevc = 0; // Force the use of TCP instead of UDP
 			$resolver->port = 53; // DNS Server port
-			$resolver->recurse = 1; // Disable recursion
-			$resolver->retry = 1; // How long to wait for answer
-			$resolver->retrans = 1; // How many times to retry for answer
+			$resolver->recurse = 0; // Disable recursion
+			$resolver->retry = 2; // How long to wait for answer
+			$resolver->retrans = 2; // How many times to retry for answer
 
     		$SELECT_DOMAIN_NS = mysql_query("SELECT content FROM records WHERE name = '".$d."' AND type = 'NS' ".$user_id." ORDER BY content ASC", $db);
     		$r=0;
