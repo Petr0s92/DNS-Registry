@@ -29,6 +29,7 @@ header("Expires: Sat, 26 Jul ".(date("Y")+1)." 05:00:00 GMT"); // Date in the fu
 $js_files = array(
     './jquery/css/custom-theme/jquery-ui-1.8.7.custom.css',
 	'./jquery/tipsy/stylesheets/tipsy.css',
+	'./jquery/colorbox/colorbox.css',
     './style.css'
 );
 

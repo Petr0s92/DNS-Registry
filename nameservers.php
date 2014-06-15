@@ -289,7 +289,6 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
             $soa_update = update_soa_serial_byid($TLD['id']);
                        
         if ($UPDATE && $soa_update){
-            $_SESSION['admin_help'] = $_POST['Help'];
             header("Location: index.php?section=".$SECTION."&saved_success=1".$sort_vars.$search_vars);
             exit();
         }else{

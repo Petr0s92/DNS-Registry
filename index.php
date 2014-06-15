@@ -78,7 +78,7 @@ admin_auth();
 
 			<!-- USER LOGOUT START -->
 			<div id="user_panel">
-			User: <a href="index.php?section=staff&action=edit&id=<?=$_SESSION['admin_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit account"><strong><?=$_SESSION['admin_username'];?></strong></a>
+			User: <a href="index.php?section=users&action=edit&id=<?=$_SESSION['admin_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit account"><strong><?=$_SESSION['admin_username'];?></strong></a>
 			<a href="login.php?action=logout" class="logout <?if (staff_help()){?>tip_east<?}?>" title="Logout of the system">Logout</a>
 			</div>
 			<!-- USER LOGOUT END -->           

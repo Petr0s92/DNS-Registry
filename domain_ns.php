@@ -34,7 +34,7 @@ if ($_GET['domain']){
 	$d = mysql_real_escape_string($_GET['domain'], $db);
 	$d_vars = "&domain=".$d	;
 }else{
-	header ("Location: ./index.php");
+	header ("Location: ./index.php?section=domains");
 	exit();
 }
 
@@ -263,7 +263,6 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
             $soa_update = update_soa_serial($TLD);
             
         if ($UPDATE && $soa_update){
-            $_SESSION['admin_help'] = $_POST['Help'];
             header("Location: index.php?section=".$SECTION."&saved_success=1".$sort_vars.$search_vars.$d_vars);
             exit();
         }else{

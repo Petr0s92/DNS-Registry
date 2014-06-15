@@ -264,6 +264,10 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                 <script>
                 $(function() {
                 	
+                	
+                	$(".validate_domain").colorbox({iframe:true, width:"85%", height:"90%", fastIframe:true});
+                
+                	
                 	// most effect types need no options passed by default
                     var options = {};    
                     
@@ -535,8 +539,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <tr>
                         <th><?=create_sort_link("name","Domain Name");?></th>
                         <th>Nameservers</th>
-                        <th><?=create_sort_link("created","Registered");?></th>
-                        <th><?=create_sort_link("change_date","Updated");?></th>
+                        <th><?=create_sort_link("created","Registered");?> / <?=create_sort_link("change_date","Updated");?></th>
                         <th><?=create_sort_link("disabled","Domain Status");?></th>
                         <?if ($_SESSION['admin_level'] == 'admin'){?>
                         <th><a href="javascript:void(0)" <?if (staff_help()){?>class="tip_south"<?}?> title="Domain Owner">Owner</a></th>
@@ -551,25 +554,26 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       
 					  if ($_SESSION['admin_level'] == 'admin'){
 					  	$SELECT_DOMAIN_USER = mysql_query("SELECT username, id FROM users WHERE id = '".$LISTING['user_id']."' ", $db);
-					  	$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);					  	  
+					  	$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
 					  }
 
-					  ?>      
+					  ?>     
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
-                        <td align="left" nowrap><h4> &nbsp; <a href="http://<?=$LISTING['name'];?>" target="_blank" class="tip_south" title="Visit web site" ><img src="images/ico_link.png" border="0" align="absmiddle"/></a> &nbsp;<a href="index.php?section=domain_ns&domain=<?=$LISTING['name'];?>" class="tip_south" title="Set Domain Nameservers" ><?=$LISTING['name'];?></a></h4></td>
+                        <td align="left" nowrap><h4> &nbsp; <a href="http://<?=$LISTING['name'];?>" target="_blank" <?if (staff_help()){?>class="tip_south"<?}?> title="Visit web site" ><img src="images/ico_link.png" border="0" align="absmiddle"/></a> &nbsp;<a href="index.php?section=domain_ns&domain=<?=$LISTING['name'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Set Domain Nameservers" ><?=$LISTING['name'];?></a></h4></td>
                         <td>
                             <table>
 								<?
 								$r=0;					  
 					  			$SELECT_NAMESERVERS = mysql_query("SELECT content, id FROM `".$mysql_table."` WHERE name = '".$LISTING['name']."' AND type = 'NS' ", $db);
 					  			while ($NAMESERVERS = mysql_fetch_array($SELECT_NAMESERVERS)){
-					  				$SELECT_GLUE = mysql_query("SELECT id FROM `".$mysql_table."` WHERE name = '".$NAMESERVERS['content']."' AND type = 'A'", $db);
+					  				$SELECT_GLUE = mysql_query("SELECT id, user_id FROM `".$mysql_table."` WHERE name = '".$NAMESERVERS['content']."' AND type = 'A'", $db);
 					  				$GLUE = mysql_fetch_array($SELECT_GLUE);
 					  	  		$r++;
-						  		?>                        		
+						  		?>
+						  		                         		
                         		<tr>
-                        			<?if ($NAMESERVERS['content']!='unconfigured'){?>
-                        	    	<td nowrap="nowrap" width="60"><a href="index.php?section=nameservers&action=edit&id=<?=$GLUE['id'];?>" class="tip_south" title="Edit this nameserver" ><img src="images/ico_edit_ns.png" align="absmiddle"></a> <strong>ns<?=$r?>:</strong></td>
+                        			<?if ($NAMESERVERS['content']!='unconfigured' ){?>
+                        	    	<td nowrap="nowrap" align="right" width="60"><?if ($GLUE['user_id'] == $_SESSION['admin_id'] || $_SESSION['admin_level'] == 'admin'){?><a href="index.php?section=nameservers&action=edit&id=<?=$GLUE['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit this nameserver's Glue/A Record" ><img src="images/ico_edit_ns.png" align="absmiddle"></a> <?}?><strong>ns<?=$r?>:</strong></td>
                         	    	<?}?>
                         	    	<td nowrap="nowrap">
 										<?if ($NAMESERVERS['content']=='unconfigured'){?>
@@ -582,9 +586,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         		<?}?>
                         	</table>                        
                         </td>
-                        <td align="center" nowrap><?=date("d-m-Y g:i a", $LISTING['created']);?></td>
-                        <td align="center" nowrap><?=date("d-m-Y g:i a", $LISTING['change_date']);?></td>
-                        <td align="center" nowrap>
+                        <td align="center" nowrap><?if ($_GET['sort']=='created'){?><strong><?}?>C <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LISTING['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?></td>
+                        <td align="center" >   
                         <?
                         if ($_SESSION['admin_level'] == 'admin'){
                         	$status_title = 'Enable/Disable';
@@ -601,12 +604,10 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <a href="javascript:void(0)" class="<?if (staff_help()){?>tip_south<?}?> <?if ($toggle){?>toggle_active<?}?> <? if ($LISTING['disabled'] != '1') { ?>activated<? } else { ?>deactivated<? } ?>" <?if ($toggle){?>rel="<?=$LISTING['id']?>"<?}?> title="<?=$status_title;?>"><span><?=$status_title;?></span></a>
                         </td>
                         <?if ($_SESSION['admin_level'] == 'admin'){?>
-                        <td align="center" nowrap><a href="index.php?section=users&action=edit&id=<?=$LISTING['user_id'];?>" class="tip_south" title="View User details"><?=$DOMAIN_USER['username'];?></a></td>
+                        <td align="center" nowrap><a href="index.php?section=users&action=edit&id=<?=$LISTING['user_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="View User details"><?=$DOMAIN_USER['username'];?></a></td>
                         <?}?>
                         <td align="center" nowrap="nowrap">
-                            <?if ($LISTING['disabled'] == '1'){?>
-                            <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Click here to validate your DNS Server configuration to enable your domain" class="<?if (staff_help()){?>tip_south<?}?> validate"><span>Validate Domain</span></a> &nbsp; 
-                            <?}?>
+                            <a href="validate_domain.php?domain=<?=$LISTING['name'];?>" title="Click here to validate your DNS Server configuration to enable your domain" class="<?if (staff_help()){?>tip_south<?}?> validate validate_domain"><span>Validate Domain</span></a> &nbsp; 
                             <a href="index.php?section=domain_ns&amp;domain=<?=$LISTING['name'];?>" title="Configure Domain Nameserver" class="<?if (staff_help()){?>tip_south<?}?> setns"><span>Set Nameserver</span></a> &nbsp; 
                             <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
                         </td>

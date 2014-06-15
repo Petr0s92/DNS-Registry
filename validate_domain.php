@@ -256,7 +256,7 @@ if ($_GET['domain']){
 				}
 								
 				echo "</div>\n";
-				echo "\n\n<hr><br />\n\n\n";
+				echo "\n\n<hr height='1' width='90%' align='left'><br />\n\n\n";
 			
 			}
     		

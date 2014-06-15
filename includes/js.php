@@ -20,22 +20,18 @@
 *                                                                             *
 *-----------------------------------------------------------------------------*/
 
-require ("config.php");
-require ("functions.php");
-
-
 ob_start("ob_gzhandler");
 header('Content-type: application/javascript');
 
 header("Expires: Sat, 26 Jul ".(date("Y")+1)." 05:00:00 GMT"); // Date in the future
-    //'./jquery/jquery-1.4.4.min.js',
-	
+    
 $js_files = array(
 	'./jquery/jquery-1.9.1.min.js',
 	'./jquery/jquery-migrate-1.1.1.js',
 	'./jquery/jquery-ui-1.8.7.custom.min.js',
 	'./jquery/tipsy/javascripts/jquery.tipsy.js',
-    './jquery/jquery.easing.1.2.js'
+    './jquery/colorbox/jquery.colorbox-min.js',
+    './jquery/jquery.easing.1.2.js',
 );
 
 
