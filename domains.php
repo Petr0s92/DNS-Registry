@@ -68,9 +68,9 @@ if (isset($_GET['sort'])){
         $order = "ORDER BY `". mysql_escape_string($_GET['sort']) ."` ". mysql_escape_string($_GET['by']) . " ";
     }
 } else {
-    $order = "ORDER BY `name` ASC ";
-    $_GET['sort'] = "name";
-    $_GET['by'] = "asc";
+    $order = "ORDER BY `created` DESC ";
+    $_GET['sort'] = "created";
+    $_GET['by'] = "desc";
 }
 $sort_vars = "&sort=".$_GET['sort']."&by=".$_GET['by'];
 

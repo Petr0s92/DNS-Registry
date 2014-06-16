@@ -71,9 +71,9 @@ $action_title = "All Users";
             $order = "ORDER BY `". addslashes($_GET['sort']) ."` ". addslashes($_GET['by']) . " ";
         }
     } else {
-        $order = "ORDER BY `username` ASC ";
-        $_GET['sort'] = "username";
-        $_GET['by'] = "asc";
+        $order = "ORDER BY `registered` DSC ";
+        $_GET['sort'] = "registered";
+        $_GET['by'] = "desc";
     }
     $sort_vars = "&sort=".$_GET['sort']."&by=".$_GET['by'];
 
@@ -173,7 +173,7 @@ if ($_POST['action'] == "add" ) {
     
     if (count($errors) == 0) {
         
-        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (username, password, email, fullname, description, Admin_level, nodeid, Help, active) VALUES (      
+        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (username, password, email, fullname, description, Admin_level, nodeid, Help, active, registered) VALUES (      
             '" . addslashes($_POST['username']) . "',
             '" . md5($_POST['password']) . "',
             '" . addslashes($_POST['email']) . "',
@@ -182,7 +182,8 @@ if ($_POST['action'] == "add" ) {
             '" . addslashes($_POST['Admin_level']) . "',
             '" . addslashes($_POST['nodeid']) . "',
             '1',
-            '1'
+            '1',
+            UNIX_TIMESTAMP()
         )", $db);
 
         if ($INSERT){
