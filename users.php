@@ -622,8 +622,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <td  align="center"><?= mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'NS' AND user_id = '".$LISTING['id']."' GROUP BY name ", $db));?></td>
                         <td align="center"><a href="mailto:<?=$LISTING['email'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Send Email to user"><?=$LISTING['email'];?></a></td>
                         <td nowrap align="center" ><?=date("d-m-Y g:i a", $LISTING['registered']);?></td>
-                        <td nowrap align="center" ><?if ($LISTING['last_login']){ echo date("d-m-Y g:i a", $LISTING['last_login']); }?></td>
-                        <td align="center" ><?=$LISTING['last_ip'];?></td>
+                        <td nowrap align="center" ><?if ($LISTING['last_login']){ echo date("d-m-Y g:i a", $LISTING['last_login']); }else{ echo "Never"; }?></td>
+                        <td align="center" ><?if ($LISTING['last_ip']){ echo $LISTING['last_ip'];}else{ echo 'None'; }?></td>
                         <td align="center" ><?=$LISTING['Admin_level'];?></td>
                         <td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
