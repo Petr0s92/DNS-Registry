@@ -24,10 +24,10 @@ require("includes/config.php");
 require("includes/functions.php");
 
 // Check if visitor's IP is in the allowed range for free registration
-if ( !netMatch($CONF['REG_ALLOWED_IPS'], $_SERVER['REMOTE_ADDR'])){
+if ($CONF['REG_ALLOWED_IPS'] != 'any' && !netMatch($CONF['REG_ALLOWED_IPS'], $_SERVER['REMOTE_ADDR'])){
 	header("Location: index.php");
 	exit();
-}  
+}
 
 if (admin_logged()) {
     header("Location: index.php");
