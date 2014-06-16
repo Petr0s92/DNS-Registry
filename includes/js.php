@@ -51,5 +51,18 @@ $(function() {
     $('.tip_west').tipsy({gravity: 'w', fade: true});
      
     $('.tip').tipsy();
+    
+	$('#switch_user').change(function() {
+		//alert( "Handler for .change() called." );
+		
+		var user_id = $(this).find(":selected").val();
+		$.post("index.php?section=<?=$SECTION;?>&action=switch_user", {
+            user_id: user_id		    
+		}, function(response){
+			location.reload();
+		});		
+		
+	});    
+    
         
 });   

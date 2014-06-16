@@ -76,12 +76,24 @@ admin_auth();
 			</ul>
 			<!-- MAIN MENU END -->
 
-			<!-- USER LOGOUT START -->
+			<!-- USER MENU START -->
 			<div id="user_panel">
+			<?if ($_SESSION['admin_level'] == 'admin' || $_SESSION['admin_orig']){?>
+			<select name="switch_user" id="switch_user" title="Switch to user" class="tip_south" >
+                <option value="" selected="selected">--Select--</option>
+				<? 
+				$SELECT_USERS = mysql_query("SELECT username, id FROM users WHERE active ='1' ORDER BY username ASC", $db);
+				while ($USERS = mysql_fetch_array($SELECT_USERS)){
+				?>                                                    
+                <option value="<?=$USERS['id'];?>"   <? if ($_SESSION['admin_id'] == $USERS['id']){ echo "selected=\"selected\""; }?> ><?=$USERS['username'];?></option>
+				<?}?>                                                    
+            </select>
+            <?}else{?>
 			User: <a href="index.php?section=user&action=edit&id=<?=$_SESSION['admin_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit account"><strong><?=$_SESSION['admin_username'];?></strong></a>
+			<?}?>
 			<a href="login.php?action=logout" class="logout <?if (staff_help()){?>tip_east<?}?>" title="Logout of the system">Logout</a>
 			</div>
-			<!-- USER LOGOUT END -->           
+			<!-- USER MENU END -->           
 
 		</div>
 		<!-- MENU END -->

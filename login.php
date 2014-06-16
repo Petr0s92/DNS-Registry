@@ -123,7 +123,7 @@ $(function() {
         <input name="username" id="username" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['username']?>" />
         <label for="password">Password: </label>
         <input name="password" id="password" type="password" size="20" maxlength="20" class="input_field" />
-
+		<br />
         <input type="checkbox" name="remember" id="remember" value="1"<? if ($_POST['remember']) echo " checked=\"checked\"";?> /><label for="remember" style="display:inline"> Remember</label>
         <a href="#" class="forgot_trigger" style="padding-left:10px">Did you forget your password?</a>
         <div class="clr">&nbsp;</div>

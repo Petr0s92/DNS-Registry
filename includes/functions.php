@@ -80,17 +80,32 @@ if (isset($SECTION) && $SECTION == 'domains'){
 #########################################
 
 // create sessions - cookie
-function admin_create_sessions($id,$username,$password,$remember, $help, $level){
-    global $CONF, $db;
+function admin_create_sessions($id,$username,$password,$remember, $help, $level, $impersonate=false){
+    global $CONF, $db, $_SESSION;
     
+    if ($impersonate == true){
+		if ($id != $_SESSION['admin_orig']){
+			$_SESSION['admin_orig'] = $_SESSION['admin_id'];
+		}else{
+			unset($_SESSION['admin_orig']);			
+		}
+    }else{
+    	if ($id == $_SESSION['admin_orig']){
+			unset($_SESSION['admin_orig']);
+		}
+		
+    }
+
     //session_register();
     $_SESSION['admin_id'] = $id;
     $_SESSION['admin_username'] = $username;
     $_SESSION['admin_md5part'] = substr(md5($password),0,10);
     $_SESSION['admin_help'] = $help;
     $_SESSION['admin_level'] = $level;
-
-	mysql_query("UPDATE users SET last_login = UNIX_TIMESTAMP(), last_ip = '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'  WHERE id = '" . $id ."'", $db);
+    
+    if ($impersonate == false){
+		mysql_query("UPDATE users SET last_login = UNIX_TIMESTAMP(), last_ip = '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'  WHERE id = '" . $id ."'", $db);
+	}
 	    
     if(isset($remember)){
         setcookie($CONF['COOKIE_NAME'], $_SESSION['admin_id'] . "||" . $_SESSION['admin_username']  ."||" . $_SESSION['admin_md5part']. "||" . $_SESSION['admin_help'], time()+60*60*24*15, "/");
@@ -197,6 +212,39 @@ function admin_auth($login_page = "login.php", $access_denied_page = "access_den
 
 }
 
+
+//IMPERSONATE USER
+if ($_GET['action'] == 'switch_user' && $_POST['user_id'] && ($_SESSION['admin_level'] == 'admin' || $_SESSION['admin_orig']) ){
+	
+	$SELECT_SWITCH_USER= mysql_query("SELECT * FROM users WHERE id = '".(int)$_POST['user_id']."' ", $db);
+	$SWITCH_USER = mysql_fetch_array($SELECT_SWITCH_USER);
+
+	if(isset($_COOKIE[$CONF['COOKIE_NAME']])) {
+		$remember = '1'; 	
+	}else{
+		$remember = '0';
+	}
+	
+	if ($_SESSION['admin_orig']){
+		$impersonate = false;
+	}else{
+		$impersonate = true;
+	}
+	
+	if ($SWITCH_USER['Admin_level'] == 'admin' && $_SESSION['admin_orig'] == $SWITCH_USER['id']){
+		$user_level = 'admin';
+		
+	}elseif ($SWITCH_USER['Admin_level'] == 'admin' && $_SESSION['id'] != $SWITCH_USER['id'] ){
+		$user_level = 'user';
+	}else{
+		$user_level = 'user';
+	}	
+	
+	admin_create_sessions($SWITCH_USER['id'],$SWITCH_USER['username'],$SWITCH_USER['password'],$remember, 1, $user_level, $impersonate);
+	
+	exit('ok');
+	
+}
 
 // HELPER FUNCTIONS
 

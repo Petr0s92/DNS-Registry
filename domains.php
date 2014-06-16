@@ -432,11 +432,9 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                                     <option value="" selected="selected">--Select--</option>
 													<? 
 													$SELECT_TLDs = mysql_query("SELECT name, `default` AS def FROM tlds WHERE active ='1' ORDER BY name ASC", $db);
-													echo mysql_error();
 													while ($TLDs = mysql_fetch_array($SELECT_TLDs)){
 														$SELECT_DOMAIN_ID = mysql_query("SELECT id FROM domains WHERE name = '".$TLDs['name']."' ", $db);
 														$DOMAIN_ID = mysql_fetch_array($SELECT_DOMAIN_ID);
-														print_r($TLDs);
 													?>                                                    
                                                     <option value="<?=$DOMAIN_ID['id'];?>"   <? if ($_POST['tld'] == $DOMAIN_ID['id']){ echo "selected=\"selected\""; }elseif ($TLDs['def'] == '1'){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
 													<?}?>                                                    
