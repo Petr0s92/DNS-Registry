@@ -387,7 +387,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                 <div id="main_content">
                 
                 <div class="mainsubtitle_bg">
-                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List all my Domain Names</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add">Register new Domain Name</a> | <a href="index.php?section=<?=$SECTION;?>">Back to My Domains List</a><?}else{?><a href="javascript: void(0)" id="button">Register new Domain Name</a><?}?></div>
+                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List all my Domain Names</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add" class="add"><span>Register new Domain Name</span></a> | <a href="index.php?section=<?=$SECTION;?>">Back to My Domains List</a><?}else{?><a href="javascript: void(0)" id="button" class="add"><span>Register new Domain Name</span></a><?}?></div>
                 </div> 
                             
                 <br />

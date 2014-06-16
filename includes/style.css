@@ -673,6 +673,9 @@ p.notification_fail    { background:#faf9f6 url(../images/ico_inactive.png) 5px 
 .paging_field { font-family:Arial, Helvetica, sans-serif; font-size:12px; border:1px solid #ddd; padding:3px; width:25px; text-align:center }
 .no_records { text-align:center; padding:15px; border-bottom:1px solid #e5e5e5; color: #bc3720;   }
 
+.add {display: inline-block; margin-left: 3px; padding-left:20px; background-repeat:no-repeat;  background:url(../images/ico_add.png) 0px center no-repeat; height:16px;  }
+.back {display: inline-block; margin-left: 3px; padding-left:20px; background-repeat:no-repeat;  background:url(../images/ico_back.png) 0px center no-repeat; height:16px;  }
+
 .edit {display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat;  background:url(../images/ico_edit.png); width:16px; height:16px; }
 .edit span { display:none }
 

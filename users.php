@@ -437,7 +437,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                 <div id="main_content">
                 
                 <div class="mainsubtitle_bg">
-                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List Users</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add">Add New User</a><?}else{?><a href="javascript: void(0)" id="button">Add New User</a><?}?></div>
+                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List Users</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add" class="add"><span>Add New User</a><?}else{?><a href="javascript: void(0)" id="button" class="add"><span>Add New User</a><?}?></div>
                 </div> 
                  
                  <br />           

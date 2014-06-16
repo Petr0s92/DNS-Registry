@@ -404,7 +404,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
                 <div id="main_content">
                 
                 <div class="mainsubtitle_bg">
-                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List all Nameservers</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add<?=$d_vars;?>">Add Nameserver to Domain</a><?}else{?><a href="javascript: void(0)" id="button">Add Nameserver</a><?}?> | <a href="index.php?section=domains">Back to My Domains</a></div>
+                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List all Nameservers</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add<?=$d_vars;?>" class="add"><span>Add Nameserver to Domain</span></a><?}else{?><a href="javascript: void(0)" id="button" class="add">Add Nameserver to Domain</a><?}?> | <a href="index.php?section=domains" class="back"><span>Back to My Domains</span></a></div>
                 </div> 
                             
                 <br />
@@ -482,6 +482,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
                                 
                           <legend>&raquo; Nameservers List</legend>
                         
+                      <?/*
                       <form name="search_form" action="index.php?section=<?=$SECTION;?><?=$d_vars;?>" method="get" class="search_form">
                         <input type="hidden" name="section" value="<?=$SECTION;?>" />
                         <input type="hidden" name="domain" value="<?=$d;?>" />
@@ -508,12 +509,13 @@ if ($_GET['action'] == "delete" && $_POST['id']){
                             <td width="36%"><? if ($items_number) { include "includes/paging.php"; } ?></td>
                         </tr>
                       </table>                            
-                        
+                      */?>  
                         
                   
                       <table width="100%" border="0" cellspacing="2" cellpadding="5">
                       <tr>
                         <th><?=create_sort_link("content", "Nameserver");?></th>
+                        <th>IP Address (Glue)</th>
                         <th>Actions</th>
                       </tr>
                       <!-- RESULTS START -->
@@ -523,14 +525,25 @@ if ($_GET['action'] == "delete" && $_POST['id']){
                       $i++;
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
-                        <td nowrap><a href="index.php?section=<?=$SECTION;?>&action=edit&id=<?=$LISTING['id'];?><?=$sort_vars;?><?=$search_vars;?><?=$d_vars;?>" title="Edit Nameserver" class="<?if (staff_help()){?>tip_south<?}?>"><?=$LISTING['content'];?></a></td>
+                        <td align="center" nowrap><a href="index.php?section=<?=$SECTION;?>&action=edit&id=<?=$LISTING['id'];?><?=$sort_vars;?><?=$search_vars;?><?=$d_vars;?>" title="Edit Nameserver" class="<?if (staff_help()){?>tip_south<?}?>"><?=$LISTING['content'];?></a></td>
+                        <td align="center" nowrap><?
+                        $SELECT_GLUE = mysql_query("SELECT id, user_id, content FROM `".$mysql_table."` WHERE name = '".$LISTING['content']."' AND type = 'A'", $db);
+					  	$GLUE = mysql_fetch_array($SELECT_GLUE);
+					  	  		
+                        ?>
+                        <?if ($GLUE['content']){?>
+                        <?if ($GLUE['user_id'] == $_SESSION['admin_id'] || $_SESSION['admin_level'] == 'admin'){?><a href="index.php?section=nameservers&action=edit&id=<?=$GLUE['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit this nameserver's Glue/A Record" ><img src="images/ico_edit_ns.png" align="absmiddle"></a> <?}?>
+                        <strong class="blue" style="font-family: monospace">(<?=$GLUE['content'];?>)</strong>
+                        <?}else{?>
+                        <span class="red alert_ico"><strong>No Glue record found</strong></span>
+                        <?}?>
                         <td align="center" nowrap="nowrap">
                             <a href="index.php?section=<?=$SECTION;?>&amp;action=edit&amp;id=<?=$LISTING['id'];?><?=$sort_vars;?><?=$search_vars;?><?=$d_vars;?>" title="Edit" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Edit</span></a>
                             <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
                         </td>
                       </tr>
                       <?}?>
-
+                      
                       <!-- RESULTS END -->
                     </table>
                     
