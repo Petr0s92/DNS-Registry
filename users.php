@@ -30,7 +30,7 @@ if ($_SESSION['admin_level'] != 'admin'){
 
 //Define current page data
 $mysql_table = 'users';
-$sorting_array = array("id", "username", "fullname", "description", "email", "Admin_level", "active", "created", "last_login");
+$sorting_array = array("id", "username", "fullname", "description", "email", "Admin_level", "active", "created", "last_login", "registered");
 
 // ----------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ $action_title = "All Users";
             $order = "ORDER BY `". addslashes($_GET['sort']) ."` ". addslashes($_GET['by']) . " ";
         }
     } else {
-        $order = "ORDER BY `registered` DSC ";
+        $order = "ORDER BY `registered` DESC ";
         $_GET['sort'] = "registered";
         $_GET['by'] = "desc";
     }
