@@ -92,11 +92,8 @@ function admin_create_sessions($id,$username,$password,$remember, $help, $level,
     }else{
     	if ($id == $_SESSION['admin_orig']){
 			unset($_SESSION['admin_orig']);
-		}else{
-			mysql_query("UPDATE users SET last_login = UNIX_TIMESTAMP(), last_ip = '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'  WHERE id = '" . $id ."'", $db);			
 		}
-		
-    }
+	}
 
     //session_register();
     $_SESSION['admin_id'] = $id;
@@ -104,6 +101,10 @@ function admin_create_sessions($id,$username,$password,$remember, $help, $level,
     $_SESSION['admin_md5part'] = substr(md5($password),0,10);
     $_SESSION['admin_help'] = $help;
     $_SESSION['admin_level'] = $level;
+    
+    if (!$_SESSION['admin_orig']){
+		mysql_query("UPDATE users SET last_login = UNIX_TIMESTAMP(), last_ip = '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'  WHERE id = '" . $id ."'", $db);		
+    }
     	    
     if(isset($remember)){
         setcookie($CONF['COOKIE_NAME'], $_SESSION['admin_id'] . "||" . $_SESSION['admin_username']  ."||" . $_SESSION['admin_md5part']. "||" . $_SESSION['admin_help'], time()+60*60*24*15, "/");
