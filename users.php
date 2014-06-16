@@ -622,7 +622,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <td  align="center"><?= mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'NS' AND user_id = '".$LISTING['id']."' GROUP BY name ", $db));?></td>
                         <td align="center"><a href="mailto:<?=$LISTING['email'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Send Email to user"><?=$LISTING['email'];?></a></td>
                         <td nowrap align="center" ><?=date("d-m-Y g:i a", $LISTING['registered']);?></td>
-                        <td nowrap align="center" ><?=date("d-m-Y g:i a", $LISTING['last_login']);?></td>
+                        <td nowrap align="center" ><?if ($LISTING['last_login']){ echo date("d-m-Y g:i a", $LISTING['last_login']); }?></td>
                         <td align="center" ><?=$LISTING['last_ip'];?></td>
                         <td align="center" ><?=$LISTING['Admin_level'];?></td>
                         <td align="center" >
