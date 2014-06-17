@@ -305,7 +305,7 @@ if ($_GET['domain']){
 		<tr>
 			<td>
 				<div id="validate_credits">
-					<a href="http://www.code.ath/public" target="_blank">Domain Registry Control Panel</a>
+					<?=$CONF['CREDITS'];?>
     			</div>
             </td>
 		</tr>    

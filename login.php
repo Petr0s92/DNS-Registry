@@ -137,7 +137,7 @@ $(function() {
 
     </form>
     <div id="login_credits">
-        <a href="http://www.code.ath/public" target="_blank">Domain Registry Control Panel
+        <?=$CONF['CREDITS'];?>
     </div>
     
     <div id="forgot_dialog" title="Did you forget your password?" style="display:none">

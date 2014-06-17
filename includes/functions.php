@@ -39,6 +39,8 @@ while ($SETTINGS = mysql_fetch_array($SELECT_SETTINGS)){
 	$CONF[$SETTINGS['Name']] = $SETTINGS['Value'];
 }
 
+$CONF['CREDITS'] = "<a href=\"http://www.git.ath/public\" target=\"_blank\">Domain Registry Control Panel</a> &copy; ". date("Y");
+
 //Start gzip compression & session
 require ("sessions.php");
 ob_start();

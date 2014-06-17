@@ -168,7 +168,7 @@ admin_auth();
 
 	<!-- FOOTER START -->
 	<div id="footer">
-		<span style="float:right"><a href="http://www.code.ath/public" target="_blank">Domain Registry Control Panel</a> &copy; <?=date("Y")?>.</span>
+		<span style="float:right"><?=$CONF['CREDITS'];?></span>
 		<?=$CONF['APP_NAME'];?>
 	
 	</div>
