@@ -102,9 +102,6 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
 
 
 ?>
-<? if (!1) { ?>
-<link href="includes/style.css" rel="stylesheet" type="text/css" />
-<? } ?>
 
                 <script>
                 $(function() {

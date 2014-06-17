@@ -346,9 +346,6 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 
 
 ?>
-<? if (!1) { ?>
-<link href="includes/style.css" rel="stylesheet" type="text/css" />
-<? } ?>
 
                 <script>
                 $(function() {

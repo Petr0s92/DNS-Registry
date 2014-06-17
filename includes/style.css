@@ -597,7 +597,6 @@ button {
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	border-radius: 5px;
-	font-size: 13px;
 	padding: 5px 5px 5px 5px;
 	line-height: 13px;
 	cursor: pointer;
@@ -620,6 +619,20 @@ input, select, textarea {
     /*width: 190px;*/
     background-color: #f8f7f3;
     
+    
+}
+
+.input_disabled {
+    
+    border: 1px solid #dad7c8;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    padding: 5px 5px 5px 5px;
+    /*width: 190px;*/
+    background-color: #f8f7f3;
+    color:#C0C0AB;
+	
     
 }
 

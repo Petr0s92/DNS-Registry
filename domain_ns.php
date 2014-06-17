@@ -312,9 +312,6 @@ if ($_GET['action'] == "delete" && $_POST['id']){
 
 
 ?>
-<? if (!1) { ?>
-<link href="includes/style.css" rel="stylesheet" type="text/css" />
-<? } ?>
 
                 <script>
                 $(function() {

@@ -130,7 +130,7 @@ if ($_POST['action'] == "add" ) {
         $tld = "";
     } else {
         
-        $SELECT_TLD = mysql_query("SELECT name FROM `tlds` WHERE `id` = '".mysql_escape_string($_POST['tld'])."' ",$db);
+        $SELECT_TLD = mysql_query("SELECT name, id FROM `tlds` WHERE `id` = '".mysql_escape_string($_POST['tld'])."' ",$db);
         $TLD = mysql_fetch_array($SELECT_TLD);
         if (!$TLD['name']){
         	$errors['tld'] = "Please choose a TLD.";	
@@ -141,17 +141,73 @@ if ($_POST['action'] == "add" ) {
     }
     
     $_POST['name'] = trim($_POST['name']);
-    if (!ctype_alnum($_POST['name'])) {
-        $errors['name'] = "Please choose a valid domain name. Only Alphanumeric characters are allowed";
+    if (!preg_match("/^(?!-)[a-z0-9-]{1,63}(?<!-)$/", $_POST['name'])) {
+        $errors['name'] = "Please choose a valid domain name. Only lowercase alphanumeric characters are allowed and a dash (-). Domain cannot start or end with a dash.";
     } else {
-    	if (strlen($_POST['name']) > 30){
+    	if (strlen($_POST['name']) > 62){
 			$errors['name'] = "Please choose a shorter domain name.";	
+    	}elseif (strlen($_POST['name']) < 2){
+			$errors['name'] = "Please choose a bigger domain name.";	
     	}else{
 	        if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['name'].$tld)."' ",$db))){
 	            $errors['name'] = "This domain name is already registered." ;
 	        } 
     	}
     }
+    
+    //CHECK NAMESERVERS
+    for ($i = 0; $i <= count($_POST['nameserver'])-1; $i++) {
+    	$ns = trim($_POST['nameserver'][$i]);	
+    	$glue = trim($_POST['glue'][$i]);	
+    	$n = $i+1;
+		if (!$ns){
+    		$errors['namesever'.$i] = "Please enter a valid Nameserver ".$n.".";						
+    	}else{
+    		//check nameserver name
+		    if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns)."' AND type = 'A' AND user_id > 0 ",$db))){
+			    //NS exists! We use this one!			    
+			    $nameserver[$i]['name'] = trim($ns);	
+			}else{
+
+				//Check if the nameserver to be created is under a domain the user owns or under the newly created domain
+				$new_domain = ".".$_POST['name'] . $tld;
+				$ns_domain_parts = explode(".", $ns);
+				$ns_domain_parts = array_reverse($ns_domain_parts);
+				$ns_domain = $ns_domain_parts[1] . "." . $ns_domain_parts[0] . $tld;				
+				if ( stristr($ns. $tld, $new_domain ) || 
+					mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns_domain)."' AND type = 'NS' " . $user_id ,$db))
+				) {
+					//NS does not exist - so we check the A record to add them later on
+					if ($glue){
+    					//check nameserver ip/glue
+					    if(filter_var($glue, FILTER_VALIDATE_IP)){
+							if ( ip2long($glue) <= ip2long("10.255.255.255") && ip2long("10.0.0.0") <=  ip2long($glue) )  {
+								//IP VALIDATED! We prepare arrays for the new nameserver/glue record insert
+								$nameserver[$i]['name'] = trim($ns);	
+								$nameserver[$i]['glue'] = trim($glue);
+																					
+							}else{
+								$errors['glue'.$i] = "The Nameserver ".$n." IP you entered is not valid.";	
+							}	
+						}else{
+							$errors['glue'.$i] = "The Nameserver ".$n." IP you entered is not valid.";	
+						}        
+    				}else{
+						$n = $i+1;
+						$errors['glue'.$i] = "Please enter a valid Nameserver ".$n." IP.";						
+					}				
+				}else{
+					$n = $i+1;
+					$errors['namesever'.$i] = "Nameserver ".$n." parent domain is not owned by you. Cannot create Glue Record";						
+    			}
+			}    	    		
+    	}
+
+	}
+	
+	echo "<pre>";	
+	print_r($nameserver);	    
+	echo "</pre>";	    
     
     if (!$_POST['user_id']) {
         if ($_SESSION['admin_level'] != 'admin'){
@@ -163,23 +219,53 @@ if ($_POST['action'] == "add" ) {
     
     if (count($errors) == 0) {
         
-        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, user_id, domain_id, type, content, ttl, prio, change_date, disabled, auth, created) VALUES (      
-            '" . mysql_escape_string($_POST['name'].$tld) . "',
-            '" . mysql_escape_string($_POST['user_id']) . "',
-            '2',
-            'NS',
-            'unconfigured',
-            '".$CONF['RECORDS_TTL']."',
-            '0',
-            UNIX_TIMESTAMP(),
-            '1',
-            '0',
-            UNIX_TIMESTAMP()
-        )", $db);
+        $insert_errors = array();
+        for ($i = 0; $i <= count($nameserver)-1; $i++) {
+        
+	        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, user_id, domain_id, type, content, ttl, prio, change_date, disabled, auth, created) VALUES (      
+	            '" . mysql_escape_string($_POST['name'].$tld) . "',
+	            '" . mysql_escape_string($_POST['user_id']) . "',
+	            '".$TLD['id']."',
+	            'NS',
+	            '".mysql_escape_string($nameserver[$i]['name'])."',
+	            '".$CONF['RECORDS_TTL']."',
+	            '0',
+	            UNIX_TIMESTAMP(),
+	            '1',
+	            '0',
+	            UNIX_TIMESTAMP()
+	        )", $db);
+	        
+	        if (!$INSERT){
+				$insert_errors[] = true;
+	        }
+	        
+	        if ($nameserver[$i]['glue']){
+
+		        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, content, type, domain_id, ttl, prio, change_date, created, user_id, auth, disabled ) VALUES (      
+		            '" . mysql_escape_string($nameserver[$i]['name']) . "',
+		            '" . mysql_escape_string($nameserver[$i]['glue']) . "',
+		            'A',
+		            '".$TLD['id']."',
+		            '".$CONF['RECORDS_TTL']."',
+		            '0',
+		            UNIX_TIMESTAMP(),
+		            UNIX_TIMESTAMP(),
+		            '".$_SESSION['admin_id']."',
+		            '0',
+		            '1'
+		        )", $db);
+				
+				if (!$INSERT){
+					$insert_errors[] = true;
+	        	}		
+	        }
+    		
+    		//$soa_update = update_soa_serial($tld);
     	
-    	$soa_update = update_soa_serial($tld);
+		}
     	
-        if ($INSERT && $soa_update){
+        if (count($insert_errors) == 0){
             header("Location: index.php?section=".$SECTION."&saved_success=1");
             exit();
         }else{
@@ -256,10 +342,25 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
     exit();
 }
 
+
+// FIND NAMESERVER GLUE
+if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
+    $nameserver = addslashes($_POST['nameserver']);
+    
+    $SELECT_GLUE = mysql_query("SELECT content FROM `".$mysql_table."` WHERE name = '".$nameserver."' AND user_id > 0", $db);
+    $GLUE = mysql_fetch_array($SELECT_GLUE);
+
+    if ($GLUE['content']){
+    	ob_clean();
+	    echo $GLUE['content'];
+	} else {
+		ob_clean();
+	    echo "Enter IP";
+	}
+    exit();
+}
+
 ?>
-<? if (!1) { ?>
-<link href="includes/style.css" rel="stylesheet" type="text/css" />
-<? } ?>
 
                 <script>
                 $(function() {
@@ -306,6 +407,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     $('#name').tipsy({trigger: 'focus', gravity: 'n', fade: true});
                     $('#tld').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#user_id').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#nameserver').tipsy({ gravity: 'e', fade: true, live: true, html: true });
+                    $('#glue').tipsy({ gravity: 'w', fade: true, live: true, html: true });
                     <?}?>
                     
 
@@ -375,10 +478,99 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     $('.'+bar_class).hide();
                     return false;
                 });
+                
+                
+                //Get new domain name as being typed
+                //$("#name").live('keyup', function() {
+        		//	var userdomain = this.value;
+        		//	$("#nameserver").val( this.value );
+        		//});
+                
+                
+				// Add Nameserver fields to add form                
+				var MaxInputs       = 9; //maximum input boxes allowed
+				var InputsWrapper   = $("#InputsWrapper"); //Input boxes wrapper ID
+				var AddButton       = $("#AddMoreFileBox"); //Add button ID
 
-                
+				<?
+				if (count($_POST['nameserver'])){
+					echo "var FieldCount=".count($_POST['nameserver']).";";
+					echo "var x=FieldCount;";
+				}else{
+					echo "var FieldCount=1;";
+					echo "var x=FieldCount;";
+				}
+				?>
+
+				$(AddButton).click(function (e)  //on add input button click
+				{
+				        if(x <= MaxInputs) //max input box allowed
+				        {      
+				        	x++; //text box increment
+				            FieldCount++; //text box added increment
+				            //add input box
+				            var content = '<div>'+
+				            				'<label for="nameserver" class="required">Nameserver '+ FieldCount +'</label>'+
+				            				'<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name.<br />Eg: ns'+ FieldCount +'.domain.ath" value="ns'+ FieldCount +'.domain.ath"/> '+
+				            				' &nbsp; IP: <input type="text" name="glue[]" class="glue" id="glue" value="Enter IP"/> '+
+				                          	'<a href="javascript:void(0)" class="removeclass" title="Click here to remove this nameserver field"><img src="images/ico_remove.png" align="absmiddle"></a>'+
+				                          '<br /><br /></div>';
+				            
+				            $(InputsWrapper).append(content);
+				        }
+				return false;
+				});
+
+				$("body").on("click",".removeclass", function(e){ //user click on remove text
+				        if( x > 1 ) {
+				                $(this).parent('div').remove(); //remove text box
+				                x--; //decrement textbox
+				                FieldCount--; //text box decrement				            
+				        }
+				return false;
+				});
+
+				//Auto clear input NS fields
+				$("#nameserver").live('focus', function() {
+					if( this.value.indexOf( "domain.ath" ) != -1 ){
+					$(this).val('');
+					}
+				});				                 
+				
+				//Auto clear input GLUE fields
+				$("#glue").live('focus', function() {
+					if( this.value.indexOf( "10.x.x." ) != -1 || this.value.indexOf( "Enter IP" ) != -1 ){
+					$(this).val('');
+					}
+				});				                 
+				
+				//Find Nameserver Glue and add it to the field
+                $('#nameserver').live('keyup', function () {
+                    var nameserver = this.value;
+                    var field = $(this).next();
+                    if (nameserver.length > 3){
+	                    $.post("index.php?section=<?=$SECTION;?>&action=fetch_glue", {
+	                        nameserver: nameserver
+	                    }, function(response){
+	                        if (response){
+	                            $(field).val(response);
+	                            if( response.indexOf( "Enter IP" ) != -1 ){
+	                            	$(field).removeClass('input_disabled');									
+	                            	//$(field).attr("disabled", false);									
+								}else{
+									$(field).addClass('input_disabled');
+									//$(field).attr("disabled", true);									
+								}
+	                        }
+	                    });
+					}
+					return false;
                 });
-                
+
+				
+				//end                                
+                });				                 
+				                                
 
                 </script>
                 
@@ -442,10 +634,75 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                                 </select>
                                                 
                                             </p>
+												
+												<label class="required">Nameserver 1</label>                                            
+                                            	<div id="InputsWrapper">
+												
+													<div>
+														<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name<br />Eg: ns1.domain.ath" value="<?if($_POST['nameserver'][0]){ echo $_POST['nameserver'][0]; }else{?>ns1.domain.ath<?}?>"/>
+														&nbsp; 
+														<?
+														//echo "<pre>";
+														//print_r($_POST);
+														//echo "</pre>";
+														if ($_POST){	
+															$SELECT_GLUE = mysql_query("SELECT content FROM records WHERE name = '".mysql_real_escape_string($_POST['nameserver'][0])."' AND user_id > 0", $db);
+															$GLUE = mysql_fetch_array($SELECT_GLUE);
+															if ($GLUE['content']){
+																$glue = $GLUE['content'];
+																$disabled = ' class="input_disabled" ';
+															}elseif ($_POST['glue'][0]){
+																$glue = $_POST['glue'][0];
+																$disabled = '';
+															}else{
+																$glue = 'Enter IP';
+																$disabled = '';
+															}
+														}else{
+															$glue = 'Enter IP';															
+															$disabled = '';
+														}															
+														?>
+														IP: <input type="text" name="glue[]" id="glue" <?=$disabled;?> value="<?=$glue;?>"/><br /><br />
+													</div>
+													
+													<?
+													if ($_POST){
+														for ($i = 1; $i <= count($_POST['nameserver'])-1; $i++) {
+															$SELECT_GLUE = mysql_query("SELECT content FROM records WHERE name = '".mysql_real_escape_string($_POST['nameserver'][$i])."' AND user_id > 0", $db);
+															$GLUE = mysql_fetch_array($SELECT_GLUE);
+															if ($GLUE['content']){
+																$glue = $GLUE['content'];
+																$disabled = ' class="input_disabled" ';
+															}elseif ($_POST['glue'][$i]){
+																$glue = $_POST['glue'][$i];
+																$disabled = '';
+															}else{
+																$glue = 'Enter IP';
+																$disabled = '';
+															}
+														
+													?>
+													<div>
+                                            			<label class="required">Nameserver <?=$i+1;?></label>
+                                            			<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name<br />Eg: ns<?=$i;?>.domain.ath" value="<?if($_POST['nameserver'][$i]){ echo $_POST['nameserver'][$i]; }else{?>ns<?=$i;?>.domain.ath<?}?>"/>
+														&nbsp; 
+														IP: <input type="text" name="glue[]" id="glue" <?=$disabled;?> value="<?=$glue;?>"/>
+														<a href="javascript:void(0)" class="removeclass" title="Click here to remove this nameserver field"><img src="images/ico_remove.png" align="absmiddle"></a>
+														<br /><br />
+													</div>
+													<?}}?> 
+													
+												</div>
+												<a href="javascript:void(0)" id="AddMoreFileBox">Add another Nameserver <img src="images/ico_add.png" align="absmiddle"></a>
+												<br />
+                                        	    
+                                        	
                                             
                                         </div>
                                         <div class="colx2-right">
-                                            
+                                        
+                                        	
                                             <? if ($_SESSION['admin_level'] == 'admin'){?>
                                             <p>
                                                 <label for="user_id" class="required">Domain Name Owner</label>
