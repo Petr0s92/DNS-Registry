@@ -205,9 +205,9 @@ if ($_POST['action'] == "add" ) {
 
 	}
 	
-	echo "<pre>";	
-	print_r($nameserver);	    
-	echo "</pre>";	    
+	//echo "<pre>";	
+	//print_r($nameserver);	    
+	//echo "</pre>";	    
     
     if (!$_POST['user_id']) {
         if ($_SESSION['admin_level'] != 'admin'){
