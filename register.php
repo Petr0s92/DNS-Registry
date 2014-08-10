@@ -134,7 +134,7 @@ $(function() {
     </noscript>
     <!-- NO JAVASCRIPT NOTIFICATION END -->
 
-    <h1 id="login_title"><a href="index.php"><img src="images/logo.<?if (is_file("./images/logo.custom.png")){?>.custom<?}?>png" alt="<?=$CONF['APP_NAME'];?>" /></a></h1>
+    <h1 id="login_title"><a href="index.php"><img src="images/logo<?if (is_file("./images/logo.custom.png")){?>.custom<?}?>.png" alt="<?=$CONF['APP_NAME'];?>" /></a></h1>
 	
     <form id="login_form" name="login_form" method="POST" action="./register.php?action=register">
         <h1>Register new account</h1>
