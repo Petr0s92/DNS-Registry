@@ -112,6 +112,10 @@ admin_auth();
 					<h2 class="sidebar_title">Registry Stats</h2>
 					<table width="100%" border="0" cellspacing="2" cellpadding="2">
 					<tr>
+					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total TLDs</td>
+					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM tlds WHERE active ='1' ", $db));?></strong></td>
+					</tr>
+					<tr>
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Domains</td>
 					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'NS' AND user_id > 0 GROUP BY name", $db));?></strong></td>
 					</tr>
