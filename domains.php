@@ -622,13 +622,13 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                                 <input type="text" name="name" id="name" title="Enter the Domain Name" value="<?if($_POST['name']){ echo $_POST['name']; } ?>">
                                                 <select name="tld" id="tld" title="Select TLD" >
                                                     <option value="" selected="selected">--Select--</option>
-													<? 
-													$SELECT_TLDs = mysql_query("SELECT name, `default` AS def FROM tlds WHERE active ='1' ORDER BY name ASC", $db);
+													<?
+													$SELECT_TLDs = mysql_query("SELECT name, `default` FROM tlds WHERE active ='1' ORDER BY name ASC", $db);
 													while ($TLDs = mysql_fetch_array($SELECT_TLDs)){
 														$SELECT_DOMAIN_ID = mysql_query("SELECT id FROM domains WHERE name = '".$TLDs['name']."' ", $db);
-														$DOMAIN_ID = mysql_fetch_array($SELECT_DOMAIN_ID);
+														$DOMAIN_ID = mysql_fetch_array($SELECT_DOMAIN_ID);  
 													?>                                                    
-                                                    <option value="<?=$DOMAIN_ID['id'];?>"   <? if ($_POST['tld'] == $DOMAIN_ID['id']){ echo "selected=\"selected\""; }elseif ($TLDs['def'] == '1'){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
+                                                    <option value="<?=$DOMAIN_ID['id'];?>"   <? if ($DOMAIN_ID['id'] && $_POST['tld'] == $DOMAIN_ID['id']){ echo "selected=\"selected\""; }elseif ($TLDs['default'] == '1'){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
 													<?}?>                                                    
                                                     
                                                 </select>
