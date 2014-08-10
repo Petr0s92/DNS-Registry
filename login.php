@@ -130,7 +130,7 @@ $(function() {
 
         <input type="submit" name="go" id="go" value="Login" class="button_primary" />
         
-        <?if ($CONF['REG_ALLOWED_IPS'] != 'any' && !netMatch($CONF['REG_ALLOWED_IPS'], $_SERVER['REMOTE_ADDR'])){?>  
+        <?if ($CONF['REG_ALLOWED_IPS'] == 'any' || netMatch($CONF['REG_ALLOWED_IPS'], $_SERVER['REMOTE_ADDR'])){?>  
         <a href="register.php" id="login_message" style="padding-left:10px">Click here to register a new account</a>
         <?}?>
         <div class="clr">&nbsp;</div>
