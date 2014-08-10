@@ -108,7 +108,7 @@ $(function() {
     </noscript>
     <!-- NO JAVASCRIPT NOTIFICATION END -->
 
-    <h1 id="login_title"><img src="images/logo.png" alt="<?=$CONF['APP_NAME'];?>" /></h1>
+    <h1 id="login_title"><img src="images/logo<?if (is_file("./images/logo.custom.png")){?>.custom<?}?>.png" alt="<?=$CONF['APP_NAME'];?>" /></h1>
       
 
     <form id="login_form" name="login_form" method="POST" action="./login.php?action=login&return=<?=$return?>">
