@@ -119,7 +119,7 @@ if ($_POST['action'] == "add" ) {
     $errors = array();
     
     $_POST['name'] = trim($_POST['name']);
-    if (!preg_match("/^[a-z]{1,9}$/", $_POST['name'])) {
+    if (!preg_match("/^[a-z\.]{1,9}$/", $_POST['name'])) {
         $errors['name'] = "Please choose a TLD Name with 2 to 10 latin lowercase characters without numbers, spaces and symbols.";
     }else{
         
