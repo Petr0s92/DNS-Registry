@@ -511,7 +511,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 				            //add input box
 				            var content = '<div>'+
 				            				'<label for="nameserver" class="required">Nameserver '+ FieldCount +'</label>'+
-				            				'<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name.<br />Eg: ns'+ FieldCount +'.domain.ath" value="ns'+ FieldCount +'.domain.ath"/> '+
+				            				'<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name.<br />Eg: ns'+ FieldCount +'.domain.tld" value="ns'+ FieldCount +'.domain.tld"/> '+
 				            				' &nbsp; IP: <input type="text" name="glue[]" class="glue" id="glue" value="Enter IP"/> '+
 				                          	'<a href="javascript:void(0)" class="removeclass" title="Click here to remove this nameserver field"><img src="images/ico_remove.png" align="absmiddle"></a>'+
 				                          '<br /><br /></div>';
@@ -532,7 +532,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 
 				//Auto clear input NS fields
 				$("#nameserver").live('focus', function() {
-					if( this.value.indexOf( "domain.ath" ) != -1 ){
+					if( this.value.indexOf( "domain.tld" ) != -1 ){
 					$(this).val('');
 					}
 				});				                 
@@ -639,7 +639,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                             	<div id="InputsWrapper">
 												
 													<div>
-														<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name<br />Eg: ns1.domain.ath" value="<?if($_POST['nameserver'][0]){ echo $_POST['nameserver'][0]; }else{?>ns1.domain.ath<?}?>"/>
+														<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name<br />Eg: ns1.domain.tld" value="<?if($_POST['nameserver'][0]){ echo $_POST['nameserver'][0]; }else{?>ns1.domain.tld<?}?>"/>
 														&nbsp; 
 														<?
 														//echo "<pre>";
@@ -685,7 +685,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 													?>
 													<div>
                                             			<label class="required">Nameserver <?=$i+1;?></label>
-                                            			<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name<br />Eg: ns<?=$i;?>.domain.ath" value="<?if($_POST['nameserver'][$i]){ echo $_POST['nameserver'][$i]; }else{?>ns<?=$i;?>.domain.tld<?}?>"/>
+                                            			<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name<br />Eg: ns<?=$i;?>.domain.tld" value="<?if($_POST['nameserver'][$i]){ echo $_POST['nameserver'][$i]; }else{?>ns<?=$i;?>.domain.tld<?}?>"/>
 														&nbsp; 
 														IP: <input type="text" name="glue[]" id="glue" <?=$disabled;?> value="<?=$glue;?>"/>
 														<a href="javascript:void(0)" class="removeclass" title="Click here to remove this nameserver field"><img src="images/ico_remove.png" align="absmiddle"></a>

@@ -142,6 +142,21 @@ pre {
 	display:none 
 }
 
+#logo_custom { }
+
+#logo_custom a { 
+	display:block; 
+	height:84px; 
+	width:395px; 
+	float:left;
+	background:url(../images/logo.custom.png) no-repeat ; 
+    margin:3px 0 0 10px
+}
+	
+#logo_custom a span { 
+	display:none 
+}
+
 .clr {clear:both; height:1px; font-size:1px; }
 
 

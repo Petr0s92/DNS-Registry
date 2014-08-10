@@ -52,7 +52,8 @@ admin_auth();
 
 		<!-- HEADER START -->
 		<div id="header">
-			<div id="logo">
+			
+			<div id="logo<?if (is_file("./images/logo.custom.png")){?>_custom<?}?>">
 				<a href="index.php"><span><?=$CONF['APP_NAME'];?></span></a>
 			</div>
 		</div>
