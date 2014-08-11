@@ -404,8 +404,13 @@ function update_soa_serial ($tld){
 	
 	if (stristr($tld,".")){
 		$tld_parts = explode (".", $tld);
-		$tld_parts_rev = array_reverse($tld_parts);
-		$tld = $tld_parts_rev[0];
+		
+		$tld_parts[0] = false;
+		$tld = implode(".", $tld_parts);
+		$tld =  substr($tld, 1);
+														
+		//$tld_parts_rev = array_reverse($tld_parts);
+		//$tld = $tld_parts_rev[0];
 	}
 	
 	$SELECT_TLD = mysql_query("SELECT id  FROM domains WHERE name = '".addslashes($tld)."' ", $db);
