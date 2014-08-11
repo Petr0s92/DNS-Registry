@@ -167,7 +167,6 @@ if ($_POST['action'] == "add" ) {
 			$DOMAIN_parts = explode("." ,$DOMAIN['name']);
 			
 			$DOMAIN_parts[0] = false;
-			$DOMAIN_parts[1] = false;
 			$TLD = implode(".", $DOMAIN_parts);
 			$TLD =  substr($TLD, 1);			
 			   echo $TLD;
@@ -246,7 +245,6 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
 			$DOMAIN_parts = explode("." ,$DOMAIN['name']);
 			
 			$DOMAIN_parts[0] = false;
-			$DOMAIN_parts[1] = false;
 			$TLD = implode(".", $DOMAIN_parts);
 			$TLD =  substr($TLD, 1);			
 			
