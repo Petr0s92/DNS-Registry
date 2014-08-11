@@ -166,16 +166,19 @@ if ($_GET['domain']){
 								                
 								                //Check if db NS record is part of the domain (so that we need to check it's A/Glue records)
 												$dbns_parts = explode(".", $DOMAIN_NS_GLUES['content']);
+												//print_r($dbns_parts);
 												$dbns_parts[0] = false;
 												$ns_parent_domain = implode(".", $dbns_parts);
+												$ns_parent_domain =  substr($ns_parent_domain, 1);;
 												//$dbns_parts = array_reverse($dbns_parts);
-												//$ns_parent_domain = $dbns_parts[1] . ".". $dbns_parts[0];					
+												//$ns_parent_domain = $dbns_parts[1] . ".". $dbns_parts[0];
+												//echo $ns_parent_domain;
 												
 							                    //Check for A records on the proper nameservers because not always the nameserver we are iterating now is authoritative for the A/glue record.
 	                                            $SELECT_NS_PARENT = mysql_query("SELECT content FROM records WHERE name = '".$ns_parent_domain."' AND type ='NS' ORDER BY content ASC", $db);
 	                                            while ($NS_PARENT = mysql_fetch_array($SELECT_NS_PARENT)){
-												
-													if ($NS_PARENT['content'] == $DOMAIN_NS_GLUES['content'] ){
+												    
+												    if ($NS_PARENT['content'] == $DOMAIN_NS_GLUES['content'] ){
 														$RESOLVER_IP = $NS_IP['content'];
 		                                                $local_ns_found = true;
 		                                                break;
