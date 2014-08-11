@@ -169,7 +169,7 @@ if ($_GET['domain']){
 												//print_r($dbns_parts);
 												$dbns_parts[0] = false;
 												$ns_parent_domain = implode(".", $dbns_parts);
-												$ns_parent_domain =  substr($ns_parent_domain, 1);;
+												$ns_parent_domain =  substr($ns_parent_domain, 1);
 												//$dbns_parts = array_reverse($dbns_parts);
 												//$ns_parent_domain = $dbns_parts[1] . ".". $dbns_parts[0];
 												//echo $ns_parent_domain;

@@ -529,7 +529,10 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                             	$nameserver_parts = explode(".", $RESULT['name']);
                                             	
                                             	$NS_NAME = $nameserver_parts[0];
-                                            	$NS_DOMAIN = $nameserver_parts[1] . "." . $nameserver_parts[2];
+                                            	$nameserver_parts[0] = false;
+												$NS_DOMAIN = implode (".", $nameserver_parts);
+												$NS_DOMAIN =  substr($NS_DOMAIN, 1);												                                            	
+                                            	//$NS_DOMAIN = $nameserver_parts[1] . "." . $nameserver_parts[2];
                                             		
                                             	?>
                                                 <label for="name" class="required">Nameserver Name</label>

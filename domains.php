@@ -171,9 +171,15 @@ if ($_POST['action'] == "add" ) {
 
 				//Check if the nameserver to be created is under a domain the user owns or under the newly created domain
 				$new_domain = ".".$_POST['name'] . $tld;
+				//echo $new_domain;
 				$ns_domain_parts = explode(".", $ns);
-				$ns_domain_parts = array_reverse($ns_domain_parts);
-				$ns_domain = $ns_domain_parts[1] . "." . $ns_domain_parts[0] . $tld;				
+				//print_r($ns_domain_parts);
+				$ns_domain_parts[0] = false;
+				$ns_domain = implode(".", $ns_domain_parts);
+				$ns_domain = substr($ns_domain, 1);												
+				//$ns_domain_parts = array_reverse($ns_domain_parts);
+				//$ns_domain = $ns_domain_parts[1] . "." . $ns_domain_parts[0] . $tld;
+				//echo $ns_domain;				
 				if ( stristr($ns. $tld, $new_domain ) || 
 					mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns_domain)."' AND type = 'NS' " . $user_id ,$db))
 				) {
@@ -294,7 +300,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
 		$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `name`= '".$DOMAIN['name']."' AND type = 'NS' ". $user_id ,$db);
 		$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `name` LIKE '%.".$DOMAIN['name']."' AND type = 'A' ". $user_id ,$db);
 	    
-	    $soa_update = update_soa_serial($DOMAIN['name']);
+	    $soa_update = update_soa_serial($DOMAIN['name'], true);
 	    
 	    if ($DELETE && $soa_update){
 	        ob_end_clean();

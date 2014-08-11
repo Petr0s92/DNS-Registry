@@ -399,22 +399,19 @@ function update_soa_serial_byid($domain_id) {
 }
 
 
-function update_soa_serial ($tld){
+function update_soa_serial ($tld, $domain=false){
 	global $db;
 	
-	if (stristr($tld,".")){
+	if ($domain){
 		$tld_parts = explode (".", $tld);
 		
-		if (count($tld_parts) > 2 ){
-		
-			$tld_parts[0] = false;
-			$tld = implode(".", $tld_parts);
-			$tld =  substr($tld, 1);
-																	
-			//$tld_parts_rev = array_reverse($tld_parts);
-			//$tld = $tld_parts_rev[0];
-			
-		}
+		$tld_parts[0] = false;
+		$tld = implode(".", $tld_parts);
+		$tld =  substr($tld, 1);
+																
+		//$tld_parts_rev = array_reverse($tld_parts);
+		//$tld = $tld_parts_rev[0];
+	
 	}
 	
 	$SELECT_TLD = mysql_query("SELECT id  FROM domains WHERE name = '".addslashes($tld)."' ", $db);
