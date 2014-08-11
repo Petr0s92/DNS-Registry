@@ -170,7 +170,7 @@ if ($_POST['action'] == "add" ) {
 			$DOMAIN_parts[1] = false;
 			$TLD = implode(".", $DOMAIN_parts);
 			$TLD =  substr($TLD, 1);			
-			
+			   echo $TLD;
 			//$TLD = $DOMAIN_parts[1];
 		}
     }
