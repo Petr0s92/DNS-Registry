@@ -146,7 +146,12 @@ if ($_POST['action'] == "add" ) {
 			$domain = ".".$DOMAIN['name'];
 			
 			$DOMAIN_parts = explode("." ,$DOMAIN['name']);
-			$TLD = $DOMAIN_parts[1];
+
+			$DOMAIN_parts[0] = false;
+			$TLD = implode(".", $DOMAIN_parts);
+			$TLD =  substr($TLD, 1);			
+			
+			//$TLD = $DOMAIN_parts[1];
         }
         
     }
@@ -236,7 +241,12 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
 			$domain = ".".$DOMAIN['name'];
 			
 			$DOMAIN_parts = explode("." ,$DOMAIN['name']);
-			$TLD = $DOMAIN_parts[1];
+			
+			$DOMAIN_parts[0] = false;
+			$TLD = implode(".", $DOMAIN_parts);
+			$TLD =  substr($TLD, 1);			
+			
+			//$TLD = $DOMAIN_parts[1];
         }
         
     }
