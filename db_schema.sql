@@ -115,7 +115,8 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (6, 'REG_ALLOWED_IPS', '10.0.0.0/8', 'Allowed IPs for open registration. Type ''any'' to allow all IPs.', 'panel'),
 (7, 'RECORDS_TTL', '86400', 'TTL Used for NS & A (glue) records in TLD zone.', 'general'),
 (8, 'DNS_VALIDATE_WAIT', '2', 'How long the domain validator should wait for a reply from the nameserver (seconds)', 'panel'),
-(9, 'DNS_VALIDATE_RETRY', '2', 'How many times the domain validator should try to get a reply from a nameserver', 'panel');
+(9, 'DNS_VALIDATE_RETRY', '2', 'How many times the domain validator should try to get a reply from a nameserver', 'panel'),
+(10, 'PORTAL_URL', 'http://www.example.com', 'Full url to web portal', 'panel');
 
 
 

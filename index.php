@@ -73,7 +73,9 @@ admin_auth();
 			<li class="menu_settings"><a href="index.php?section=settings" title="Manage system settings" <? if ($SECTION=='settings' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='settings' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='settings' && staff_help()){?>class="tip_south"<?}?> ><span>Settings</span></a></li>
 			<?
 			}
-			?><li class="menu_portal"><a href="http://www.ath/" title="Go back to www.ath portal for more information" <?if (staff_help()){?>class='tip_south'<?}?> target="_blank" ><span>Portal</span></a></li>
+			if ($CONF['PORTAL_URL']){
+			?><li class="menu_portal"><a href="<?=$CONF['PORTAL_URL'];?>" title="Go back to <?=$CONF['PORTAL_URL'];?> portal for more information" <?if (staff_help()){?>class='tip_south'<?}?> target="_blank" ><span>Portal</span></a></li>
+			<?}?>
 			</ul>
 			<!-- MAIN MENU END -->
 
