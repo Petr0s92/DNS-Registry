@@ -724,6 +724,9 @@ p.notification_fail    { background:#faf9f6 url(../images/ico_inactive.png) 5px 
 .setns { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_setns.gif); width:16px; height:16px; }
 .setns span { display:none }                                                                                                                         
 
+.arrow_up_left { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_up_left.gif); width:16px; height:16px; }
+.arrow_up_left span { display:none }                                                                                                                         
+
 .alert_ico { display: inline-block; margin-left: 5px; padding-left:20px; background:url(../images/ico_alert.png) 0px center no-repeat; width:16px; height:16px; }
 
 

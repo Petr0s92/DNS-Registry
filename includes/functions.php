@@ -383,7 +383,7 @@ function get_next_serial($curr_serial, $today = '') {
 
 function update_soa_serial_byid($domain_id) {
 	$soa_rec = get_soa_record($domain_id);
-    if ($soa_rec == NULL) { 
+    if ($soa_rec == NULL) {
         return false;
     }
 
@@ -425,6 +425,26 @@ function update_soa_serial ($tld, $domain=false){
 function netMatch ($CIDR,$IP) {
     list ($net, $mask) = explode ('/', $CIDR);
     return ( ip2long ($IP) & ~((1 << (32 - $mask)) - 1) ) == ip2long ($net);
+}
+
+// Find if given domain contains a TLD that we manage
+function getTLD ($domain){
+	global $db;
+	
+	$domain_parts = array_reverse( explode (".", $domain) );
+
+	$tld = '';	
+	for ($i = 0; $i <= count($domain_parts); $i++) {
+		$tld = $domain_parts[$i] . $tld ;
+		if (mysql_num_rows(mysql_query("SELECT 1  FROM `tlds` WHERE name = '".$tld."' ", $db))){
+			return $tld;
+		}else{
+			$tld = "." . $tld ;
+		}
+	}
+	
+	return false;
+	
 } 
   
 ?>

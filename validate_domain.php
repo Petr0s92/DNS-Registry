@@ -101,7 +101,14 @@ if ($_GET['domain']){
 			    $SELECT_NS_IP = mysql_query("SELECT content FROM records WHERE name = '".$DOMAIN_NS['content']."' AND type = 'A' ", $db);
 				$NS_IP = mysql_fetch_array($SELECT_NS_IP);
 					
-			    echo "<h4><img src='images/ico_info.png' align='absmiddle'> &nbsp;Checking Nameserver: <strong class='blue'>" .$DOMAIN_NS['content'] ." (".$NS_IP['content'].")</strong></h4>\n";
+			    $OUR_TLD = getTLD($DOMAIN_NS['content']);
+			    
+			    if ($OUR_TLD){
+			    	echo "<h4><img src='images/ico_info.png' align='absmiddle'> &nbsp;Checking Nameserver: <strong class='blue'>" .$DOMAIN_NS['content'] ." (".$NS_IP['content'].")</strong></h4>\n";
+				}else{
+					echo "<h4><img src='images/ico_info.png' align='absmiddle'> &nbsp;Checking Nameserver: <strong class='blue'>" .$DOMAIN_NS['content'] ." (3rd Party TLD)</strong></h4>\n";
+					$NS_IP['content'] = $DOMAIN_NS['content'];					
+				}
 				echo "<div style='margin-left: 40px;'>\n";
 								
 				if ($DOMAIN_NS['content'] != 'unconfigured'){
@@ -157,72 +164,77 @@ if ($_GET['domain']){
 																				
 											echo "<img src='images/ico_valid.png' align='absmiddle' > <strong class='blue'>NS</strong> records check <strong class='green'>[OK]</strong><br /><br />\n";
 											
-											$glue_errors = array(); 
-							                
-											$SELECT_DOMAIN_NS_GLUES = mysql_query("SELECT content FROM records WHERE name = '".$d."' AND type = 'NS' ORDER BY content ASC", $db);
-    										while($DOMAIN_NS_GLUES = mysql_fetch_array($SELECT_DOMAIN_NS_GLUES)){
-    				                    
-												$local_ns_found = false;
+											//If NS records are TLD of ours, check Glue Records if needed
+											if ($OUR_TLD){
+																						
+												$glue_errors = array(); 
 								                
-								                //Check if db NS record is part of the domain (so that we need to check it's A/Glue records)
-												$dbns_parts = explode(".", $DOMAIN_NS_GLUES['content']);
-												//print_r($dbns_parts);
-												$dbns_parts[0] = false;
-												$ns_parent_domain = implode(".", $dbns_parts);
-												$ns_parent_domain =  substr($ns_parent_domain, 1);
-												//$dbns_parts = array_reverse($dbns_parts);
-												//$ns_parent_domain = $dbns_parts[1] . ".". $dbns_parts[0];
-												//echo $ns_parent_domain;
-												
-							                    //Check for A records on the proper nameservers because not always the nameserver we are iterating now is authoritative for the A/glue record.
-	                                            $SELECT_NS_PARENT = mysql_query("SELECT content FROM records WHERE name = '".$ns_parent_domain."' AND type ='NS' ORDER BY content ASC", $db);
-	                                            while ($NS_PARENT = mysql_fetch_array($SELECT_NS_PARENT)){
-												    
-												    if ($NS_PARENT['content'] == $DOMAIN_NS_GLUES['content'] ){
-														$RESOLVER_IP = $NS_IP['content'];
-		                                                $local_ns_found = true;
-		                                                break;
-                                                	}else{
-														$SELECT_NS_PARENT_IP = mysql_query("SELECT content FROM records WHERE name = '".$NS_PARENT['content']."' AND type = 'A' ", $db);
-			                                            $NS_PARENT_IP = mysql_fetch_array($SELECT_NS_PARENT_IP);
-														$RESOLVER_IP = $NS_PARENT_IP['content'];
-														$RESOLVER_NAME = $NS_PARENT['content'];
-														if ($local_ns_found){
-															break;
-														}
-		                                        	}
+												$SELECT_DOMAIN_NS_GLUES = mysql_query("SELECT content FROM records WHERE name = '".$d."' AND type = 'NS' ORDER BY content ASC", $db);
+    											while($DOMAIN_NS_GLUES = mysql_fetch_array($SELECT_DOMAIN_NS_GLUES)){
+    					                    
+													$local_ns_found = false;
+									                
+									                //Check if db NS record is part of the domain (so that we need to check it's A/Glue records)
+													$dbns_parts = explode(".", $DOMAIN_NS_GLUES['content']);
+													//print_r($dbns_parts);
+													$dbns_parts[0] = false;
+													$ns_parent_domain = implode(".", $dbns_parts);
+													$ns_parent_domain =  substr($ns_parent_domain, 1);
+													//$dbns_parts = array_reverse($dbns_parts);
+													//$ns_parent_domain = $dbns_parts[1] . ".". $dbns_parts[0];
+													//echo $ns_parent_domain;
 													
-	                                            }
-	                                            
-											    //Set resolver nameserver IP to use for lookup
-												$resolver->nameservers = array($RESOLVER_IP);
-                                                //echo $RESOLVER_IP . "<br>";
-											    // Get A records from nameserver
-    		                            		$response = $resolver->rawQuery($DOMAIN_NS_GLUES['content'], 'A');
-			                                    //echo "<pre>";
-												//print_r($response);
-												//echo "</pre>";
-												
-												$SELECT_NS_GLUE = mysql_query("SELECT content FROM records WHERE name = '".$DOMAIN_NS_GLUES['content']."' AND type = 'A' ", $db);
-												$NS_GLUE = mysql_fetch_array($SELECT_NS_GLUE);							
-												
-												if ($response->header->rcode != 'NXDOMAIN'){
-													if ($response->answer[0]->address == $NS_GLUE['content']){
-														echo "<img src='images/ico_valid.png' align='absmiddle' > Glue <strong class='blue'>".$NS_GLUE['content']."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong>  check <strong class='green'>[OK]</strong><br />\n";
+								                    //Check for A records on the proper nameservers because not always the nameserver we are iterating now is authoritative for the A/glue record.
+		                                            $SELECT_NS_PARENT = mysql_query("SELECT content FROM records WHERE name = '".$ns_parent_domain."' AND type ='NS' ORDER BY content ASC", $db);
+		                                            while ($NS_PARENT = mysql_fetch_array($SELECT_NS_PARENT)){
+													    
+													    if ($NS_PARENT['content'] == $DOMAIN_NS_GLUES['content'] ){
+															$RESOLVER_IP = $NS_IP['content'];
+			                                                $local_ns_found = true;
+			                                                break;
+                                                		}else{
+															$SELECT_NS_PARENT_IP = mysql_query("SELECT content FROM records WHERE name = '".$NS_PARENT['content']."' AND type = 'A' ", $db);
+				                                            $NS_PARENT_IP = mysql_fetch_array($SELECT_NS_PARENT_IP);
+															$RESOLVER_IP = $NS_PARENT_IP['content'];
+															$RESOLVER_NAME = $NS_PARENT['content'];
+															if ($local_ns_found){
+																break;
+															}
+		                                        		}
+														
+		                                            }
+		                                            
+												    //Set resolver nameserver IP to use for lookup
+													$resolver->nameservers = array($RESOLVER_IP);
+	                                                //echo $RESOLVER_IP . "<br>";
+												    // Get A records from nameserver
+    		                            			$response = $resolver->rawQuery($DOMAIN_NS_GLUES['content'], 'A');
+				                                    //echo "<pre>";
+													//print_r($response);
+													//echo "</pre>";
+													
+													$SELECT_NS_GLUE = mysql_query("SELECT content FROM records WHERE name = '".$DOMAIN_NS_GLUES['content']."' AND type = 'A' ", $db);
+													$NS_GLUE = mysql_fetch_array($SELECT_NS_GLUE);							
+													
+													if ($response->header->rcode != 'NXDOMAIN'){
+														if ($response->answer[0]->address == $NS_GLUE['content']){
+															echo "<img src='images/ico_valid.png' align='absmiddle' > Glue <strong class='blue'>".$NS_GLUE['content']."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong>  check <strong class='green'>[OK]</strong><br />\n";
+														}else{
+															echo "<img src='images/ico_invalid.png' align='absmiddle' > Glue response: <strong class='red'>".$response->answer[0]->address."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong> does not match the glue record in registry (<strong class='blue'>".$NS_GLUE['content']."</strong>)<br />\n";
+															$glue_errors[] = true;
+														}
 													}else{
-														echo "<img src='images/ico_invalid.png' align='absmiddle' > Glue response: <strong class='red'>".$response->answer[0]->address."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong> does not match the glue record in registry (<strong class='blue'>".$NS_GLUE['content']."</strong>)<br />\n";
+														echo "<img src='images/ico_invalid.png' align='absmiddle' > Glue <strong class='blue'>".$NS_GLUE['content']."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong> does not exist (<strong class='red'>NXDOMAIN</strong>)<br />\n";
 														$glue_errors[] = true;
 													}
-												}else{
-													echo "<img src='images/ico_invalid.png' align='absmiddle' > Glue <strong class='blue'>".$NS_GLUE['content']."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong> does not exist (<strong class='red'>NXDOMAIN</strong>)<br />\n";
-													$glue_errors[] = true;
+													
+													if ($RESOLVER_IP != $NS_IP['content']){
+													    echo "<span class='small' style='margin-left: 20px;'>(Authoritative NS for ".$DOMAIN_NS_GLUES['content']." > ".$RESOLVER_IP." - ".$RESOLVER_NAME.")</span><br /><br />\n";
+													}else{
+														echo "<br />\n";
+													}
 												}
-												
-												if ($RESOLVER_IP != $NS_IP['content']){
-												    echo "<span class='small' style='margin-left: 20px;'>(Authoritative NS for ".$DOMAIN_NS_GLUES['content']." > ".$RESOLVER_IP." - ".$RESOLVER_NAME.")</span><br /><br />\n";
-												}else{
-													echo "<br />\n";
-												}
+											
 											}
 											
 										}elseif($NS_TOTAL > count($NS)-2){
@@ -289,11 +301,11 @@ if ($_GET['domain']){
 			    $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
 			    if ($DOMAIN['disabled'] == '1'){
-				    $UPDATE = mysql_query("UPDATE records SET `disabled` = '0' WHERE `name` = '".$DOMAIN['name']."' ".$user_id,$db);
+				    $UPDATE  = mysql_query("UPDATE records SET `disabled` = '0' WHERE `name` = '".$DOMAIN['name']."' ".$user_id,$db);
 					$UPDATE2 = mysql_query("UPDATE records SET `disabled` = '0' WHERE `name` LIKE '%.".$DOMAIN['name']."' ".$user_id,$db);
 					
 					$soa_update = update_soa_serial_byid($DOMAIN['domain_id']);
-				
+
 					if ($UPDATE && $UPDATE2 && $soa_update){
 						echo "<h3>Your domain is now enabled.</h3>\n";
 					}else{

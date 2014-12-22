@@ -164,18 +164,21 @@ if ($_POST['action'] == "add" ) {
         if (!$DOMAIN['name']){
         	$errors['domain'] = "Missing domain";	
 		}else{
+			/*
 			$DOMAIN_parts = explode("." ,$DOMAIN['name']);
 			
 			$DOMAIN_parts[0] = false;
 			$TLD = implode(".", $DOMAIN_parts);
 			$TLD =  substr($TLD, 1);			
-			   echo $TLD;
+			*/
+			$TLD = getTLD($DOMAIN['name']);
 			//$TLD = $DOMAIN_parts[1];
 		}
     }
     
     $_POST['content'] = trim($_POST['content']);
-	if (!mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['content'])."' AND type = 'A' AND user_id > 0 ",$db))){
+    $NS_TLD = getTLD(mysql_escape_string($_POST['content']));
+    if ($NS_TLD && !mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['content'])."' AND type = 'A' AND user_id > 0 ",$db))){
 	    if ($DOMAIN['user_id'] == $_SESSION['admin_id']){
 	    	
 	    	$ns_part = explode(".", $_POST['content']);
@@ -242,18 +245,22 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
         if (!$DOMAIN['name']){
         	$errors['domain'] = "Missing domain";	
 		}else{
+			/*
 			$DOMAIN_parts = explode("." ,$DOMAIN['name']);
 			
 			$DOMAIN_parts[0] = false;
 			$TLD = implode(".", $DOMAIN_parts);
-			$TLD =  substr($TLD, 1);			
-			
+			$TLD =  substr($TLD, 1);
+			*/
+						
+			$TLD = getTLD($DOMAIN['name']);
 			//$TLD = $DOMAIN_parts[1];
 		} 
     }
     
     $_POST['content'] = trim($_POST['content']);
-	if (!mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['content'])."' AND type = 'A' AND user_id > 0 ",$db))){
+	$NS_TLD = getTLD(mysql_escape_string($_POST['content']));
+    if ($NS_TLD && !mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['content'])."' AND type = 'A' AND user_id > 0 ",$db))){
 	    if ($DOMAIN['user_id'] == $_SESSION['admin_id']){
 	    	
 	    	$ns_part = explode(".", $_POST['content']);
@@ -541,8 +548,10 @@ if ($_GET['action'] == "delete" && $_POST['id']){
                         <?if ($GLUE['content']){?>
                         <?if ($GLUE['user_id'] == $_SESSION['admin_id'] || $_SESSION['admin_level'] == 'admin'){?><a href="index.php?section=nameservers&action=edit&id=<?=$GLUE['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit this nameserver's Glue/A Record" ><img src="images/ico_edit_ns.png" align="absmiddle"></a> <?}?>
                         <strong class="blue" style="font-family: monospace">(<?=$GLUE['content'];?>)</strong>
-                        <?}else{?>
+                        <?}elseif(getTLD($LISTING['content'])){?>
                         <span class="red alert_ico"><strong>No Glue record found</strong></span>
+                        <?}else{?>
+                        <span class="blue"><strong>3rd Party TLD</strong></span>
                         <?}?>
                         <td align="center" nowrap="nowrap">
                             <a href="index.php?section=<?=$SECTION;?>&amp;action=edit&amp;id=<?=$LISTING['id'];?><?=$sort_vars;?><?=$search_vars;?><?=$d_vars;?>" title="Edit" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Edit</span></a>

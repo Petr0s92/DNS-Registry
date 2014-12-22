@@ -119,7 +119,6 @@ $SELECT_RESULTS  = mysql_query("SELECT `".$mysql_table."`.* FROM `".$mysql_table
 $url_vars = "action=".$_GET['action'] . $sort_vars . $search_vars;
 
 
-
 //ADD NEW RECORD
 if ($_POST['action'] == "add" ) {
     
@@ -132,7 +131,11 @@ if ($_POST['action'] == "add" ) {
         
         $SELECT_TLD = mysql_query("SELECT name, id FROM `tlds` WHERE `id` = '".mysql_escape_string($_POST['tld'])."' ",$db);
         $TLD = mysql_fetch_array($SELECT_TLD);
-        if (!$TLD['name']){
+        
+        $SELECT_TLD_ID = mysql_query("SELECT domain_id, name FROM `".$mysql_table."` WHERE name = '".$TLD['name']."' AND type = 'SOA' ",$db);
+        $TLDID = mysql_fetch_array($SELECT_TLD_ID);
+        
+        if (!$TLDID['name'] && !$TLDID['domain_id']){
         	$errors['tld'] = "Please choose a TLD.";	
 		}else{
 			$tld = ".".$TLD['name'];
@@ -164,7 +167,7 @@ if ($_POST['action'] == "add" ) {
     		$errors['namesever'.$i] = "Please enter a valid Nameserver ".$n.".";						
     	}else{
     		//check nameserver name
-		    if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns)."' AND type = 'A' AND user_id > 0 ",$db))){
+		    if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns)."' AND type = 'A' AND user_id > 0 ",$db)) || !getTLD(mysql_escape_string($ns)) ){
 			    //NS exists! We use this one!			    
 			    $nameserver[$i]['name'] = trim($ns);	
 			}else{
@@ -231,7 +234,7 @@ if ($_POST['action'] == "add" ) {
 	        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, user_id, domain_id, type, content, ttl, prio, change_date, disabled, auth, created) VALUES (      
 	            '" . mysql_escape_string($_POST['name'].$tld) . "',
 	            '" . mysql_escape_string($_POST['user_id']) . "',
-	            '".$TLD['id']."',
+	            '".$TLDID['domain_id']."',
 	            'NS',
 	            '".mysql_escape_string($nameserver[$i]['name'])."',
 	            '".$CONF['RECORDS_TTL']."',
@@ -252,7 +255,7 @@ if ($_POST['action'] == "add" ) {
 		            '" . mysql_escape_string($nameserver[$i]['name']) . "',
 		            '" . mysql_escape_string($nameserver[$i]['glue']) . "',
 		            'A',
-		            '".$TLD['id']."',
+		            '".$TLDID['domain_id']."',
 		            '".$CONF['RECORDS_TTL']."',
 		            '0',
 		            UNIX_TIMESTAMP(),
@@ -326,9 +329,10 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 	}
     
     $SELECT_DOMAIN = mysql_query("SELECT name, domain_id FROM `".$mysql_table."` WHERE id = '".$id."' ". $user_id, $db);
-    $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
     if (mysql_num_rows($SELECT_DOMAIN)){
+
+        $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
 	    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `disabled` = '".$option."' WHERE `name` = '".$DOMAIN['name']."' ".$user_id,$db);
 	    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `disabled` = '".$option."' WHERE `name` LIKE '%.".$DOMAIN['name']."' ".$user_id,$db);
@@ -352,7 +356,14 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 // FIND NAMESERVER GLUE
 if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
     $nameserver = addslashes($_POST['nameserver']);
-    
+
+    //Check if nameserver TLD belongs to us or a 3rd Party DNS Service
+    if (!getTLD($nameserver)){
+		ob_clean();
+	    echo "3rd Party TLD";
+	    exit();
+	}
+	    
     $SELECT_GLUE = mysql_query("SELECT content FROM `".$mysql_table."` WHERE name = '".$nameserver."' AND user_id > 0", $db);
     $GLUE = mysql_fetch_array($SELECT_GLUE);
 
@@ -560,12 +571,15 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 	                    }, function(response){
 	                        if (response){
 	                            $(field).val(response);
-	                            if( response.indexOf( "Enter IP" ) != -1 ){
+	                            if( response ==  "3rd Party TLD" ){
+	                            	$(field).addClass('input_disabled');									
+	                            	$(field).attr("disabled", true);									
+								}else if( response.indexOf( "Enter IP" ) != -1 ){
 	                            	$(field).removeClass('input_disabled');									
-	                            	//$(field).attr("disabled", false);									
-								}else{
+	                            	$(field).attr("disabled", false);									
+								}else {
 									$(field).addClass('input_disabled');
-									//$(field).attr("disabled", true);									
+									$(field).attr("disabled", true);									
 								}
 	                        }
 	                    });
@@ -629,12 +643,12 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                                 <select name="tld" id="tld" title="Select TLD" >
                                                     <option value="" selected="selected">--Select--</option>
 													<?
-													$SELECT_TLDs = mysql_query("SELECT name, `default` FROM tlds WHERE active ='1' ORDER BY name ASC", $db);
+													$SELECT_TLDs = mysql_query("SELECT name, `default`, `id` FROM tlds WHERE active ='1' ORDER BY name ASC", $db);
 													while ($TLDs = mysql_fetch_array($SELECT_TLDs)){
 														$SELECT_DOMAIN_ID = mysql_query("SELECT id FROM domains WHERE name = '".$TLDs['name']."' ", $db);
 														$DOMAIN_ID = mysql_fetch_array($SELECT_DOMAIN_ID);  
 													?>                                                    
-                                                    <option value="<?=$DOMAIN_ID['id'];?>"   <? if ($DOMAIN_ID['id'] && $_POST['tld'] == $DOMAIN_ID['id']){ echo "selected=\"selected\""; }elseif ($TLDs['default'] == '1'){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
+                                                    <option value="<?=$TLDs['id'];?>"   <? if ($DOMAIN_ID['id'] && $_POST['tld'] == $TLDs['id']){ echo "selected=\"selected\""; }elseif ($TLDs['default'] == '1'){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
 													<?}?>                                                    
                                                     
                                                 </select>
@@ -645,7 +659,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                             	<div id="InputsWrapper">
 												
 													<div>
-														<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name<br />Eg: ns1.domain.tld" value="<?if($_POST['nameserver'][0]){ echo $_POST['nameserver'][0]; }else{?>ns1.domain.tld<?}?>"/>
+														<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name<br />Eg: ns1.domain.tld" value="<?if($_POST['nameserver'][0]){ echo $_POST['nameserver'][0]; }else{?>ns1.domain.tld<?}?>" autocomplete="off" />
 														&nbsp; 
 														<?
 														//echo "<pre>";
@@ -696,6 +710,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 														IP: <input type="text" name="glue[]" id="glue" <?=$disabled;?> value="<?=$glue;?>"/>
 														<a href="javascript:void(0)" class="removeclass" title="Click here to remove this nameserver field"><img src="images/ico_remove.png" align="absmiddle"></a>
 														<br /><br />
+														
 													</div>
 													<?}}?> 
 													
@@ -835,13 +850,19 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 						  		                         		
                         		<tr>
                         			<?if ($NAMESERVERS['content']!='unconfigured' ){?>
-                        	    	<td nowrap="nowrap" align="right" width="60"><?if ($GLUE['user_id'] == $_SESSION['admin_id'] || $_SESSION['admin_level'] == 'admin'){?><a href="index.php?section=nameservers&action=edit&id=<?=$GLUE['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit this nameserver's Glue/A Record" ><img src="images/ico_edit_ns.png" align="absmiddle"></a> <?}?><strong>ns<?=$r?>:</strong></td>
+                        	    	<td nowrap="nowrap" align="right" width="60">
+                        	    		<?if ( ( $GLUE['user_id'] == $_SESSION['admin_id'] || $_SESSION['admin_level'] == 'admin') && getTLD($NAMESERVERS['content']) ){?>
+                        	    		<a href="index.php?section=nameservers&action=edit&id=<?=$GLUE['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit this nameserver's Glue/A Record" ><img src="images/ico_edit_ns.png" align="absmiddle"></a> 
+                        	    		<?}else{?>
+                        	    		<a href="javascript:void(0)" <?if (staff_help()){?>class="tip_south"<?}?> title="3rd Party TLD" ><img src="images/ico_arrow_up_left.png" align="absmiddle"></a>
+                        	    		<?}?> 
+                        	    		<strong>ns<?=$r?>:</strong></td>
                         	    	<?}?>
                         	    	<td nowrap="nowrap">
-										<?if ($NAMESERVERS['content']=='unconfigured'){?>
+										<?if ($NAMESERVERS['content']=='unconfigured' && getTLD($NAMESERVERS['content'])){?>
 										<span class="red alert_ico"><strong style="font-family: monospace"><a href="index.php?section=domain_ns&domain=<?=$LISTING['name'];?>&action=edit&id=<?=$NAMESERVERS['id'];?>" title="Configure this Domain's Nameserver" <?if (staff_help()){?>class="tip_south"<?}?> ><?=$NAMESERVERS['content'];?></a></strong></span>
 										<?}else{?>
-										<span class="<?if ($NAMESERVERS['content']=='unconfigured'){echo "red alert_ico";}else{ echo "blue";} ?>"><strong style="font-family: monospace"><?=$NAMESERVERS['content'];?></strong></span> <span class="small" style="font-family: monospace">(<?=$GLUE['content'];?>)</span>
+										<span class="<?if ($NAMESERVERS['content']=='unconfigured'){echo "red alert_ico";}else{ echo "blue";} ?>"><strong style="font-family: monospace"><?=$NAMESERVERS['content'];?></strong></span> <span class="small" style="font-family: monospace">(<?if (getTLD($NAMESERVERS['content'])){ echo $GLUE['content'];}else{ echo "3rd Party TLD";}?>)</span>
 										<?}?> 
 									</td>
                         	    </tr>
