@@ -164,11 +164,11 @@ if ($_GET['domain']){
 																				
 											echo "<img src='images/ico_valid.png' align='absmiddle' > <strong class='blue'>NS</strong> records check <strong class='green'>[OK]</strong><br /><br />\n";
 											
+											$glue_errors = array();
+											
 											//If NS records are TLD of ours, check Glue Records if needed
 											if ($OUR_TLD){
-																						
-												$glue_errors = array(); 
-								                
+											    
 												$SELECT_DOMAIN_NS_GLUES = mysql_query("SELECT content FROM records WHERE name = '".$d."' AND type = 'NS' ORDER BY content ASC", $db);
     											while($DOMAIN_NS_GLUES = mysql_fetch_array($SELECT_DOMAIN_NS_GLUES)){
     					                    
@@ -204,34 +204,40 @@ if ($_GET['domain']){
 														
 		                                            }
 		                                            
-												    //Set resolver nameserver IP to use for lookup
-													$resolver->nameservers = array($RESOLVER_IP);
-	                                                //echo $RESOLVER_IP . "<br>";
-												    // Get A records from nameserver
-    		                            			$response = $resolver->rawQuery($DOMAIN_NS_GLUES['content'], 'A');
-				                                    //echo "<pre>";
-													//print_r($response);
-													//echo "</pre>";
+												    //Skip check if A record is not under our TLDs
+												    
+												    if (getTLD($DOMAIN_NS_GLUES['content'])){
 													
-													$SELECT_NS_GLUE = mysql_query("SELECT content FROM records WHERE name = '".$DOMAIN_NS_GLUES['content']."' AND type = 'A' ", $db);
-													$NS_GLUE = mysql_fetch_array($SELECT_NS_GLUE);							
-													
-													if ($response->header->rcode != 'NXDOMAIN'){
-														if ($response->answer[0]->address == $NS_GLUE['content']){
-															echo "<img src='images/ico_valid.png' align='absmiddle' > Glue <strong class='blue'>".$NS_GLUE['content']."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong>  check <strong class='green'>[OK]</strong><br />\n";
+													    //Set resolver nameserver IP to use for lookup
+														$resolver->nameservers = array($RESOLVER_IP);
+		                                                //echo $RESOLVER_IP . "<br>";
+													    // Get A records from nameserver
+    		                            				$response = $resolver->rawQuery($DOMAIN_NS_GLUES['content'], 'A');
+					                                    //echo "<pre>";
+														//print_r($response);
+														//echo "</pre>";
+														
+														$SELECT_NS_GLUE = mysql_query("SELECT content FROM records WHERE name = '".$DOMAIN_NS_GLUES['content']."' AND type = 'A' ", $db);
+														$NS_GLUE = mysql_fetch_array($SELECT_NS_GLUE);							
+														
+														if ($response->header->rcode != 'NXDOMAIN'){
+															if ($response->answer[0]->address == $NS_GLUE['content']){
+																echo "<img src='images/ico_valid.png' align='absmiddle' > Glue <strong class='blue'>".$NS_GLUE['content']."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong>  check <strong class='green'>[OK]</strong><br />\n";
+															}else{
+																echo "<img src='images/ico_invalid.png' align='absmiddle' > Glue response: <strong class='red'>".$response->answer[0]->address."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong> does not match the glue record in registry (<strong class='blue'>".$NS_GLUE['content']."</strong>)<br />\n";
+																$glue_errors[] = true;
+															}
 														}else{
-															echo "<img src='images/ico_invalid.png' align='absmiddle' > Glue response: <strong class='red'>".$response->answer[0]->address."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong> does not match the glue record in registry (<strong class='blue'>".$NS_GLUE['content']."</strong>)<br />\n";
+															echo "<img src='images/ico_invalid.png' align='absmiddle' > Glue <strong class='blue'>".$NS_GLUE['content']."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong> does not exist (<strong class='red'>NXDOMAIN</strong>)<br />\n";
 															$glue_errors[] = true;
 														}
-													}else{
-														echo "<img src='images/ico_invalid.png' align='absmiddle' > Glue <strong class='blue'>".$NS_GLUE['content']."</strong> for A record <strong class='blue'>".$DOMAIN_NS_GLUES['content']."</strong> does not exist (<strong class='red'>NXDOMAIN</strong>)<br />\n";
-														$glue_errors[] = true;
-													}
-													
-													if ($RESOLVER_IP != $NS_IP['content']){
-													    echo "<span class='small' style='margin-left: 20px;'>(Authoritative NS for ".$DOMAIN_NS_GLUES['content']." > ".$RESOLVER_IP." - ".$RESOLVER_NAME.")</span><br /><br />\n";
-													}else{
-														echo "<br />\n";
+														
+														if ($RESOLVER_IP != $NS_IP['content']){
+														    echo "<span class='small' style='margin-left: 20px;'>(Authoritative NS for ".$DOMAIN_NS_GLUES['content']." > ".$RESOLVER_IP." - ".$RESOLVER_NAME.")</span><br /><br />\n";
+														}else{
+															echo "<br />\n";
+														}
+														
 													}
 												}
 											
