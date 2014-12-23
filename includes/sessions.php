@@ -45,7 +45,7 @@ session_set_save_handler('_open',
                          '_read',
                          '_write',
                          '_destroy',
-                         '_clean');
+                         '_gc');
 
 function _open(){
     global $db;
@@ -102,7 +102,7 @@ function _destroy($id){
     return mysql_query($sql, $db);
 }
 
-function _clean($max){
+function _gc($max){
     global $db;
     
     $old = time() - $max;
