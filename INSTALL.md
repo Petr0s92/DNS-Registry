@@ -8,16 +8,23 @@
 # Installation:
 
 First create a database and credentials to be used by PowerDNS and the DNS Registry Control Panel.
+
 Import the db_schema.sql schema into the newly created database.
+
 
 Copy all files to a web accessible directory. Eg: /dns
 
 Edit `includes/config.php.sample` and add the MySQL Credentials.
+
 Save as `config.php`
 
-Optional:
+
+*Optional:*
+
 Edit `dashboard.php.dist` to put your own 'welcome content' on the Dashboard page and save as `dashboard.php`
+
 Upload your custom logo in `./images/logo.custom.png` to replace the default logo. 
+
 
 ```
 Visit http://your_domain/dns
@@ -28,17 +35,22 @@ Password: admin
 
 After logging in you should go to 'Settings' section and edit all settings according to your needs.
 
+
 Then you need to add the 'Root Nameservers' with their TSIG Secret Keys.
+
 An easy way to generate a unique TSIG Key for each Root Nameserver is by running the following command on a linux terminal
 
 `dd if=/dev/random of=/dev/stdout count=1 bs=32 | base64`
 
 You then copy the last line of the output of the command above and use it as a TSIG Key.
 
+
 And finally you can add the TLDs that those Root Nameservers will serve.
 
 Now you need to configure powerdns
+
 Here's an example of the powerdns mysql backend configuration
+
 
 ```
 # Launch gmysql backend
@@ -55,6 +67,7 @@ gmysql-dnssec=yes
 
 gmysql-list-query-auth=select content,ttl,prio,type,domain_id,name, auth from records where domain_id='%d' and disabled != '1' order by name, type
 ```
+
 
 Then you need to configure your root nameservers (slaves) with the appropriate TSIG Keys.
 
