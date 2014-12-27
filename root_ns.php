@@ -299,7 +299,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                 <div id="main_content">
                 
                 <div class="mainsubtitle_bg">
-                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List TLDs</a> | <a href="javascript: void(0)" id="button" class="add"><span>Add New Root Nameserver</a></div>
+                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List Root Nameservers</a> | <a href="javascript: void(0)" id="button" class="add"><span>Add New Root Nameserver</a></div>
                 </div> 
                 
                 <br />
@@ -335,7 +335,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                         <div class="colx2-left">
                                             <p>
                                                 <label for="name" class="required">Root Nameserver Name</label>
-                                                <input type="text" name="name" id="name" title="Enter the TLD Name" value="<? if($_POST['name']){ echo $_POST['name']; } ?>">
+                                                <input type="text" name="name" id="name" title="Enter the Root Nameserver Name" value="<? if($_POST['name']){ echo $_POST['name']; } ?>">
                                             </p>
                                         </div>
                                         <div class="colx2-right">
@@ -382,7 +382,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom:15px; margin-top: 15px;">
                         <tr>
                             <td width="36%" height="30">
-                                <h3 style="margin:0"><?=$action_title;?> <? if ($q || $tld_type) { ?><span style="font-size:12px"> (<a href="index.php?section=<?=$SECTION;?>">x</a>)</span><? } ?></h3> 
+                                <h3 style="margin:0"><?=$action_title;?> <? if ($q) { ?><span style="font-size:12px"> (<a href="index.php?section=<?=$SECTION;?>">x</a>)</span><? } ?></h3> 
                             </td>
                             <td width="28%" align="center">
                                 <? if ($items_number) { ?>
