@@ -190,6 +190,8 @@ pre {
 #login_message { font-size:13px; color:#900 }
 #login_credits { width:300px; margin:0 auto; font-size:11px; text-align:right; height:30px; line-height:30px}
 
+#forgot_dialog { width:260px; margin:0 auto; display:none; }
+
 #access_denied { 
     width:300px; 
     margin:0 auto; 
@@ -274,6 +276,11 @@ pre {
 
 #navigation li.menu_tlds a span { 
     background: url(../images/nav_tlds.png) 5px center no-repeat; 
+    padding:0 5px 0 25px 
+}
+
+#navigation li.menu_root_ns a span { 
+    background: url(../images/nav_root_ns.png) 5px center no-repeat; 
     padding:0 5px 0 25px 
 }
 
@@ -397,6 +404,19 @@ pre {
 
 .maintitle_tlds {
     background: url(../images/nav_tlds.png) 8px center no-repeat; 
+    font-family: Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
+    font-size: 20px;
+    border:1px solid #dad7c8; 
+    border-radius: 5px;
+    -moz-border-radius: 5px; 
+    -webkit-border-radius: 5px; 
+    color:#686761; 
+    padding: 5px 5px 5px 28px;
+    
+}
+
+.maintitle_root_ns {
+    background: url(../images/nav_root_ns.png) 8px center no-repeat; 
     font-family: Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
     font-size: 20px;
     border:1px solid #dad7c8; 
@@ -723,9 +743,6 @@ p.notification_fail    { background:#faf9f6 url(../images/ico_inactive.png) 5px 
 
 .setns { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_setns.gif); width:16px; height:16px; }
 .setns span { display:none }                                                                                                                         
-
-.arrow_up_left { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_up_left.gif); width:16px; height:16px; }
-.arrow_up_left span { display:none }                                                                                                                         
 
 .alert_ico { display: inline-block; margin-left: 5px; padding-left:20px; background:url(../images/ico_alert.png) 0px center no-repeat; width:16px; height:16px; }
 

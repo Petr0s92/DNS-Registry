@@ -30,10 +30,10 @@ if ($_SESSION['admin_level'] != 'admin'){
 }
 
 //Define current page data
-$mysql_table = 'tlds';
-$sorting_array = array("id", "name", "active", "default");
+$mysql_table = 'root_ns';
+$sorting_array = array("id", "name", "active");
 
-$action_title = "All TLDs"; 
+$action_title = "All Root Nameservers"; 
     
 $search_vars = "";
     
@@ -42,7 +42,7 @@ if ($q) {
 	$search_vars .= "&q=$q"; 
 	$action_title = "Search: " . $q;
 }
-$search_query = "WHERE ($mysql_table.name LIKE '%$q%' OR $mysql_table.active LIKE '%$q%'  OR $mysql_table.default LIKE '%$q%' )";
+$search_query = "WHERE ($mysql_table.name LIKE '%$q%' OR $mysql_table.active LIKE '%$q%' )";
 
 
 // Sorting
@@ -107,6 +107,7 @@ $url_vars = "action=".$_GET['action'] . $sort_vars . $search_vars;
 
 
 
+
 //ADD NEW RECORD
 if ($_POST['action'] == "add" ) {
     
@@ -114,13 +115,19 @@ if ($_POST['action'] == "add" ) {
     
     $_POST['name'] = trim($_POST['name']);
     if (!preg_match("/^(?!-)^(?!\.)[a-z0-9-\.]{1,63}(?<!-)(?<!\.)$/", $_POST['name'])) {
-        $errors['name'] = "Please choose a TLD Name with 2 to 10 latin lowercase characters without numbers, spaces and symbols.";
+        $errors['name'] = "Please choose a Nameserver Name with 2 to 10 latin lowercase characters without numbers, spaces and symbols.";
     }else{
         
         if (mysql_num_rows(mysql_query("SELECT id FROM `".$mysql_table."` WHERE `name` = '".addslashes($_POST['name'])."' ",$db))){
-            $errors['name'] = "TLD is already in use." ;
+            $errors['name'] = "The nameserver is already registered on this system." ;
         } 
     }
+    
+    $_POST['tsig_key'] = trim($_POST['tsig_key']);
+    if (!$_POST['tsig_key']){
+		$errors['tsig_key'] = "You need to fill in a TSIG Key" ;		
+    }
+    
     
     if (count($errors) == 0) {
         
@@ -131,56 +138,7 @@ if ($_POST['action'] == "add" ) {
 
         if ($INSERT){
         	
-        	//So far so good. Now create the domain on powerdns tables
-			mysql_query("INSERT INTO `domains` (`name`, `type`) VALUES ('".addslashes($_POST['name'])."', 'MASTER')", $db);
-			$new_domain_id = mysql_insert_id($db);
-			$new_domain_time = time();
-			
-			//Insert SOA record
-			mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES (
-						'".$new_domain_id."', 
-						'".addslashes($_POST['name'])."', 
-						'SOA',
-						'".$CONF['DEFAULT_SOA']."',
-						'".$CONF['RECORDS_TTL']."',
-						'0',
-						'".$new_domain_time."',
-						NULL,
-						NULL,
-						'0',
-						'0',
-						'0'
-			)", $db);
-			
-			//Insert root NS records
-			$SELECT_ROOT_NS = mysql_query("SELECT `name` FROM `root_ns` WHERE `active` = '1' ORDER BY `name` ASC ", $db);
-			while($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
-				
-				mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES (
-							'".$new_domain_id."', 
-							'".addslashes($_POST['name'])."', 
-							'NS',
-							'".$ROOT_NS['name']."',
-							'".$CONF['RECORDS_TTL']."',
-							'0',
-							'".$new_domain_time."',
-							NULL,
-							NULL,
-							'0',
-							'0',
-							'0'
-				)", $db);
-
-				//Insert the NS TSIG records for AXFR				
-				mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
-							'".$new_domain_id."', 
-							'TSIG-ALLOW-AXFR',
-							'".$ROOT_NS['name']."'
-							
-				)", $db);
-				
-			}
-			        	
+        	mysql_query("INSERT INTO `tsigkeys` (name, algorithm, secret) VALUES ( '".addslashes($_POST['name'])."', 'hmac-md5', '".addslashes($_POST['tsig_key'])."' )", $db);
         	
             header("Location: index.php?section=".$SECTION."&saved_success=1");
             exit();
@@ -197,17 +155,10 @@ if ($_POST['action'] == "add" ) {
 if ($_GET['action'] == "delete" && $_POST['id']){
     $id = addslashes(str_replace ("tr-", "", $_POST['id']));
     
-    $SELECT_TLD_NAME = mysql_query("SELECT `name` FROM `tlds` WHERE id = '".$id."' ");
-    $TLD_NAME = mysql_fetch_array($SELECT_TLD_NAME);
-    
-    $SELECT_DOMAIN = mysql_query("SELECT `name`, `id` FROM `domains` WHERE name = '".$TLD_NAME['name']."' ");
-    $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
-    
-    
+    $SELECT_ROOT_NS = mysql_query("SELECT `name` FROM `root_ns` WHERE id = '".$id."' ");
+    $ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS);
     $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
-    $DELETE = mysql_query("DELETE FROM `domains` WHERE `id`= '".$DOMAIN['id']."' " ,$db);
-    $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `domain_id`= '".$DOMAIN['id']."' " ,$db);
-    $DELETE = mysql_query("DELETE FROM `records` WHERE `domain_id`= '".$DOMAIN['id']."' " ,$db);
+    $DELETE = mysql_query("DELETE FROM `tsigkeys` WHERE `name`= '".$ROOT_NS['name']."' " ,$db);
     
     if ($DELETE){
         ob_end_clean();
@@ -236,25 +187,6 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
     }
     exit();
 }
-
-// SET DEFAULT TLD
-if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'])){
-    $id = addslashes($_POST['id']);
-    $option = addslashes($_POST['option']);
-
-    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `default` = '".$option."' WHERE `id`= '".$id."'",$db);
-    
-    if ($UPDATE) {
-        //print_r($_GET);
-        ob_clean();
-        echo "ok";
-    }else{
-        ob_clean();
-        echo "An error has occured.";
-    }
-    exit();
-}
-
 
 ?>
 
@@ -292,13 +224,14 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                     <?if (staff_help()){?>
                     //TIPSY for the ADD Form
                     $('#name').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#tsig_key').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     <?}?>
                     
 
                     //DELETE RECORD
                     $('a.delete').click(function () {
                         var record_id = $(this).attr('rel');
-                        if(confirm('Are you sure you want to delete this record?\n\rThis action cannot be undone!\n\r\n\WARNING: This action will DELETE **ALL** related domains to this TLD!!!')){
+                        if(confirm('Are you sure you want to delete this record?\n\rThis action cannot be undone!\n\r\n\rNOTICE: Deleting a Root Nameserver will not update your TLDs\' already-configured nameservers!')){
                             $.post("index.php?section=<?=$SECTION;?>&action=delete", {
                                 id: record_id
                             }, function(response){
@@ -345,31 +278,6 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                         return false;
                     });
     
-                    
-                    //SET DEFAULT FLAG
-                    $('a.toggle_default').click(function () {
-                        if ($(this).hasClass('activated')){    
-                            var option = '0';
-                        } else if ($(this).hasClass('deactivated')){
-                            var option = '1';
-                        }
-                        var myItem = $(this);
-                        var record_id = $(this).attr('rel');
-                        $.post("index.php?section=<?=$SECTION;?>&action=toggle_default", {
-                            id: record_id,
-                            option: option
-                        }, function(response){
-	                        if (response == "ok"){
-	                            $(myItem).toggleClass('activated');
-	                            $(myItem).toggleClass('deactivated');
-	                        }else{
-	                            $("#notification_fail_response").html('An error occured.' );
-	                            $('.notification_fail').show();
-	                            //alert(response);
-	                        }
-                        });
-                        return false;
-                    });
     
     
                 //CLOSE THE NOTIFICATION BAR
@@ -386,12 +294,12 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
 
                 </script>
                 
-                <!-- TLDS SECTION START -->
+                <!-- ROOT NS SECTION START -->
 
                 <div id="main_content">
                 
                 <div class="mainsubtitle_bg">
-                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List TLDs</a> | <a href="javascript: void(0)" id="button" class="add"><span>Add New TLD</a></div>
+                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List TLDs</a> | <a href="javascript: void(0)" id="button" class="add"><span>Add New Root Nameserver</a></div>
                 </div> 
                 
                 <br />
@@ -410,7 +318,7 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                         
                     <div id="toggler">
                     
-                        <!-- ADD TLDS START -->
+                        <!-- ADD ROOT NS START -->
                         <? if (count($errors) > 0) { ?>
                             <div id="errors">
                                 <p>Please check:</p>
@@ -422,16 +330,19 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                         
                         <form id="form" method="post" action="index.php?section=<?=$SECTION;?>&action=add">
                             <fieldset>
-                                <legend>&raquo; New TLD</legend>
+                                <legend>&raquo; New Root Nameserver</legend>
                                      <div class="columns">
                                         <div class="colx2-left">
                                             <p>
-                                                <label for="name" class="required">TLD Name</label>
+                                                <label for="name" class="required">Root Nameserver Name</label>
                                                 <input type="text" name="name" id="name" title="Enter the TLD Name" value="<? if($_POST['name']){ echo $_POST['name']; } ?>">
                                             </p>
                                         </div>
                                         <div class="colx2-right">
-                                            
+                                            <p>
+                                                <label for="name" class="required">Root Nameserver TSIG Key</label>
+                                                <input type="text" name="tsig_key" id="tsig_key" title="Enter the TSIG Key" value="<? if($_POST['tsig_key']){ echo $_POST['tsig_key']; } ?>">
+                                            </p>
                                         </div>
                                      </div>
                            </fieldset>
@@ -443,7 +354,7 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                            </fieldset>
                         </form>                    
                         
-                        <!-- ADD TLDs END -->
+                        <!-- ADD ROOT NS END -->
                         
                         <br />
                         
@@ -451,17 +362,17 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                         
                     <div id="toggler2">
                       
-                    <!-- LIST TLDs START -->
+                    <!-- LIST ROOT NS START -->
                       
                       <fieldset>
                                 
-                          <legend>&raquo; TLDs List</legend>
+                          <legend>&raquo; Root Nameservers List</legend>
                         
                       <form name="search_form" action="index.php?section=<?=$SECTION;?>" method="get" class="search_form">
                         <input type="hidden" name="section" value="<?=$SECTION;?>" />
                         <table border="0" cellspacing="0" cellpadding="4">
                             <tr>
-                                <td>TLD Name:</td>
+                                <td>Root Nameserver Name:</td>
                                 <td><input type="text" name="q" id="search_field_q" class="input_field" value="<?=$q?>" /></td>
                                 <td><button type="submit"  >Search</button></td>
                             </tr>
@@ -486,8 +397,8 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                   
                       <table width="100%" border="0" cellspacing="2" cellpadding="5">
                       <tr>
-                        <th><?=create_sort_link("name","TLD Name");?></th>
-                        <th><?=create_sort_link("default","Default TLD");?></th>
+                        <th><?=create_sort_link("name","Root Nameserver Name");?></th>
+                        <th>TSIG Key</th>
                         <th><?=create_sort_link("active", "Active");?></th>
                         <th>Actions</th>
                       </tr>
@@ -495,13 +406,14 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                       <?
                       $i=-1;
                       while($LISTING = mysql_fetch_array($SELECT_RESULTS)){
-                      $i++;  
+                      	  $i++;
+                      	  $SELECT_TSIG = mysql_query("SELECT `secret` FROM `tsigkeys` WHERE `name` = '".$LISTING['name']."' ", $db );
+                      	  $TSIG = mysql_fetch_array($SELECT_TSIG);
+                      	    
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap><?=$LISTING['name'];?></td>
-                        <td align="center" >
-                            <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_default <? if ($LISTING['default'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Set Default TLD"><span>Set Default</span></a>
-                        </td>
+                        <td nowrap><?=$TSIG['secret'];?></td>
                         <td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
                         </td>
@@ -533,11 +445,11 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                     
                     </fieldset>
                     
-                    <!-- LIST TLDS END -->
+                    <!-- LIST ROOT NS END -->
                     
                     </div>
                         
                 </div>    
                 
-                <!-- TLDS SECTION END --> 
+                <!-- ROOT NS SECTION END --> 
                 

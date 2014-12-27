@@ -80,7 +80,7 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
         
         $INSERT = mysql_query("INSERT INTO `users` (username, password, email, nodeid, fullname, Admin_level, Help, active, registered) VALUES (      
             '" . mysql_real_escape_string($_POST['username']) . "',
-            '" . md5($_POST['password']) . "',
+            '" . sha1($_POST['password']) . "',
             '" . mysql_real_escape_string($_POST['email']) . "',
             '" . mysql_real_escape_string($_POST['nodeid']) . "',
             '" . mysql_real_escape_string($_POST['fullname']) . "',

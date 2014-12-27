@@ -30,7 +30,7 @@ $js_files = array(
 	'./jquery/jquery-migrate-1.1.1.js',
 	'./jquery/jquery-ui-1.8.7.custom.min.js',
 	'./jquery/tipsy/javascripts/jquery.tipsy.js',
-    './jquery/colorbox/jquery.colorbox-min.js',
+	'./jquery/colorbox/jquery.colorbox-min.js',
     './jquery/jquery.easing.1.2.js',
 );
 

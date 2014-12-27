@@ -133,14 +133,14 @@ $(function() {
         <?if ($CONF['REG_ALLOWED_IPS'] == 'any' || netMatch($CONF['REG_ALLOWED_IPS'], $_SERVER['REMOTE_ADDR'])){?>  
         <a href="register.php" id="login_message" style="padding-left:10px">Click here to register a new account</a>
         <?}?>
-        <div class="clr">&nbsp;</div>
-
+        <div class="clr">&nbsp;</div>       
+        
     </form>
     <div id="login_credits">
         <?=$CONF['CREDITS'];?>
     </div>
     
-    <div id="forgot_dialog" title="Did you forget your password?" style="display:none">
+    <div id="forgot_dialog" title="Did you forget your password?" >
         <p>If you lost your password contact the Administrator on this email: <br /><br /><a href="mailto:<?=$CONF['MAIL_SUPPORT']?>"><?=$CONF['MAIL_SUPPORT']?></a>.</p>
     </div>
     

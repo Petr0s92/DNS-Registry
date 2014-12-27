@@ -84,7 +84,7 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
             WHERE id= '" . addslashes($id) . "'",$db);
         
         if ($change_pass) {
-            $UPDATE_PASS = mysql_query("UPDATE `".$mysql_table."` SET password = '" . md5($_POST['password']) . "' WHERE id= '" . addslashes($id) . "'",$db);
+            $UPDATE_PASS = mysql_query("UPDATE `".$mysql_table."` SET password = '" . sha1($_POST['password']) . "' WHERE id= '" . addslashes($id) . "'",$db);
         }
         
         if ($UPDATE){

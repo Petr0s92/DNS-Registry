@@ -260,7 +260,7 @@ if ($_POST['action'] == "add" ) {
 		            '0',
 		            UNIX_TIMESTAMP(),
 		            UNIX_TIMESTAMP(),
-		            '".$_SESSION['admin_id']."',
+		            '".mysql_escape_string($_POST['user_id'])."',
 		            '0',
 		            '1'
 		        )", $db);
@@ -853,7 +853,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         	    	<td nowrap="nowrap" align="right" width="60">
                         	    		<?if ( ( $GLUE['user_id'] == $_SESSION['admin_id'] || $_SESSION['admin_level'] == 'admin') && getTLD($NAMESERVERS['content']) ){?>
                         	    		<a href="index.php?section=nameservers&action=edit&id=<?=$GLUE['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit this nameserver's Glue/A Record" ><img src="images/ico_edit_ns.png" align="absmiddle"></a> 
-                        	    		<?}else{?>
+                        	    		<?}elseif (!getTLD($NAMESERVERS['content'])){?>
                         	    		<a href="javascript:void(0)" <?if (staff_help()){?>class="tip_south"<?}?> title="3rd Party TLD" ><img src="images/ico_arrow_up_left.png" align="absmiddle"></a>
                         	    		<?}?> 
                         	    		<strong>ns<?=$r?>:</strong></td>

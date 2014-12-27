@@ -175,7 +175,7 @@ if ($_POST['action'] == "add" ) {
         
         $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (username, password, email, fullname, description, Admin_level, nodeid, Help, active, registered) VALUES (      
             '" . addslashes($_POST['username']) . "',
-            '" . md5($_POST['password']) . "',
+            '" . sha1($_POST['password']) . "',
             '" . addslashes($_POST['email']) . "',
             '" . addslashes($_POST['fullname']) . "',
             '" . addslashes($_POST['description']) . "',
@@ -256,7 +256,7 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
             WHERE id= '" . $_POST['id'] . "'",$db);
         
         if ($change_pass) {
-            $UPDATE_PASS = mysql_query("UPDATE `".$mysql_table."` SET password = '" . md5($_POST['password']) . "' WHERE id= '" . $_POST['id'] . "'",$db);
+            $UPDATE_PASS = mysql_query("UPDATE `".$mysql_table."` SET password = '" . sha1($_POST['password']) . "' WHERE id= '" . $_POST['id'] . "'",$db);
         }
         
         if ($UPDATE){

@@ -1,7 +1,3 @@
---
--- Table structure for table `cryptokeys`
---
-
 DROP TABLE IF EXISTS `cryptokeys`;
 CREATE TABLE IF NOT EXISTS `cryptokeys` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -9,14 +5,10 @@ CREATE TABLE IF NOT EXISTS `cryptokeys` (
   `flags` int(11) NOT NULL,
   `active` tinyint(1) DEFAULT NULL,
   `content` text,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `domainidindex` (`domain_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `domainmetadata`
---
 
 DROP TABLE IF EXISTS `domainmetadata`;
 CREATE TABLE IF NOT EXISTS `domainmetadata` (
@@ -24,14 +16,10 @@ CREATE TABLE IF NOT EXISTS `domainmetadata` (
   `domain_id` int(11) NOT NULL,
   `kind` varchar(16) DEFAULT NULL,
   `content` text,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `domainmetadata_idx` (`domain_id`, `kind`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `domains`
---
 
 DROP TABLE IF EXISTS `domains`;
 CREATE TABLE IF NOT EXISTS `domains` (
@@ -46,11 +34,6 @@ CREATE TABLE IF NOT EXISTS `domains` (
   UNIQUE KEY `name_index` (`name`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `records`
---
 
 DROP TABLE IF EXISTS `records`;
 CREATE TABLE IF NOT EXISTS `records` (
@@ -71,15 +54,22 @@ CREATE TABLE IF NOT EXISTS `records` (
   KEY `rec_name_index` (`name`),
   KEY `nametype_index` (`name`,`type`),
   KEY `domain_id` (`domain_id`),
-  KEY `orderindex` (`ordername`),
+  KEY `recordorder` (`domain_id`, `ordername`),
   KEY `user_id` (`created`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
--- --------------------------------------------------------
+ALTER TABLE `records` ADD CONSTRAINT `records_ibfk_1` FOREIGN KEY (`domain_id`) REFERENCES `domains` (`id`) ON DELETE CASCADE;
 
---
--- Table structure for table `sessions`
---
+DROP TABLE IF EXISTS `root_ns`;
+CREATE TABLE IF NOT EXISTS `root_ns` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `active` enum('1','0') NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_index` (`name`),
+  KEY `active` (`active`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
+
 
 DROP TABLE IF EXISTS `sessions`;
 CREATE TABLE IF NOT EXISTS `sessions` (
@@ -87,13 +77,8 @@ CREATE TABLE IF NOT EXISTS `sessions` (
   `access` int(10) unsigned DEFAULT NULL,
   `data` text,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `settings`
---
 
 DROP TABLE IF EXISTS `settings`;
 CREATE TABLE IF NOT EXISTS `settings` (
@@ -103,28 +88,22 @@ CREATE TABLE IF NOT EXISTS `settings` (
   `Description` varchar(100) NOT NULL,
   `Type` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=12 ;
 
 
 INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
-(1, 'MAIL_SUPPORT', 'hostmaster@your-domain.tld', 'Support Mail Address', 'general'),
+(1, 'MAIL_SUPPORT', 'contact@your-domain.tld', 'Support Mail Address', 'general'),
 (2, 'ADMIN_ITEMS_PER_PAGE', '100', 'Records per page', 'panel'),
-(3, 'APP_NAME', 'My DNS Registry', 'Application Name (custom branding)', 'general'),
-(4, 'APP_URL', 'https://your-domain.tld', 'Full URL to Control Panel (without trailing slash)', 'panel'),
-(5, 'COOKIE_NAME', 'mydnsregistry', 'Cookie name for panel', 'panel'),
+(3, 'APP_NAME', 'My Wireless Domains', 'Application Name (custom branding)', 'general'),
+(4, 'APP_URL', 'https://www.your-domain.tld/registry', 'Full URL to Control Panel (without trailing slash)', 'panel'),
+(5, 'COOKIE_NAME', 'mydomains', 'Cookie name for panel', 'panel'),
 (6, 'REG_ALLOWED_IPS', '10.0.0.0/8', 'Allowed IPs for open registration. Type ''any'' to allow all IPs.', 'panel'),
 (7, 'RECORDS_TTL', '86400', 'TTL Used for NS & A (glue) records in TLD zone.', 'general'),
 (8, 'DNS_VALIDATE_WAIT', '2', 'How long the domain validator should wait for a reply from the nameserver (seconds)', 'panel'),
 (9, 'DNS_VALIDATE_RETRY', '2', 'How many times the domain validator should try to get a reply from a nameserver', 'panel'),
-(10, 'PORTAL_URL', 'http://www.example.com', 'Full url to web portal', 'panel');
+(10, 'PORTAL_URL', 'https://www.your-domain.tld', 'Full url to web portal', 'panel'),
+(11, 'DEFAULT_SOA', 'ns1.your-domain.tld hostmaster.your-domain.tld 2014122201 21600 3600 3600000 120', 'Default SOA record for all new TLDs', 'panel');
 
-
-
--- --------------------------------------------------------
-
---
--- Table structure for table `supermasters`
---
 
 DROP TABLE IF EXISTS `supermasters`;
 CREATE TABLE IF NOT EXISTS `supermasters` (
@@ -133,11 +112,6 @@ CREATE TABLE IF NOT EXISTS `supermasters` (
   `account` varchar(40) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `tlds`
---
 
 DROP TABLE IF EXISTS `tlds`;
 CREATE TABLE IF NOT EXISTS `tlds` (
@@ -153,11 +127,6 @@ CREATE TABLE IF NOT EXISTS `tlds` (
   KEY `default` (`default`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `tsigkeys`
---
 
 DROP TABLE IF EXISTS `tsigkeys`;
 CREATE TABLE IF NOT EXISTS `tsigkeys` (
@@ -169,11 +138,6 @@ CREATE TABLE IF NOT EXISTS `tsigkeys` (
   UNIQUE KEY `namealgoindex` (`name`,`algorithm`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `users`
---
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE IF NOT EXISTS `users` (
@@ -194,14 +158,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `nodeid` int(10) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `Admin_level` (`Admin_level`,`Help`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
-
--- --------------------------------------------------------
-
-INSERT INTO `users` (`id`, `username`, `password`, `fullname`, `email`, `description`, `perm_templ`, `active`, `use_ldap`, `Admin_level`, `Help`
-) VALUES (
-	1, 'admin', '21232f297a57a5a743894a0e4a801fc3', 'Administrator', 'admin@example.net', 'Administrator with full rights.', 1, 1, 0, 'admin', '1'
-);
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
 
 
-ALTER TABLE `records` ADD CONSTRAINT `records_ibfk_1` FOREIGN KEY (`domain_id`) REFERENCES `domains` (`id`) ON DELETE CASCADE;
+INSERT INTO `users` (`id`, `username`, `password`, `fullname`, `email`, `description`, `perm_templ`, `active`, `use_ldap`, `Admin_level`, `Help`, `registered`, `last_login`, `last_ip`, `nodeid`) VALUES
+(1, 'admin', 'd033e22ae348aeb5660fc2140aec35850c4da997', 'Administrator - TLD Owner', 'admin@your-domain.tld', 'Administrator with full rights', 1, 1, 0, 'admin', '1', UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), '0.0.0.0', 1);

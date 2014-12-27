@@ -69,6 +69,7 @@ admin_auth();
 			<? 
 			if ($_SESSION['admin_level'] == 'admin'){
 			?><li class="menu_tlds"><a href="index.php?section=tlds" title="Managed allowed TLDs" <? if ($SECTION=='tlds' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='tlds' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='tlds' && staff_help()){?>class="tip_south"<?}?> ><span>TLDs</span></a></li>
+			<li class="menu_root_ns"><a href="index.php?section=root_ns" title="Manage Root Nameservers" <? if ($SECTION=='root_ns' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='root_ns' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='root_ns' && staff_help()){?>class="tip_south"<?}?> ><span>Root Nameservers</span></a></li>
 			<li class="menu_users"><a href="index.php?section=users" title="Manage Users" <? if ($SECTION=='users' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='users' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='users' && staff_help()){?>class="tip_south"<?}?> ><span>Users</span></a></li>
 			<li class="menu_settings"><a href="index.php?section=settings" title="Manage system settings" <? if ($SECTION=='settings' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='settings' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='settings' && staff_help()){?>class="tip_south"<?}?> ><span>Settings</span></a></li>
 			<?
@@ -157,7 +158,11 @@ admin_auth();
 					<?
 					// LOAD THE APPROPRIATE SECTION 
 					if (!$SECTION){
-						include "dashboard.php";
+						if (file_exists('dashboard.php')) {
+							include "dashboard.php";
+						}else{
+							include "dashboard.php.dist";
+						}
 					}
 
 					if ($SECTION && preg_match('!^[\w @.-]*$!', $SECTION)) {

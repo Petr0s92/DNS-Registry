@@ -65,6 +65,9 @@ if (isset($SECTION) && $SECTION == 'domains'){
 }elseif (isset($SECTION) && $SECTION == 'tlds'){
     $maintitle_class = 'maintitle_tlds';
     $maintitle_title = 'Allowed Top Level Domains (TLDs)';
+}elseif (isset($SECTION) && $SECTION == 'root_ns'){
+    $maintitle_class = 'maintitle_root_ns';
+    $maintitle_title = 'Root Nameservers for TLDs';
 }elseif (isset($SECTION) && $SECTION == 'users'){
     $maintitle_class = 'maintitle_users';
     $maintitle_title = 'User Management';
@@ -100,7 +103,7 @@ function admin_create_sessions($id,$username,$password,$remember, $help, $level,
     //session_register();
     $_SESSION['admin_id'] = $id;
     $_SESSION['admin_username'] = $username;
-    $_SESSION['admin_md5part'] = substr(md5($password),0,10);
+    $_SESSION['admin_sha1part'] = substr(sha1($password),0,10);
     $_SESSION['admin_help'] = $help;
     $_SESSION['admin_level'] = $level;
     
@@ -109,7 +112,7 @@ function admin_create_sessions($id,$username,$password,$remember, $help, $level,
     }
     	    
     if(isset($remember)){
-        setcookie($CONF['COOKIE_NAME'], $_SESSION['admin_id'] . "||" . $_SESSION['admin_username']  ."||" . $_SESSION['admin_md5part']. "||" . $_SESSION['admin_help'], time()+60*60*24*15, "/");
+        setcookie($CONF['COOKIE_NAME'], $_SESSION['admin_id'] . "||" . $_SESSION['admin_username']  ."||" . $_SESSION['admin_sha1part']. "||" . $_SESSION['admin_help'], time()+60*60*24*15, "/");
         return;
     }
 }
@@ -118,9 +121,9 @@ function admin_create_sessions($id,$username,$password,$remember, $help, $level,
 function admin_login($username,$password,$remember){
     global $db;
         
-    $md5pass = md5($password);
+    $sha1pass = sha1($password);
     $username = mysql_real_escape_string($username);
-    $USER_SELECT = @mysql_query("SELECT * FROM `users` WHERE username='".addslashes($username)."' AND password='".addslashes($md5pass)."' AND active='1' LIMIT 1",$db);
+    $USER_SELECT = @mysql_query("SELECT * FROM `users` WHERE username='".addslashes($username)."' AND password='".addslashes($sha1pass)."' AND active='1' LIMIT 1",$db);
     $user_check = @mysql_num_rows($USER_SELECT);     
 
     if ($user_check) { 
@@ -144,7 +147,7 @@ function admin_logout(){
 function admin_logged(){
     global $db, $CONF;
 
-    if(isset($_SESSION['admin_username']) && isset($_SESSION['admin_md5part'])) {
+    if(isset($_SESSION['admin_username']) && isset($_SESSION['admin_sha1part'])) {
         $USER_SELECT = @mysql_query("SELECT * FROM `users` WHERE id='".$_SESSION['admin_id']."' AND username='".$_SESSION['admin_username']."' AND active='1' LIMIT 1",$db);
         $USER_CHECK = @mysql_num_rows($USER_SELECT);
         if ($USER_CHECK) {
@@ -159,7 +162,7 @@ function admin_logged(){
         $USER_CHECK = @mysql_num_rows($USER_SELECT);
         if ($USER_CHECK) {
             $USER = @mysql_fetch_array($USER_SELECT);
-            if (substr(md5($USER['password']),0,10) == $cookie[2]) {
+            if (substr(sha1($USER['password']),0,10) == $cookie[2]) {
                 admin_create_sessions($USER['id'], $USER['username'], $USER['password'], 1, $USER['Help'], $USER['Admin_level']);
                 return true;
             }
