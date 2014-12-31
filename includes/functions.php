@@ -42,9 +42,11 @@ while ($SETTINGS = mysql_fetch_array($SELECT_SETTINGS)){
 $CONF['CREDITS'] = "<a href=\"https://github.com/Cha0sgr/DNS-Registry\" target=\"_blank\">DNS Registry Control Panel</a> &copy; ". date("Y");
 
 //Start gzip compression & session
-require ("sessions.php");
-ob_start();
-session_start();
+if(php_sapi_name() != "cli" && stristr($_SERVER['PHP_SELF'], "js.php") == FALSE  && stristr($_SERVER['PHP_SELF'], "css.php") == FALSE ) {
+	require ("sessions.php");
+	ob_start();
+	session_start();
+}
 
 
 //Set global var $SECTION

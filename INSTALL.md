@@ -4,6 +4,7 @@
 * PHP 5.2+
 * MySQL 5+
 * PEAR Net_DNS 1.0.7
+* PEAR System_Daemon 1.0.0
 
 # Installation:
 

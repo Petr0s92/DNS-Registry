@@ -102,7 +102,9 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (8, 'DNS_VALIDATE_WAIT', '2', 'How long the domain validator should wait for a reply from the nameserver (seconds)', 'panel'),
 (9, 'DNS_VALIDATE_RETRY', '2', 'How many times the domain validator should try to get a reply from a nameserver', 'panel'),
 (10, 'PORTAL_URL', 'https://www.your-domain.tld', 'Full url to web portal', 'panel'),
-(11, 'DEFAULT_SOA', 'ns1.your-domain.tld hostmaster.your-domain.tld 2014122201 21600 3600 3600000 120', 'Default SOA record for all new TLDs', 'panel');
+(11, 'DEFAULT_SOA', 'ns1.your-domain.tld hostmaster.your-domain.tld 2014122201 21600 3600 3600000 120', 'Default SOA record for all new TLDs', 'panel'),
+(12, 'WHOIS_USER', 'nobody', 'User under which the WHOIS Server will run.', 'general'),
+(13, 'WHOIS_URL', 'https://www.your-domain.tld', 'Webbased Whois URL.', 'general');
 
 
 DROP TABLE IF EXISTS `supermasters`;
