@@ -31,6 +31,8 @@ if( ! extension_loaded('pcntl' ) ) {
 	exit(-1);
 }
 
+error_reporting(E_STRICT);
+
 // Include required libraries
 require(dirname(__FILE__)."/includes/supersocket.class.php");
 require("System/Daemon.php");
