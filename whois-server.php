@@ -37,38 +37,38 @@ require("System/Daemon.php");
 
 // Allowed arguments & their defaults
 $runmode = array(
-    'no-daemon' => false,
-    'help' => false,
-    'write-initd' => false,
+	'no-daemon' => false,
+	'help' => false,
+	'write-initd' => false,
 );
 
 // Scan command line attributes for allowed arguments
 foreach ($argv as $k=>$arg) {
-    if (substr($arg, 0, 2) == '--' && isset($runmode[substr($arg, 2)])) {
-        $runmode[substr($arg, 2)] = true;
-    }
+	if (substr($arg, 0, 2) == '--' && isset($runmode[substr($arg, 2)])) {
+		$runmode[substr($arg, 2)] = true;
+	}
 }
 
 // Help mode. Shows allowed argumentents and quit directly
 if ($runmode['help'] == true) {
-    echo 'Usage: '.$argv[0].' [runmode]' . "\n";
-    echo 'Available runmodes:' . "\n";
-    foreach ($runmode as $runmod=>$val) {
-        echo ' --'.$runmod . "\n";
-    }
-    die();
+	echo 'Usage: '.$argv[0].' [runmode]' . "\n";
+	echo 'Available runmodes:' . "\n";
+	foreach ($runmode as $runmod=>$val) {
+		echo ' --'.$runmod . "\n";
+	}
+	die();
 }
 
 // Setup
 $options = array(
-    'appName' => 'whoisd',
-    'appDir' => dirname(__FILE__),
-    'appDescription' => "DNS Registry Panel - WHOIS Server",
-    'authorName' => 'Vaggelis Koutroumpas',
-    'authorEmail' => 'vaggelis@koutroumpas.gr',
-    'sysMaxExecutionTime' => '0',
-    'sysMaxInputTime' => '0',
-    'sysMemoryLimit' => '128M'
+	'appName' => 'whoisd',
+	'appDir' => dirname(__FILE__),
+	'appDescription' => "DNS Registry Panel - WHOIS Server",
+	'authorName' => 'Vaggelis Koutroumpas',
+	'authorEmail' => 'vaggelis@koutroumpas.gr',
+	'sysMaxExecutionTime' => '0',
+	'sysMaxInputTime' => '0',
+	'sysMemoryLimit' => '128M'
 );
 
 // Set setup options
@@ -76,24 +76,21 @@ System_Daemon::setOptions($options);
 
 // This program can also be run in the forground with runmode --no-daemon
 if (!$runmode['no-daemon']) {
-    // Spawn Daemon
-    System_Daemon::start();
+	// Spawn Daemon
+	System_Daemon::start();
 }
 
 // With the runmode --write-initd, this program can automatically write a
 // system startup file called: 'init.d'
 // This will make sure your daemon will be started on reboot
 if (!$runmode['write-initd']) {
-    //System_Daemon::info('not writing an init.d script this time');
+	//System_Daemon::info('not writing an init.d script this time');
 } else {
-    if (($initd_location = System_Daemon::writeAutoRun()) === false) {
-        System_Daemon::notice('unable to write init.d script');
-    } else {
-        System_Daemon::info(
-            'sucessfully written startup script: %s',
-            $initd_location
-        );
-    }
+	if (($initd_location = System_Daemon::writeAutoRun()) === false) {
+		System_Daemon::notice('unable to write init.d script');
+	} else {
+		System_Daemon::info( 'sucessfully written startup script: %s', $initd_location );
+	}
 }
 
 
@@ -114,13 +111,13 @@ function whois_reply($socket_id, $channel_id, $buffer, &$obj){
 		$SELECT_OWNER = mysql_query("SELECT username FROM users WHERE id = '".$DOMAIN['user_id']."' ", $db);
 		$OWNER = mysql_fetch_array($SELECT_OWNER);
 		        
-        $whois_reply  = "% DNS Registry WHOIS Server for ".$CONF['APP_NAME']." (c)2014-".date("Y")."\n\r";
-        $whois_reply .= "% For more information regarding this WHOIS service please visit ".$CONF['WHOIS_URL']."\n\r";
-        $whois_reply .= "% \n\r";
-        
-        $whois_reply .= "% WHOIS ".$DOMAIN_lookup."\n\r";
-        $whois_reply .= "% \n\r";
-        $whois_reply .= "\n\r";
+		$whois_reply  = "% DNS Registry WHOIS Server for ".$CONF['APP_NAME']." (c)2014-".date("Y")."\n\r";
+		$whois_reply .= "% For more information regarding this WHOIS service please visit ".$CONF['WHOIS_URL']."\n\r";
+		$whois_reply .= "% \n\r";
+
+		$whois_reply .= "% WHOIS ".$DOMAIN_lookup."\n\r";
+		$whois_reply .= "% \n\r";
+		$whois_reply .= "\n\r";
         
         if (mysql_num_rows($SELECT_DOMAIN)){
         	
@@ -146,8 +143,8 @@ function whois_reply($socket_id, $channel_id, $buffer, &$obj){
 	        
 		}else{
 			
-	        $whois_reply .= "Domain ".$DOMAIN_lookup." is not registered.\n\r";
-	        $whois_reply .= "\n\r";
+			$whois_reply .= "Domain ".$DOMAIN_lookup." is not registered.\n\r";
+			$whois_reply .= "\n\r";
 			
 		}
         
