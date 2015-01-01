@@ -103,8 +103,13 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (9, 'DNS_VALIDATE_RETRY', '2', 'How many times the domain validator should try to get a reply from a nameserver', 'panel'),
 (10, 'PORTAL_URL', 'https://www.your-domain.tld', 'Full url to web portal', 'panel'),
 (11, 'DEFAULT_SOA', 'ns1.your-domain.tld hostmaster.your-domain.tld 2014122201 21600 3600 3600000 120', 'Default SOA record for all new TLDs', 'panel'),
-(12, 'WHOIS_USER', 'nobody', 'User under which the WHOIS Server will run.', 'general'),
-(13, 'WHOIS_URL', 'https://www.your-domain.tld', 'Webbased Whois URL.', 'general');
+(12, 'WHOIS_USER', 'nobody', 'User under which the WHOIS Server will run.', 'whois'),
+(13, 'WHOIS_URL', 'https://www.your-domain.tld', 'Webbased Whois URL.', 'whois'),
+(14, 'WHOIS_PORT', '43', 'Whois server port. Default: 43', 'whois'),
+(15, 'WHOIS_ADDRESS', '0', 'Whois server address. Set to 0 to listen to all system addresses.', 'whois'),
+(16, 'WHOIS_MAXLENGTH', '256', 'Maximum number of characters the whois server will accept.', 'whois'),
+(17, 'WHOIS_LISTENQ', '10', 'Whois server listen queue.', 'whois'),
+(18, 'WHOIS_MAXCONN', '100', 'Whois server maximum concurrent connections.', 'whois');
 
 
 DROP TABLE IF EXISTS `supermasters`;
