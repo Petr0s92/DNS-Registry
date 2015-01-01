@@ -99,12 +99,12 @@ function handle_client($allclient, $socket, $buf) {
 	//Domain exists, prepare reply
 	if (mysql_num_rows($SELECT_DOMAIN)){
 
-		$whois_reply .= "Domain ".$DOMAIN_lookup." \n";
+		$whois_reply .= "Domain: ".$DOMAIN_lookup." \n";
 		$whois_reply .= "\n";
-		$whois_reply .= "Registration Date \n";
+		$whois_reply .= "Registration Date: \n";
 		$whois_reply .= "\t".date("d-m-Y g:i a",$DOMAIN['created'])."\n";
 		$whois_reply .= "\n";
-		$whois_reply .= "Updated Date \n";
+		$whois_reply .= "Updated Date: \n";
 		$whois_reply .= "\t".date("d-m-Y g:i a",$DOMAIN['change_date'])."\n";
 		$whois_reply .= "\n";
 		$whois_reply .= "Registrant:\n";

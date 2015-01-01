@@ -1,0 +1,79 @@
+#!/bin/bash
+#
+# /etc/rc.d/init.d/whoisd
+#
+# chkconfig: - 99 0
+# description: DNS Registry Panel - WHOIS Server
+# processname: whois-server.php
+# pidfile: /var/run/whoisd/whoisd.pid
+PID_FILE=/var/run/whoisd/whoisd.pid
+BIN_FILE=/var/www/html/dns/whois-server.php
+
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+start() {
+    ${BIN_FILE}
+    ret=$?
+    if [ $ret -eq 0 ]; then
+        action $"Starting whoisd: " /bin/true
+    else
+        action $"Starting whoisd: " /bin/false
+    fi
+
+    return $ret
+}
+
+stop() {
+    PID=`cat /var/run/whoisd/whoisd.pid  2>/dev/null `
+    if [ -n "$PID" ]; then
+        /bin/kill -0 "$PID" >/dev/null 2>&1
+        ret=$?
+        if [ $ret -eq 0 ]; then
+            STOPTIMEOUT=60
+            while [ $STOPTIMEOUT -gt 0 ]; do
+                /bin/kill "$PID" >/dev/null 2>&1 || break
+                sleep 1
+                let STOPTIMEOUT=${STOPTIMEOUT}-1
+            done
+            if [ $STOPTIMEOUT -eq 0 ]; then
+                echo "Timeout error occurred trying to stop whoisd."
+                ret=1
+                action $"Stopping whoisd: " /bin/false
+            else
+                action $"Stopping whoisd: " /bin/true
+            fi
+        else
+            action $"Stopping whoisd: " /bin/false
+        fi
+    else
+        ret=1
+        action $"Stopping whoisd: " /bin/false
+    fi
+
+    return $ret
+}
+
+case "$1" in
+    start)
+        start
+    ;;
+    stop)
+        stop
+    ;;
+    restart)
+        stop
+        start
+    ;;
+    reload)
+        restart
+    ;;
+    status)
+        status whoisd
+    ;;
+    *)
+        echo "Usage: whoisd [start|stop|restart|status]"
+        exit 1
+    ;;
+esac
