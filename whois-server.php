@@ -62,6 +62,8 @@ System_Daemon::start();
 require_once(dirname(__FILE__)."/includes/config.php");
 require_once(dirname(__FILE__)."/includes/functions.php");
 
+//Close initial MySQL connection
+mysql_close($db);
 
 // handle client disconnect
 function closeClient($i){
@@ -74,7 +76,11 @@ function closeClient($i){
 
 //Send results to client
 function handle_client($allclient, $socket, $buf) {
-	global $db, $CONF;
+	global $CONF;
+	
+	//MySQL Connection script
+	$db = @mysql_connect( $CONF['db_host'], $CONF['db_user'], $CONF['db_pass'] );
+	@mysql_select_db($CONF['db'],$db);	
 
 	$DOMAIN_lookup = trim($buf);
 
@@ -114,7 +120,7 @@ function handle_client($allclient, $socket, $buf) {
 		$whois_reply .= "Name Servers:\n";
 
 		//Select domain nameservers
-		$SELECT_NS = mysql_query("SELECT content FROM records WHERE name = '".$DOMAIN_lookup."' AND type='NS' ORDER BY content ASC", $db);
+		$SELECT_NS = mysql_query("SELECT content FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND type='NS' ORDER BY content ASC", $db);
 		while ($NS = mysql_fetch_array($SELECT_NS)){
 			$whois_reply .= "\t".$NS['content']."\n";
 		}
@@ -134,6 +140,9 @@ function handle_client($allclient, $socket, $buf) {
 
 	// Send the reply to client
 	socket_write($allclient[$socket], $whois_reply, strlen($whois_reply));
+	
+	//Terminate MySQL connection
+	mysql_close($db);
 
 }
 
