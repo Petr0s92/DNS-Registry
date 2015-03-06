@@ -109,7 +109,8 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (15, 'WHOIS_ADDRESS', '0', 'Whois server address. Set to 0 to listen to all system addresses.', 'whois'),
 (16, 'WHOIS_MAXLENGTH', '256', 'Maximum number of characters the whois server will accept.', 'whois'),
 (17, 'WHOIS_LISTENQ', '10', 'Whois server listen queue.', 'whois'),
-(18, 'WHOIS_MAXCONN', '100', 'Whois server maximum concurrent connections.', 'whois');
+(18, 'WHOIS_MAXCONN', '100', 'Whois server maximum concurrent connections.', 'whois'),
+(19, 'META_SLAVE_PORT', '5353', 'Port for Meta-Slave', 'panel');
 
 
 DROP TABLE IF EXISTS `supermasters`;

@@ -353,7 +353,15 @@ if ($_POST['action'] == "add" ) {
 							
 				)", $db);
 				
-    			if (!$INSERT_TSIG){
+    			//Insert the ALSO-NOTIFY records to notify meta-slaves for automatic provision of the new zone on the slaves. 				
+				$INSERT_METASLAVE = mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
+							'".$new_domain_id."', 
+							'ALSO-NOTIFY',
+							'".$ROOT_NS['name'].":".$CONF['META_SLAVE_PORT']."'
+							
+				)", $db);
+				
+				if (!$INSERT_TSIG){
 					$insert_errors[] = true;
 		        }
 		        
@@ -969,8 +977,12 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                       $i++;
                       
 					  if ($_SESSION['admin_level'] == 'admin'){
-					  	$SELECT_DOMAIN_USER = mysql_query("SELECT username, id FROM users WHERE id = '".$LISTING['user_id']."' ", $db);
-					  	$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
+					  	  if ($LISTING['user_id'] == 0){
+						  	$DOMAIN_USER['username'] = 'System';
+					  	  }else{
+					  	  	$SELECT_DOMAIN_USER = mysql_query("SELECT username, id FROM users WHERE id = '".$LISTING['user_id']."' ", $db);
+					  	  	$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
+						  }
 					  }
 					  
 					  $SELECT_ISHOSTED = mysql_query("SELECT id FROM domains WHERE name = '".$LISTING['name']."' ", $db);
@@ -1055,7 +1067,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         <?}?>
                         </td>
                         <?if ($_SESSION['admin_level'] == 'admin'){?>
-                        <td align="center" nowrap><a href="index.php?section=users&action=edit&id=<?=$LISTING['user_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="View User details"><?=$DOMAIN_USER['username'];?></a></td>
+                        <td align="center" nowrap><?if ($LISTING['user_id'] > 0){?><a href="index.php?section=users&action=edit&id=<?=$LISTING['user_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="View User details"><?}?><?=$DOMAIN_USER['username'];?><?if ($LISTING['user_id'] > 0){?></a><?}?></td>
                         <?}?>
                         <td align="center" nowrap="nowrap">
                             <?if (!$ISHOSTED){?>
