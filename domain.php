@@ -158,74 +158,65 @@ if ($_POST['action'] == "add" ) {
     	}
     }
     
-    if ($_POST['hosted'] == "nohosted"){ 
-    
-	    //CHECK NAMESERVERS
-	    for ($i = 0; $i <= count($_POST['nameserver'])-1; $i++) {
-    		$ns = trim($_POST['nameserver'][$i]);	
-    		$glue = trim($_POST['glue'][$i]);	
-    		$n = $i+1;
-			if (!$ns){
-    			$errors['namesever'.$i] = "Please enter a valid Nameserver ".$n.".";						
-    		}else{
-    			//check nameserver name
-			    if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns)."' AND type = 'A' AND user_id > 0 ",$db)) || !getTLD(mysql_escape_string($ns)) ){
-				    //NS exists! We use this one!			    
-				    $nameserver[$i]['name'] = trim($ns);	
-				}else{
+    //CHECK NAMESERVERS
+    for ($i = 0; $i <= count($_POST['nameserver'])-1; $i++) {
+    	$ns = trim($_POST['nameserver'][$i]);	
+    	$glue = trim($_POST['glue'][$i]);	
+    	$n = $i+1;
+		if (!$ns){
+    		$errors['namesever'.$i] = "Please enter a valid Nameserver ".$n.".";						
+    	}else{
+    		//check nameserver name
+		    if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns)."' AND type = 'A' AND user_id > 0 ",$db)) || !getTLD(mysql_escape_string($ns)) ){
+			    //NS exists! We use this one!			    
+			    $nameserver[$i]['name'] = trim($ns);	
+			}else{
 
-					//Check if the nameserver to be created is under a domain the user owns or under the newly created domain
-					$new_domain = ".".$_POST['name'] . $tld;
-					//echo $new_domain;
-					$ns_domain_parts = explode(".", $ns);
-					//print_r($ns_domain_parts);
-					$ns_domain_parts[0] = false;
-					$ns_domain = implode(".", $ns_domain_parts);
-					$ns_domain = substr($ns_domain, 1);												
-					//$ns_domain_parts = array_reverse($ns_domain_parts);
-					//$ns_domain = $ns_domain_parts[1] . "." . $ns_domain_parts[0] . $tld;
-					//echo $ns_domain;				
-					if ( stristr($ns. $tld, $new_domain ) || 
-						mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns_domain)."' AND type = 'NS' " . $user_id ,$db))
-					) {
-						//NS does not exist - so we check the A record to add them later on
-						if ($glue){
-    						//check nameserver ip/glue
-						    if(filter_var($glue, FILTER_VALIDATE_IP)){
-								if ( ip2long($glue) <= ip2long("10.255.255.255") && ip2long("10.0.0.0") <=  ip2long($glue) )  {
-									//IP VALIDATED! We prepare arrays for the new nameserver/glue record insert
-									$nameserver[$i]['name'] = trim($ns);	
-									$nameserver[$i]['glue'] = trim($glue);
-																						
-								}else{
-									$errors['glue'.$i] = "The Nameserver ".$n." IP you entered is not valid.";	
-								}	
+				//Check if the nameserver to be created is under a domain the user owns or under the newly created domain
+				$new_domain = ".".$_POST['name'] . $tld;
+				//echo $new_domain;
+				$ns_domain_parts = explode(".", $ns);
+				//print_r($ns_domain_parts);
+				$ns_domain_parts[0] = false;
+				$ns_domain = implode(".", $ns_domain_parts);
+				$ns_domain = substr($ns_domain, 1);												
+				//$ns_domain_parts = array_reverse($ns_domain_parts);
+				//$ns_domain = $ns_domain_parts[1] . "." . $ns_domain_parts[0] . $tld;
+				//echo $ns_domain;				
+				if ( stristr($ns. $tld, $new_domain ) || 
+					mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns_domain)."' AND type = 'NS' " . $user_id ,$db))
+				) {
+					//NS does not exist - so we check the A record to add them later on
+					if ($glue){
+    					//check nameserver ip/glue
+					    if(filter_var($glue, FILTER_VALIDATE_IP)){
+							if ( ip2long($glue) <= ip2long("10.255.255.255") && ip2long("10.0.0.0") <=  ip2long($glue) )  {
+								//IP VALIDATED! We prepare arrays for the new nameserver/glue record insert
+								$nameserver[$i]['name'] = trim($ns);	
+								$nameserver[$i]['glue'] = trim($glue);
+																					
 							}else{
 								$errors['glue'.$i] = "The Nameserver ".$n." IP you entered is not valid.";	
-							}        
-    					}else{
-							$n = $i+1;
-							$errors['glue'.$i] = "Please enter a valid Nameserver ".$n." IP.";						
-						}				
-					}else{
+							}	
+						}else{
+							$errors['glue'.$i] = "The Nameserver ".$n." IP you entered is not valid.";	
+						}        
+    				}else{
 						$n = $i+1;
-						$errors['namesever'.$i] = "Nameserver ".$n." parent domain is not owned by you. Cannot create Glue Record";						
-    				}
-				}    	    		
-    		}
+						$errors['glue'.$i] = "Please enter a valid Nameserver ".$n." IP.";						
+					}				
+				}else{
+					$n = $i+1;
+					$errors['namesever'.$i] = "Nameserver ".$n." parent domain is not owned by you. Cannot create Glue Record";						
+    			}
+			}    	    		
+    	}
 
-		}
-		
-		//echo "<pre>";	
-		//print_r($nameserver);	    
-		//echo "</pre>";	    
-	    
-	}elseif ($_POST['hosted'] != 'hosted'){
-		
-		$errors['hosted'] = "Please select a Domain Hosting Method";		
-		
 	}
-    
+	
+	//echo "<pre>";	
+	//print_r($nameserver);	    
+	//echo "</pre>";	    
     
     if (!$_POST['user_id']) {
         if ($_SESSION['admin_level'] != 'admin'){
@@ -238,134 +229,51 @@ if ($_POST['action'] == "add" ) {
     if (count($errors) == 0) {
         
         $insert_errors = array();
-        $new_domain_time = time();
-		
-        //INSERT DOMAIN FOR SELF HOSTING
-		if ($_POST['hosted'] == 'nohosted'){
-        	
-	        for ($i = 0; $i <= count($nameserver)-1; $i++) {
+        for ($i = 0; $i <= count($nameserver)-1; $i++) {
+        
+	        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, user_id, domain_id, type, content, ttl, prio, change_date, disabled, auth, created) VALUES (      
+	            '" . mysql_escape_string($_POST['name'].$tld) . "',
+	            '" . mysql_escape_string($_POST['user_id']) . "',
+	            '".$TLDID['domain_id']."',
+	            'NS',
+	            '".mysql_escape_string($nameserver[$i]['name'])."',
+	            '".$CONF['RECORDS_TTL']."',
+	            '0',
+	            UNIX_TIMESTAMP(),
+	            '1',
+	            '0',
+	            UNIX_TIMESTAMP()
+	        )", $db);
 	        
-		        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, user_id, domain_id, type, content, ttl, prio, change_date, disabled, auth, created) VALUES (      
-		            '" . mysql_escape_string($_POST['name'].$tld) . "',
-		            '" . mysql_escape_string($_POST['user_id']) . "',
+	        if (!$INSERT){
+				$insert_errors[] = true;
+	        }
+	        
+	        if ($nameserver[$i]['glue']){
+
+		        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, content, type, domain_id, ttl, prio, change_date, created, user_id, auth, disabled ) VALUES (      
+		            '" . mysql_escape_string($nameserver[$i]['name']) . "',
+		            '" . mysql_escape_string($nameserver[$i]['glue']) . "',
+		            'A',
 		            '".$TLDID['domain_id']."',
-		            'NS',
-		            '".mysql_escape_string($nameserver[$i]['name'])."',
 		            '".$CONF['RECORDS_TTL']."',
 		            '0',
-		            '".$new_domain_time."',
-		            '1',
-		            NULL,
-		            '".$new_domain_time."'
+		            UNIX_TIMESTAMP(),
+		            UNIX_TIMESTAMP(),
+		            '".mysql_escape_string($_POST['user_id'])."',
+		            '0',
+		            '1'
 		        )", $db);
-		        
-		        if (!$INSERT){
-					$insert_errors[] = true;
-		        }
-		        
-		        if ($nameserver[$i]['glue']){
-
-			        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, content, type, domain_id, ttl, prio, change_date, created, user_id, auth, disabled ) VALUES (      
-			            '" . mysql_escape_string($nameserver[$i]['name']) . "',
-			            '" . mysql_escape_string($nameserver[$i]['glue']) . "',
-			            'A',
-			            '".$TLDID['domain_id']."',
-			            '".$CONF['RECORDS_TTL']."',
-			            '0',
-			            '".$new_domain_time."',
-			            '".$new_domain_time."',
-			            '".mysql_escape_string($_POST['user_id'])."',
-			            NULL,
-			            '1'
-			        )", $db);
-					
-					if (!$INSERT){
-						$insert_errors[] = true;
-	        		}		
-		        }
-    			
-    			//$soa_update = update_soa_serial($tld);
-    		
-			}
-    		
-		}elseif ($_POST['hosted'] == 'hosted'){
-		//INSERT DOMAIN FOR MANAGED HOSTING
-			
-			//Insert Domain record
-			$INSERT_DOMAIN = mysql_query("INSERT INTO domains (name, type, notified_serial) VALUES ('". mysql_escape_string($_POST['name'].$tld)."', 'MASTER', '".get_soa_serial($CONF['DEFAULT_SOA'])."' ) ", $db);
-			
-			$new_domain_id = mysql_insert_id($db);			
-			
-			if (!$INSERT_DOMAIN || !$new_domain_id){
-				$insert_errors[] = true;
-		    }			
-			
-			
-			//Insert SOA record
-			$INSERT_SOA = mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES (
-						'".$new_domain_id."', 
-						'".mysql_escape_string($_POST['name'].$tld)."', 
-						'SOA',
-						'".$CONF['DEFAULT_SOA']."',
-						'".$CONF['RECORDS_TTL']."',
-						'0',
-						'".$new_domain_time."',
-						NULL,
-						NULL,
-						'0',
-						'".$new_domain_time."',
-						'".mysql_escape_string($_POST['user_id'])."'
-			)", $db);
-			
-			if (!$INSERT_SOA){
-				$insert_errors[] = true;
-		    }			
-			
-			//Insert Nameservers for new Domain
-			$SELECT_ROOT_NS = mysql_query("SELECT `name` FROM `root_ns` WHERE `active` = '1' ORDER BY `name` ASC ", $db);
-			while($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
 				
-				$INSERT_NS = mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES (
-							'".$new_domain_id."', 
-							'".mysql_escape_string($_POST['name'].$tld)."', 
-							'NS',
-							'".$ROOT_NS['name']."',
-							'".$CONF['RECORDS_TTL']."',
-							'0',
-							'".$new_domain_time."',
-							NULL,
-							NULL,
-							'0',
-							'".$new_domain_time."',
-							'".mysql_escape_string($_POST['user_id'])."'
-				)", $db);
-
-				if (!$INSERT_NS){
+				if (!$INSERT){
 					$insert_errors[] = true;
-		        }
-		        
-		    	//Insert the NS TSIG records for AXFR to slaves				
-				$INSERT_TSIG = mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
-							'".$new_domain_id."', 
-							'TSIG-ALLOW-AXFR',
-							'".$ROOT_NS['name']."'
-							
-				)", $db);
-				
-    			if (!$INSERT_TSIG){
-					$insert_errors[] = true;
-		        }
-		        
-		    			
-			
-			}
-			
-			$soa_update = update_soa_serial($tld);
-			
-			
+	        	}		
+	        }
+    		
+    		//$soa_update = update_soa_serial($tld);
+    	
 		}
-		
-		
+    	
         if (count($insert_errors) == 0){
             header("Location: index.php?section=".$SECTION."&saved_success=1");
             exit();
@@ -390,21 +298,10 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     
     $SELECT_DOMAIN = mysql_query("SELECT name FROM `".$mysql_table."` WHERE id = '".$id."' ". $user_id, $db);
     $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
-    
-	$SELECT_ISHOSTED = mysql_query("SELECT id FROM domains WHERE name = '".$DOMAIN['name']."' ", $db);
-	$HOSTEDID = mysql_fetch_array($SELECT_ISHOSTED);
-	$ISHOSTED = mysql_num_rows($SELECT_ISHOSTED);
-					      
 
     if (mysql_num_rows($SELECT_DOMAIN)){
 		$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `name`= '".$DOMAIN['name']."' AND type = 'NS' ". $user_id ,$db);
 		$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `name` LIKE '%.".$DOMAIN['name']."' AND type = 'A' ". $user_id ,$db);
-		
-		if ($ISHOSTED){
-			$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `domain_id`= '".$HOSTEDID['id']."' ",$db);
-			$DELETE = mysql_query("DELETE FROM `domains` WHERE `id`= '".$HOSTEDID['id']."' ",$db);
-			$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `name`= '".$DOMAIN['name']."' AND type = 'SOA' ". $user_id ,$db);
-		}
 	    
 	    $soa_update = update_soa_serial($DOMAIN['name'], true);
 	    
@@ -526,7 +423,6 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                     //TIPSY for the ADD Form
                     $('#name').tipsy({trigger: 'focus', gravity: 'n', fade: true});
                     $('#tld').tipsy({trigger: 'focus', gravity: 'w', fade: true});
-                    $('#hosted').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#user_id').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#nameserver').tipsy({ gravity: 'e', fade: true, live: true, html: true });
                     $('#glue').tipsy({ gravity: 'w', fade: true, live: true, html: true });
@@ -690,28 +586,6 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 					}
 					return false;
                 });
-                
-                
-                
-                //SHOW/HIDE INPUT FIELDS BASED ON DROPDOWN MENU SELECTION
-                <?if (!$_POST['hosted'] || $_POST['hosted'] == 'hosted') {?>
-                $('#Hosted').show();
-                $('#NoHosted').hide();
-                <?}elseif ($_POST['hosted'] == 'nohosted'){?>
-                $('#Hosted').hide();
-                $('#NoHosted').show();
-                <?}?>
-                
-                $('#hosted').live('change', function(){
-                    var myval = $('option:selected',this).val();
-                    if (myval == 'hosted') { 
-                        $('#NoHosted').hide();
-                        $('#Hosted').show();
-                    }else if(myval == 'nohosted') {
-                        $('#NoHosted').show();
-                        $('#Hosted').hide();
-                    }
-                });                
 
 				
 				//end                                
@@ -780,19 +654,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                                 </select>
                                                 
                                             </p>
-                                            
-                                            <p>
-                                                <label for="hosted" class="required">Domain Hosting Method</label>
-                                                <select name="hosted" id="hosted" title="Select the domain hosting method" >
-                                                    <option value="hosted"   <?if (!$_POST['hosted'] || $_POST['hosted'] == 'hosted'){   echo "selected=\"selected\"";}?> >Host my Domain here</option>
-                                                    <option value="nohosted" <?if ($_POST['hosted'] == 'nohosted'){ echo "selected=\"selected\"";}?> >Self Hosted</option>
-                                                </select>
-                                            </p>                                            
-
-											
-                                        	<div id="Hosted">This domain will be hosted on our servers</div>
-                                            
-                                            <div id="NoHosted">												
+												
 												<label class="required">Nameserver 1</label>                                            
                                             	<div id="InputsWrapper">
 												
@@ -856,8 +718,8 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 												<a href="javascript:void(0)" id="AddMoreFileBox">Add another Nameserver <img src="images/ico_add.png" align="absmiddle"></a>
 												<br />
                                         	    
-                                        	</div>
                                         	
+                                            
                                         </div>
                                         <div class="colx2-right">
                                         
@@ -971,30 +833,13 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 					  	$SELECT_DOMAIN_USER = mysql_query("SELECT username, id FROM users WHERE id = '".$LISTING['user_id']."' ", $db);
 					  	$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
 					  }
-					  
-					  $SELECT_ISHOSTED = mysql_query("SELECT id FROM domains WHERE name = '".$LISTING['name']."' ", $db);
-					  $HOSTEDID = mysql_fetch_array($SELECT_IS_HOSTED);
-					  $ISHOSTED = mysql_num_rows($SELECT_ISHOSTED);
-					  
+
 					  ?>     
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
-                        <td align="left" nowrap>
-	                        <h4>
-                        		&nbsp; <a href="http://<?=$LISTING['name'];?>" target="_blank" <?if (staff_help()){?>class="tip_south"<?}?> title="Visit web site" ><img src="images/ico_link.png" border="0" align="absmiddle"/></a> 
-                        		&nbsp;<a href="index.php?section=<?if ($ISHOSTED){?>domain&amp;domain_id=<?=$HOSTEDID['id'];?><?}else{?>domain_ns&domain=<?=$LISTING['name'];?><?}?>" <?if (staff_help()){?>class="tip_south"<?}?> title="<?if ($ISHOSTED){?>Manage Domain Records<?}else{?>Set Domain Nameservers<?}?>" ><?=$LISTING['name'];?></a>
-	                        </h4>
-                        </td>
+                        <td align="left" nowrap><h4> &nbsp; <a href="http://<?=$LISTING['name'];?>" target="_blank" <?if (staff_help()){?>class="tip_south"<?}?> title="Visit web site" ><img src="images/ico_link.png" border="0" align="absmiddle"/></a> &nbsp;<a href="index.php?section=domain_ns&domain=<?=$LISTING['name'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Set Domain Nameservers" ><?=$LISTING['name'];?></a></h4></td>
                         <td>
                             <table>
-                            <?if ($ISHOSTED){?>
-                            	<tr>
-                            		<td nowrap="nowrap" align="right" width="33">
-                            			<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Managed Domain Records" ><img src="images/ico_edit_ns.png" align="absmiddle"></a>
-                            		</td>
-                            		<td nowrap="nowrap"><span class="blue"><strong style="font-family: monospace">Hosted Domain</strong></span></td>
-                            	</tr>
-                            <?}else{?>
-                            	<?
+								<?
 								$r=0;					  
 					  			$SELECT_NAMESERVERS = mysql_query("SELECT content, id FROM `".$mysql_table."` WHERE name = '".$LISTING['name']."' AND type = 'NS' ", $db);
 					  			while ($NAMESERVERS = mysql_fetch_array($SELECT_NAMESERVERS)){
@@ -1022,10 +867,9 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 									</td>
                         	    </tr>
                         		<?}?>
-                        	<?}?>
-                        	</table>                        	                        
+                        	</table>                        
                         </td>
-                        <td align="center" nowrap><?if ($_GET['sort']=='created'){?><strong><?}?>R <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LISTING['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?></td>
+                        <td align="center" nowrap><?if ($_GET['sort']=='created'){?><strong><?}?>C <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LISTING['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?></td>
                         <td align="center" >   
                         <?
                         if ($_SESSION['admin_level'] == 'admin'){
@@ -1046,12 +890,8 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         <td align="center" nowrap><a href="index.php?section=users&action=edit&id=<?=$LISTING['user_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="View User details"><?=$DOMAIN_USER['username'];?></a></td>
                         <?}?>
                         <td align="center" nowrap="nowrap">
-                            <?if (!$ISHOSTED){?>
-                            <a href="validate_domain.php?domain=<?=$LISTING['name'];?>" rel="validate_group" title="Validate your DNS Server configuration to enable domain <?=$LISTING['name'];?>" class="<?if (staff_help()){?>tip_south<?}?> validate validate_domain"><span>Validate Domain</span></a> &nbsp;
-                            <a href="index.php?section=domain_ns&amp;domain=<?=$LISTING['name'];?>" title="Configure Domain Nameserver" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Set Nameserver</span></a> &nbsp;
-                            <?}else{?> 
-                            <a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" title="Manage Domain Records" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Manage Domain Records</span></a> &nbsp;
-                            <?}?> 
+                            <a href="validate_domain.php?domain=<?=$LISTING['name'];?>" rel="validate_group" title="Validate your DNS Server configuration to enable domain <?=$LISTING['name'];?>" class="<?if (staff_help()){?>tip_south<?}?> validate validate_domain"><span>Validate Domain</span></a> &nbsp; 
+                            <a href="index.php?section=domain_ns&amp;domain=<?=$LISTING['name'];?>" title="Configure Domain Nameserver" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Set Nameserver</span></a> &nbsp; 
                             <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
                         </td>
                       </tr>
