@@ -370,6 +370,7 @@ if ($_POST['action'] == "add" ) {
 			}
 			
 			$soa_update = update_soa_serial($tld);
+			$soa_update = update_soa_serial(mysql_escape_string($_POST['name'].$tld));
 			
 			
 		}
