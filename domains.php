@@ -193,13 +193,13 @@ if ($_POST['action'] == "add" ) {
 						if ($glue){
     						//check nameserver ip/glue
 						    if(filter_var($glue, FILTER_VALIDATE_IP)){
-								if ( ip2long($glue) <= ip2long("10.255.255.255") && ip2long("10.0.0.0") <=  ip2long($glue) )  {
+								if ($CONF['NAMESERVERS_IP_RANGE'] == 'any' || netMatch($CONF['NAMESERVERS_IP_RANGE'], $glue)){
 									//IP VALIDATED! We prepare arrays for the new nameserver/glue record insert
 									$nameserver[$i]['name'] = trim($ns);	
 									$nameserver[$i]['glue'] = trim($glue);
 																						
 								}else{
-									$errors['glue'.$i] = "The Nameserver ".$n." IP you entered is not valid.";	
+									$errors['glue'.$i] = "The Nameserver ".$n." IP you entered is not within permitted range: ".$CONF['NAMESERVERS_IP_RANGE'].".";	
 								}	
 							}else{
 								$errors['glue'.$i] = "The Nameserver ".$n." IP you entered is not valid.";	
@@ -323,7 +323,7 @@ if ($_POST['action'] == "add" ) {
 		    }			
 			
 			//Insert Nameservers for new Domain
-			$SELECT_ROOT_NS = mysql_query("SELECT `name` FROM `root_ns` WHERE `active` = '1' ORDER BY `name` ASC ", $db);
+			$SELECT_ROOT_NS = mysql_query("SELECT `name`, `ip` FROM `root_ns` WHERE `active` = '1' ORDER BY `name` ASC ", $db);
 			while($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
 				
 				$INSERT_NS = mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES (
@@ -357,7 +357,7 @@ if ($_POST['action'] == "add" ) {
 				$INSERT_METASLAVE = mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
 							'".$new_domain_id."', 
 							'ALSO-NOTIFY',
-							'".$ROOT_NS['name'].":".$CONF['META_SLAVE_PORT']."'
+							'".$ROOT_NS['ip'].":".$CONF['META_SLAVE_PORT']."'
 							
 				)", $db);
 				

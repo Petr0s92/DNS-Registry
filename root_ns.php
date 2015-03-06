@@ -31,7 +31,7 @@ if ($_SESSION['admin_level'] != 'admin'){
 
 //Define current page data
 $mysql_table = 'root_ns';
-$sorting_array = array("id", "name", "active");
+$sorting_array = array("id", "name", "ip", "active");
 
 $action_title = "All Root Nameservers"; 
     
@@ -42,7 +42,7 @@ if ($q) {
 	$search_vars .= "&q=$q"; 
 	$action_title = "Search: " . $q;
 }
-$search_query = "WHERE ($mysql_table.name LIKE '%$q%' OR $mysql_table.active LIKE '%$q%' )";
+$search_query = "WHERE ($mysql_table.name LIKE '%$q%' OR $mysql_table.ip LIKE '%$q%' OR $mysql_table.active LIKE '%$q%' )";
 
 
 // Sorting
@@ -123,6 +123,12 @@ if ($_POST['action'] == "add" ) {
         } 
     }
     
+    $_POST['ip'] = trim($_POST['ip']);
+    if(!filter_var($_POST['ip'], FILTER_VALIDATE_IP)){
+		$errors['ip'] = "Please enter a valid Nameserver IP Address.";	
+	}							
+    
+    
     $_POST['tsig_key'] = trim($_POST['tsig_key']);
     if (!$_POST['tsig_key']){
 		$errors['tsig_key'] = "You need to fill in a TSIG Key" ;		
@@ -131,8 +137,9 @@ if ($_POST['action'] == "add" ) {
     
     if (count($errors) == 0) {
         
-        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, active) VALUES (      
+        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, ip, active) VALUES (      
             '" . addslashes($_POST['name']) . "',
+            '" . addslashes($_POST['ip']) . "',
             '1'
         )", $db);
 
@@ -224,6 +231,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     <?if (staff_help()){?>
                     //TIPSY for the ADD Form
                     $('#name').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#ip').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#tsig_key').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     <?}?>
                     
@@ -337,6 +345,11 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                                 <label for="name" class="required">Root Nameserver Name</label>
                                                 <input type="text" name="name" id="name" title="Enter the Root Nameserver Name" value="<? if($_POST['name']){ echo $_POST['name']; } ?>">
                                             </p>
+                                        
+                                            <p>
+                                                <label for="ip" class="required">Root Nameserver IP Address</label>
+                                                <input type="text" name="ip" id="ip" title="Enter the Root Nameserver IP Address" value="<? if($_POST['ip']){ echo $_POST['ip']; } ?>">
+                                            </p>
                                         </div>
                                         <div class="colx2-right">
                                             <p>
@@ -398,6 +411,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <table width="100%" border="0" cellspacing="2" cellpadding="5">
                       <tr>
                         <th><?=create_sort_link("name","Root Nameserver Name");?></th>
+                        <th><?=create_sort_link("ip","Root Nameserver IP");?></th>
                         <th>TSIG Key</th>
                         <th><?=create_sort_link("active", "Active");?></th>
                         <th>Actions</th>
@@ -413,6 +427,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap><?=$LISTING['name'];?></td>
+                        <td nowrap><?=$LISTING['ip'];?></td>
                         <td nowrap><?=$TSIG['secret'];?></td>
                         <td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>

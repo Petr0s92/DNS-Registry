@@ -64,6 +64,7 @@ DROP TABLE IF EXISTS `root_ns`;
 CREATE TABLE IF NOT EXISTS `root_ns` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
+  `ip` varchar(15) NOT NULL,
   `active` enum('1','0') NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_index` (`name`),
@@ -110,7 +111,8 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (16, 'WHOIS_MAXLENGTH', '256', 'Maximum number of characters the whois server will accept.', 'whois'),
 (17, 'WHOIS_LISTENQ', '10', 'Whois server listen queue.', 'whois'),
 (18, 'WHOIS_MAXCONN', '100', 'Whois server maximum concurrent connections.', 'whois'),
-(19, 'META_SLAVE_PORT', '5353', 'Port for Meta-Slave', 'panel');
+(19, 'META_SLAVE_PORT', '5353', 'Port for Meta-Slave', 'panel'),
+(20, 'NAMESERVERS_IP_RANGE', '10.0.0.0/8', 'Allowed IPs for Nameservers registration. Type ''any'' to allow all IPs.', 'panel');
 
 
 DROP TABLE IF EXISTS `supermasters`;
