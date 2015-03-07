@@ -1019,6 +1019,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                       }
 					  $DOMAIN_RECORDS = mysql_num_rows($SELECT_DOMAIN_RECORDS);
                       
+                      if ($LISTING['name'] != 'meta.meta'){
 					  ?>     
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td align="left" nowrap>
@@ -1109,7 +1110,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                             <?}?>
                         </td>
                       </tr>
-                      <?}?>
+                      <?}}?>
 
                       <!-- RESULTS END -->
                     </table>
