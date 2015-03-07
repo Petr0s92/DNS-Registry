@@ -85,7 +85,7 @@ function handle_client($allclient, $socket, $buf) {
 	$DOMAIN_lookup = trim($buf);
 
 	// Select domain and owner from database
-	$SELECT_DOMAIN = mysql_query("SELECT user_id, created, change_date, type FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND ( type = 'NS'  OR type = 'A' ) LIMIT 0,1 ", $db);
+	$SELECT_DOMAIN = mysql_query("SELECT user_id, created, change_date, type, domain_id FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND ( type = 'NS' OR type = 'A' ) LIMIT 0,1 ", $db);
 	$DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
 	$SELECT_OWNER = mysql_query("SELECT username, nodeid FROM users WHERE id = '".$DOMAIN['user_id']."' ", $db);
@@ -115,7 +115,7 @@ function handle_client($allclient, $socket, $buf) {
 		$whois_reply .= "\n";
 		
 		//Show user & nameservers only if domain is delegated.
-		if ($DOMAIN['type'] == 'NS'){
+		if ($DOMAIN['user_id'] > 0 ){
 			if ($OWNER['username'] || $OWNER['nodeid']){
 				$whois_reply .= "Registrant:\n";
 			}
