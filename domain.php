@@ -359,6 +359,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     $('#content').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#priority').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#ttl').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#action').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     <?}?>
                     
 
