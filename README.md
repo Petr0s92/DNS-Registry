@@ -1,11 +1,9 @@
 # DNS Registry Control Panel
 
 A control panel to allow users to register domains on private TLDs.
-This system is primarily designed for use in Wireless Community Networks such as AWMN.net in order  
-to provide the network with a centralized DNS registry with private TLDs for the users to register domains.
+This system is primarily designed for use in Wireless Community Networks such as AWMN.net in order to provide the network with a centralized DNS registry with private TLDs for the users to register domains.
 
-There are two modes of registering domains. Self Hosting where you define your own nameservers as you would on any internet TLD  
-or Hosted Domains where the domain is registered and hosted on the same infrastructure.
+There are two modes of registering domains. Self Hosting where you define your own nameservers as you would on any internet TLD or Hosted Domains where the domain is registered and hosted on the same infrastructure.
 
 **DNS Registry Control Panel Features**
 
