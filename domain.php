@@ -24,15 +24,35 @@
 admin_auth();
 
 
+// include dns validation functions
+require ("./includes/dns.php");
+
 //Define current page data
 $mysql_table = 'records';
-$sorting_array = array("id", "name", "content", "change_date", "created");
+$sorting_array = array("id", "name", "content", "type", "ttl", "prio", "domain_id");
 
 // ----------------------------------------------------------------------
 
-$action_title = "All My Domain Names"; 
+
+if ($_SESSION['admin_level'] == 'user'){
+	$user_id = " AND user_id = '".$_SESSION['admin_id']."' ";
+}else{
+    $user_id = "";		
+}
+
+$did = mysql_real_escape_string($_GET['domain_id'], $db);
+
+$SELECT_DOMAIN = mysql_query("SELECT name, id FROM domains WHERE id = '".$did."' ".$user_id, $db);
+$DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
+
+//If domain_id is invalid redirect to my domains page
+if (!mysql_num_rows($SELECT_DOMAIN) || !$DOMAIN['id'] ){
+	Header ("Location: index.php?section=domains");
+	exit();
+}
+$action_title = "Manage Hosted Domain: " . $DOMAIN['name']; 
     
-$search_vars = "";
+$search_vars = "&domain_id=".$DOMAIN['id'];
     
 $q = mysql_real_escape_string($_GET['q'], $db);
 if ($q) { 
@@ -40,23 +60,20 @@ if ($q) {
     $action_title = "Search: " . $q;
 }
 
-if ($_SESSION['admin_level'] == 'user'){
-	$user_id = " AND user_id = '".$_SESSION['admin_id']."' ";
-}else{
-
-	$qu = mysql_real_escape_string($_GET['search_user_id'], $db);
-    if ($qu) { 
-        $search_vars .= "&search_user_id=".$qu;
-    
-        $user_id = " AND user_id = '".$qu."' ";
-     
-    }else{
-		$user_id = " AND user_id > '0' ";		
-    }
-
+$o=0;
+$ns='';
+$SELECT_ROOT_NS = mysql_query("SELECT name FROM root_ns WHERE active = '1' ", $db);
+$ROOT_NS_TOTAL = mysql_num_rows($SELECT_ROOT_NS);
+while ($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
+	$o++;
+	$ns .= "'".$ROOT_NS['name']."'";
+	if ($o < $ROOT_NS_TOTAL){
+		$ns .=", ";
+	}
 }
 
-$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' ) AND type = 'NS' ". $user_id . " GROUP BY `name` ";
+$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' OR ".$mysql_table.".type LIKE '%".$q."%' OR ".$mysql_table.".ttl LIKE '%".$q."%') AND domain_id = '".$DOMAIN['id']."' AND type != 'SOA' AND content NOT IN (".$ns.")". $user_id . "  ";
+//$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' ) AND domain_id = '".$DOMAIN['id']."'  ". $user_id . "  ";
 
   
 // Sorting
@@ -68,9 +85,9 @@ if (isset($_GET['sort'])){
         $order = "ORDER BY `". mysql_escape_string($_GET['sort']) ."` ". mysql_escape_string($_GET['by']) . " ";
     }
 } else {
-    $order = "ORDER BY `created` DESC ";
-    $_GET['sort'] = "created";
-    $_GET['by'] = "desc";
+    $order = "ORDER BY `type` ASC, `content` ASC ";
+    $_GET['sort'] = "content";
+    $_GET['by'] = "asc";
 }
 $sort_vars = "&sort=".$_GET['sort']."&by=".$_GET['by'];
 
@@ -119,163 +136,56 @@ $SELECT_RESULTS  = mysql_query("SELECT `".$mysql_table."`.* FROM `".$mysql_table
 $url_vars = "action=".$_GET['action'] . $sort_vars . $search_vars;
 
 
+
+
+//SELECT RECORD FOR EDIT
+if ( $_GET['action'] == "edit" && $_GET['id'] ) {
+    $SELECT = mysql_query("SELECT * FROM `".$mysql_table."` WHERE `id`='".addslashes($_GET['id'])."'",$db);
+    $RESULT = mysql_fetch_array($SELECT);
+}
+
+
 //ADD NEW RECORD
-if ($_POST['action'] == "add" ) {
+if ($_POST['action'] == "add" && $_POST['domain_id']) {
     
     $errors = array();
     
-    if ($_POST['tld'] < 1) {
-        $errors['tld'] = "Please choose a TLD.";
-        $tld = "";
-    } else {
-        
-        $SELECT_TLD = mysql_query("SELECT name, id FROM `tlds` WHERE `id` = '".mysql_escape_string($_POST['tld'])."' ",$db);
-        $TLD = mysql_fetch_array($SELECT_TLD);
-        
-        $SELECT_TLD_ID = mysql_query("SELECT domain_id, name FROM `".$mysql_table."` WHERE name = '".$TLD['name']."' AND type = 'SOA' ",$db);
-        $TLDID = mysql_fetch_array($SELECT_TLD_ID);
-        
-        if (!$TLDID['name'] && !$TLDID['domain_id']){
-        	$errors['tld'] = "Please choose a TLD.";	
-		}else{
-			$tld = ".".$TLD['name'];
-        }
-        
+	$SELECT_DOMAIN_USER = mysql_query("SELECT user_id FROM records WHERE domain_id = '".$DOMAIN['id']."' ", $db);
+	$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
+      
+    if ($validate = validate_input(-1, $DOMAIN['id'], $_POST['type'], $_POST['content'], $_POST['name'], $_POST['priority'], $_POST['ttl'])){
+		$errors['validate'] = $validate;	
     }
-    
-    $_POST['name'] = trim($_POST['name']);
-    if (!preg_match("/^(?!-)[a-z0-9-]{1,63}(?<!-)$/", $_POST['name'])) {
-        $errors['name'] = "Please choose a valid domain name. Only lowercase alphanumeric characters are allowed and a dash (-). Domain cannot start or end with a dash.";
-    } else {
-    	if (strlen($_POST['name']) > 62){
-			$errors['name'] = "Please choose a shorter domain name.";	
-    	}elseif (strlen($_POST['name']) < 2){
-			$errors['name'] = "Please choose a bigger domain name.";	
-    	}else{
-	        if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['name'].$tld)."' ",$db))){
-	            $errors['name'] = "This domain name is already registered." ;
-	        } 
-    	}
-    }
-    
-    //CHECK NAMESERVERS
-    for ($i = 0; $i <= count($_POST['nameserver'])-1; $i++) {
-    	$ns = trim($_POST['nameserver'][$i]);	
-    	$glue = trim($_POST['glue'][$i]);	
-    	$n = $i+1;
-		if (!$ns){
-    		$errors['namesever'.$i] = "Please enter a valid Nameserver ".$n.".";						
-    	}else{
-    		//check nameserver name
-		    if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns)."' AND type = 'A' AND user_id > 0 ",$db)) || !getTLD(mysql_escape_string($ns)) ){
-			    //NS exists! We use this one!			    
-			    $nameserver[$i]['name'] = trim($ns);	
-			}else{
-
-				//Check if the nameserver to be created is under a domain the user owns or under the newly created domain
-				$new_domain = ".".$_POST['name'] . $tld;
-				//echo $new_domain;
-				$ns_domain_parts = explode(".", $ns);
-				//print_r($ns_domain_parts);
-				$ns_domain_parts[0] = false;
-				$ns_domain = implode(".", $ns_domain_parts);
-				$ns_domain = substr($ns_domain, 1);												
-				//$ns_domain_parts = array_reverse($ns_domain_parts);
-				//$ns_domain = $ns_domain_parts[1] . "." . $ns_domain_parts[0] . $tld;
-				//echo $ns_domain;				
-				if ( stristr($ns. $tld, $new_domain ) || 
-					mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($ns_domain)."' AND type = 'NS' " . $user_id ,$db))
-				) {
-					//NS does not exist - so we check the A record to add them later on
-					if ($glue){
-    					//check nameserver ip/glue
-					    if(filter_var($glue, FILTER_VALIDATE_IP)){
-							if ( ip2long($glue) <= ip2long("10.255.255.255") && ip2long("10.0.0.0") <=  ip2long($glue) )  {
-								//IP VALIDATED! We prepare arrays for the new nameserver/glue record insert
-								$nameserver[$i]['name'] = trim($ns);	
-								$nameserver[$i]['glue'] = trim($glue);
-																					
-							}else{
-								$errors['glue'.$i] = "The Nameserver ".$n." IP you entered is not valid.";	
-							}	
-						}else{
-							$errors['glue'.$i] = "The Nameserver ".$n." IP you entered is not valid.";	
-						}        
-    				}else{
-						$n = $i+1;
-						$errors['glue'.$i] = "Please enter a valid Nameserver ".$n." IP.";						
-					}				
-				}else{
-					$n = $i+1;
-					$errors['namesever'.$i] = "Nameserver ".$n." parent domain is not owned by you. Cannot create Glue Record";						
-    			}
-			}    	    		
-    	}
-
-	}
 	
-	//echo "<pre>";	
-	//print_r($nameserver);	    
-	//echo "</pre>";	    
-    
-    if (!$_POST['user_id']) {
-        if ($_SESSION['admin_level'] != 'admin'){
-        	$_POST['user_id'] = $_SESSION['admin_id'];
-		}else{
-			$errors['user_id'] = "Please choose an owner for the domain.";			
-		}
-    }
-    
     if (count($errors) == 0) {
         
-        $insert_errors = array();
-        for ($i = 0; $i <= count($nameserver)-1; $i++) {
+        $new_record_time = time();
         
-	        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, user_id, domain_id, type, content, ttl, prio, change_date, disabled, auth, created) VALUES (      
-	            '" . mysql_escape_string($_POST['name'].$tld) . "',
-	            '" . mysql_escape_string($_POST['user_id']) . "',
-	            '".$TLDID['domain_id']."',
-	            'NS',
-	            '".mysql_escape_string($nameserver[$i]['name'])."',
-	            '".$CONF['RECORDS_TTL']."',
-	            '0',
-	            UNIX_TIMESTAMP(),
-	            '1',
-	            '0',
-	            UNIX_TIMESTAMP()
-	        )", $db);
-	        
-	        if (!$INSERT){
-				$insert_errors[] = true;
-	        }
-	        
-	        if ($nameserver[$i]['glue']){
+        //format name
+        if ($_POST['name'] == ''){
+			$NAME = $DOMAIN['name'];
+        }else{
+			$NAME = $_POST['name'] . "." . $DOMAIN['name'];
+        }
+			
+        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, content, type, domain_id, ttl, prio, change_date, created, user_id, auth, disabled ) VALUES (      
+            '" . $NAME . "',
+            '" . addslashes($_POST['content']) . "',
+            '" . addslashes($_POST['type']) . "',
+            '".$DOMAIN['id']."',
+            '" . addslashes($_POST['ttl']) . "',
+            '" . addslashes($_POST['priority']) . "',
+            '".$new_record_time."',
+            '".$new_record_time."',
+            '".$DOMAIN_USER['user_id']."',
+            '0',
+            '0'            
+        )", $db);
 
-		        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, content, type, domain_id, ttl, prio, change_date, created, user_id, auth, disabled ) VALUES (      
-		            '" . mysql_escape_string($nameserver[$i]['name']) . "',
-		            '" . mysql_escape_string($nameserver[$i]['glue']) . "',
-		            'A',
-		            '".$TLDID['domain_id']."',
-		            '".$CONF['RECORDS_TTL']."',
-		            '0',
-		            UNIX_TIMESTAMP(),
-		            UNIX_TIMESTAMP(),
-		            '".mysql_escape_string($_POST['user_id'])."',
-		            '0',
-		            '1'
-		        )", $db);
-				
-				if (!$INSERT){
-					$insert_errors[] = true;
-	        	}		
-	        }
-    		
-    		//$soa_update = update_soa_serial($tld);
-    	
-		}
-    	
-        if (count($insert_errors) == 0){
-            header("Location: index.php?section=".$SECTION."&saved_success=1");
+		$soa_update = update_soa_serial_byid($DOMAIN['id']);
+		               
+        if ($INSERT && $soa_update){
+            header("Location: index.php?section=".$SECTION."&saved_success=1".$sort_vars.$search_vars);
             exit();
         }else{
             $error_occured = TRUE;
@@ -285,6 +195,52 @@ if ($_POST['action'] == "add" ) {
         
 }
 
+
+if ($_POST['action'] == "edit" && $_POST['id']) {
+    
+    $id = $_POST['id'] = (int)$_POST['id'];
+    
+    $errors = array();
+    
+	$SELECT_DOMAIN_USER = mysql_query("SELECT user_id FROM records WHERE domain_id = '".$DOMAIN['id']."' ", $db);
+	$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
+      
+    if ($validate = validate_input($id, $DOMAIN['id'], $_POST['type'], $_POST['content'], $_POST['name'], $_POST['priority'], $_POST['ttl'])){
+		$errors['validate'] = $validate;	
+    }
+        
+    if (count($errors) == 0) {
+
+        //format name
+        if ($_POST['name'] == ''){
+			$NAME = $DOMAIN['name'];
+        }else{
+			$NAME = $_POST['name'] . "." . $DOMAIN['name'];
+        }
+                
+        $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET
+            content = '" . addslashes($_POST['content']) . "',
+            name = '" . $NAME . "',
+            prio = '" . addslashes($_POST['prio']) . "',
+            ttl = '" . addslashes($_POST['ttl']) . "',
+            type = '" . addslashes($_POST['type']) . "',
+            change_date = '".time()."'
+            
+            WHERE id= '" . $_POST['id'] . "'",$db);
+                               echo mysql_error();
+                               
+            $soa_update = update_soa_serial_byid($DOMAIN['id']);
+            
+        if ($UPDATE && $soa_update){
+            header("Location: index.php?section=".$SECTION."&saved_success=1".$sort_vars.$search_vars);
+            exit();
+        }else{
+            $error_occured = TRUE;
+        }
+        
+    }
+    
+}
 
 // DELETE RECORD
 if ($_GET['action'] == "delete" && $_POST['id']){
@@ -296,14 +252,14 @@ if ($_GET['action'] == "delete" && $_POST['id']){
 		$user_id = '';
 	}
     
-    $SELECT_DOMAIN = mysql_query("SELECT name FROM `".$mysql_table."` WHERE id = '".$id."' ". $user_id, $db);
+    $SELECT_DOMAIN = mysql_query("SELECT domain_id FROM `".$mysql_table."` WHERE id = '".$id."' ". $user_id, $db);
     $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
     if (mysql_num_rows($SELECT_DOMAIN)){
-		$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `name`= '".$DOMAIN['name']."' AND type = 'NS' ". $user_id ,$db);
-		$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `name` LIKE '%.".$DOMAIN['name']."' AND type = 'A' ". $user_id ,$db);
-	    
-	    $soa_update = update_soa_serial($DOMAIN['name'], true);
+	
+		$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' ". $user_id ,$db);
+		
+	    $soa_update = update_soa_serial_byid($DOMAIN['domain_id']);
 	    
 	    if ($DELETE && $soa_update){
 	        ob_end_clean();
@@ -328,15 +284,14 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 		$user_id = '';
 	}
     
-    $SELECT_DOMAIN = mysql_query("SELECT name, domain_id FROM `".$mysql_table."` WHERE id = '".$id."' ". $user_id, $db);
+    $SELECT_DOMAIN = mysql_query("SELECT domain_id FROM `".$mysql_table."` WHERE id = '".$id."' ". $user_id, $db);
 
     if (mysql_num_rows($SELECT_DOMAIN)){
 
         $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
-	    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `disabled` = '".$option."' WHERE `name` = '".$DOMAIN['name']."' ".$user_id,$db);
-	    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `disabled` = '".$option."' WHERE `name` LIKE '%.".$DOMAIN['name']."' ".$user_id,$db);
-		
+	    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `disabled` = '".$option."' WHERE `id` = '".$id."' ".$user_id,$db);
+	    
 		$soa_update = update_soa_serial_byid($DOMAIN['domain_id']);
 		
 		if ($UPDATE && $soa_update) {
@@ -352,44 +307,16 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
     exit();
 }
 
-
-// FIND NAMESERVER GLUE
-if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
-    $nameserver = addslashes($_POST['nameserver']);
-
-    //Check if nameserver TLD belongs to us or a 3rd Party DNS Service
-    if (!getTLD($nameserver)){
-		ob_clean();
-	    echo "3rd Party TLD";
-	    exit();
-	}
-	    
-    $SELECT_GLUE = mysql_query("SELECT content FROM `".$mysql_table."` WHERE name = '".$nameserver."' AND user_id > 0", $db);
-    $GLUE = mysql_fetch_array($SELECT_GLUE);
-
-    if ($GLUE['content']){
-    	ob_clean();
-	    echo $GLUE['content'];
-	} else {
-		ob_clean();
-	    echo "Enter IP";
-	}
-    exit();
-}
-
 ?>
 
                 <script>
                 $(function() {
                 	
                 	
-                	$(".validate_domain").colorbox({iframe:true, width:"85%", height:"90%", fastIframe:false, current: "Domain {current} of {total}" });
-                
-                	
                 	// most effect types need no options passed by default
                     var options = {};    
                     
-                    // Hide/Show the ADD Form
+                    // Hide/Show the ADD/EDIT Form
                     $( "#button" ).click(function() {
                         $( "#toggler" ).toggle( "blind", options, 500, function (){
                         	$('#name').focus();
@@ -411,29 +338,31 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                     });
                     
                     //Init
-                    <?if ($_POST['action'] || $_GET['action'] == 'add'){?>
+                    <?if ($_POST['action'] || $_GET['action'] == 'edit' || $_GET['action'] == 'add'){?>
                         $( "#toggler" ).show();
-                    <?}else{?>
+                       	$('#name').focus();
+    				<?}else{?>
                         $( "#toggler" ).hide();
                     <?}?>
                     $( "#toggler2" ).show();
                     
                     
+                    
                     <?if (staff_help()){?>
                     //TIPSY for the ADD Form
                     $('#name').tipsy({trigger: 'focus', gravity: 'n', fade: true});
-                    $('#tld').tipsy({trigger: 'focus', gravity: 'w', fade: true});
-                    $('#user_id').tipsy({trigger: 'focus', gravity: 'w', fade: true});
-                    $('#nameserver').tipsy({ gravity: 'e', fade: true, live: true, html: true });
-                    $('#glue').tipsy({ gravity: 'w', fade: true, live: true, html: true });
+                    $('#type').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#content').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#priority').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#ttl').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     <?}?>
                     
 
                     //DELETE RECORD
                     $('a.delete').click(function () {
                         var record_id = $(this).attr('rel');
-                        if(confirm('Are you sure you want to delete this domain?\n\rThis action cannot be undone!')){
-                            $.post("index.php?section=<?=$SECTION;?>&action=delete", {
+                        if(confirm('Are you sure you want to delete this record?\n\rThis action cannot be undone!')){
+                            $.post("index.php?section=<?=$SECTION;?>&action=delete&domain_id=<?=$DOMAIN['id'];?>", {
                                     id: record_id
                                 }, function(response){
                                     if (response == "ok"){
@@ -458,7 +387,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                     $('a.toggle_active').click(function () {
                     	var dochange = '0';
 	                    if ($(this).hasClass('activated')){
-	                        if(confirm('Are you sure you want disable this domain?')){    
+	                        if(confirm('Are you sure you want disable this record?')){    
 	                            var option = '1';
 	                            var dochange = '1';
 							}
@@ -469,7 +398,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 	                    if (dochange == '1'){
 		                    var myItem = $(this);
 		                    var record_id = $(this).attr('rel');
-		                    $.post("index.php?section=<?=$SECTION;?>&action=toggle_active", {
+		                    $.post("index.php?section=<?=$SECTION;?>&action=toggle_active&domain_id=<?=$DOMAIN['id'];?>", {
                           		id: record_id,
 		                        option: option
 		                    }, function(response){
@@ -497,109 +426,17 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                 });
                 
                 
-                //Get new domain name as being typed
-                //$("#name").live('keyup', function() {
-        		//	var userdomain = this.value;
-        		//	$("#nameserver").val( this.value );
-        		//});
-                
-                
-				// Add Nameserver fields to add form                
-				var MaxInputs       = 9; //maximum input boxes allowed
-				var InputsWrapper   = $("#InputsWrapper"); //Input boxes wrapper ID
-				var AddButton       = $("#AddMoreFileBox"); //Add button ID
-
-				<?
-				if (count($_POST['nameserver'])){
-					echo "var FieldCount=".count($_POST['nameserver']).";";
-					echo "var x=FieldCount;";
-				}else{
-					echo "var FieldCount=1;";
-					echo "var x=FieldCount;";
-				}
-				?>
-
-				$(AddButton).click(function (e)  //on add input button click
-				{
-				        if(x <= MaxInputs) //max input box allowed
-				        {      
-				        	x++; //text box increment
-				            FieldCount++; //text box added increment
-				            //add input box
-				            var content = '<div>'+
-				            				'<label for="nameserver" class="required">Nameserver '+ FieldCount +'</label>'+
-				            				'<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name.<br />Eg: ns'+ FieldCount +'.domain.tld" value="ns'+ FieldCount +'.domain.tld"/> '+
-				            				' &nbsp; IP: <input type="text" name="glue[]" class="glue" id="glue" value="Enter IP"/> '+
-				                          	'<a href="javascript:void(0)" class="removeclass" title="Click here to remove this nameserver field"><img src="images/ico_remove.png" align="absmiddle"></a>'+
-				                          '<br /><br /></div>';
-				            
-				            $(InputsWrapper).append(content);
-				        }
-				return false;
-				});
-
-				$("body").on("click",".removeclass", function(e){ //user click on remove text
-				        if( x > 1 ) {
-				                $(this).parent('div').remove(); //remove text box
-				                x--; //decrement textbox
-				                FieldCount--; //text box decrement				            
-				        }
-				return false;
-				});
-
-				//Auto clear input NS fields
-				$("#nameserver").live('focus', function() {
-					if( this.value.indexOf( "domain.tld" ) != -1 ){
-					$(this).val('');
-					}
-				});				                 
-				
-				//Auto clear input GLUE fields
-				$("#glue").live('focus', function() {
-					if( this.value.indexOf( "10.x.x." ) != -1 || this.value.indexOf( "Enter IP" ) != -1 ){
-					$(this).val('');
-					}
-				});				                 
-				
-				//Find Nameserver Glue and add it to the field
-                $('#nameserver').live('keyup', function () {
-                    var nameserver = this.value;
-                    var field = $(this).next();
-                    if (nameserver.length > 3){
-	                    $.post("index.php?section=<?=$SECTION;?>&action=fetch_glue", {
-	                        nameserver: nameserver
-	                    }, function(response){
-	                        if (response){
-	                            $(field).val(response);
-	                            if( response ==  "3rd Party TLD" ){
-	                            	$(field).addClass('input_disabled');									
-	                            	$(field).attr("disabled", true);									
-								}else if( response.indexOf( "Enter IP" ) != -1 ){
-	                            	$(field).removeClass('input_disabled');									
-	                            	$(field).attr("disabled", false);									
-								}else {
-									$(field).addClass('input_disabled');
-									$(field).attr("disabled", true);									
-								}
-	                        }
-	                    });
-					}
-					return false;
-                });
-
-				
 				//end                                
                 });				                 
-				                                
-
+				
                 </script>
                 
-                <!-- DOMAINS SECTION START -->
+                <!-- DOMAIN RECORDS START -->
                 
                 <div id="main_content">
                 
                 <div class="mainsubtitle_bg">
-                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List all my Domain Names</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add" class="add"><span>Register new Domain Name</span></a> | <a href="index.php?section=<?=$SECTION;?>">Back to My Domains List</a><?}else{?><a href="javascript: void(0)" id="button" class="add"><span>Register new Domain Name</span></a><?}?></div>
+                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List all Records</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add&domain_id=<?=$DOMAIN['id'];?>" class="add"><span>Add New Record</span></a><?}else{?><a href="javascript: void(0)" id="button" class="add"><span>Add New Record</span></a><?}?> | <a href="index.php?section=<?=$SECTION;?>" class="back">Back to My Domains List</a></div>
                 </div> 
                             
                 <br />
@@ -617,7 +454,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         
                     <div id="toggler">
                     
-                        <!-- ADD DOMAIN START -->
+                        <!-- ADD RECORD START -->
                         <? if (count($errors) > 0) { ?>
                             <div id="errors">
                                 <p>Please check:</p>
@@ -627,118 +464,53 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                             </div>
                         <? } ?>                        
                         
-                        <form id="form" method="post" action="index.php?section=<?=$SECTION;?>&action=add">
+                        <form id="form" method="post" action="index.php?section=<?=$SECTION;?>&action=<?if ($_GET['action'] == 'edit'){ echo 'edit';}else{ echo 'add'; } ?><?=$sort_vars;?><?=$search_vars;?>">
                         
                             
                             <fieldset>
                                 
-                                <legend>&raquo; Register Domain Name</legend>
+                                <legend>&raquo; <?if ($_GET['action'] == 'edit'){?>Edit Record<?}else{?>Add Record<?}?></legend>
                         
                                      <div class="columns">
                                         <div class="colx2-left">
                                         
                                             <p>
-                                                <label for="name" class="required">Domain Name</label>
-                                                <input type="text" name="name" id="name" title="Enter the Domain Name" value="<?if($_POST['name']){ echo $_POST['name']; } ?>">
-                                                <select name="tld" id="tld" title="Select TLD" >
-                                                    <option value="" selected="selected">--Select--</option>
-													<?
-													$SELECT_TLDs = mysql_query("SELECT name, `default`, `id` FROM tlds WHERE active ='1' ORDER BY name ASC", $db);
-													while ($TLDs = mysql_fetch_array($SELECT_TLDs)){
-														$SELECT_DOMAIN_ID = mysql_query("SELECT id FROM domains WHERE name = '".$TLDs['name']."' ", $db);
-														$DOMAIN_ID = mysql_fetch_array($SELECT_DOMAIN_ID);  
-													?>                                                    
-                                                    <option value="<?=$TLDs['id'];?>"   <? if ($DOMAIN_ID['id'] && $_POST['tld'] == $TLDs['id']){ echo "selected=\"selected\""; }elseif ($TLDs['default'] == '1'){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
-													<?}?>                                                    
-                                                    
-                                                </select>
-                                                
+                                                <label for="name" class="required">Record Name</label>
+                                                <input type="text" name="name" id="name" title="Enter the Record Name" value="<?if($_POST['name']){ echo $_POST['name']; }elseif ($_GET['action'] == "edit"){ echo stripslashes(str_replace(".".$DOMAIN['name'], "", $RESULT['name']));} ?>"><strong>.<?=$DOMAIN['name'];?></strong>
                                             </p>
 												
-												<label class="required">Nameserver 1</label>                                            
-                                            	<div id="InputsWrapper">
+                                            <p>
+                                                <label for="type" class="required">Record Type</label>
+                                                <select name="type" id="type" title="Select Record Type" >
+                                                    <option value="A"     <? if ($_POST['type'] == 'A'){     echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'A'){     echo "selected=\"selected\""; }?> >A</option>
+													<option value="MX"    <? if ($_POST['type'] == 'MX'){    echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'MX'){    echo "selected=\"selected\""; }?> >MX</option>
+													<option value="CNAME" <? if ($_POST['type'] == 'CNAME'){ echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'CNAME'){ echo "selected=\"selected\""; }?> >CNAME</option>
+													<option value="TXT"   <? if ($_POST['type'] == 'TXT'){   echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'TXT'){   echo "selected=\"selected\""; }?> >TXT</option>
+													<option value="TXT"   <? if ($_POST['type'] == 'SPF'){   echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'SPF'){   echo "selected=\"selected\""; }?> >SPF</option>
+													<option value="NS"    <? if ($_POST['type'] == 'NS'){    echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'NS'){    echo "selected=\"selected\""; }?> >NS</option>
+													<option value="SRV"   <? if ($_POST['type'] == 'SRV'){   echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'SRV'){   echo "selected=\"selected\""; }?> >SRV</option>
+                                                </select>
+                                            </p>
+                                            
+                                            <p>
+                                                <label for="content" class="required">Content</label>
+                                                <input type="text" name="content" id="content" title="Enter the Content for this Record" value="<?if($_POST['content']){ echo $_POST['content']; }elseif ($_GET['action'] == "edit"){ echo stripslashes($RESULT['content']);} ?>">
+                                            </p>
 												
-													<div>
-														<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name<br />Eg: ns1.domain.tld" value="<?if($_POST['nameserver'][0]){ echo $_POST['nameserver'][0]; }else{?>ns1.domain.tld<?}?>" autocomplete="off" />
-														&nbsp; 
-														<?
-														//echo "<pre>";
-														//print_r($_POST);
-														//echo "</pre>";
-														if ($_POST){	
-															$SELECT_GLUE = mysql_query("SELECT content FROM records WHERE name = '".mysql_real_escape_string($_POST['nameserver'][0])."' AND user_id > 0", $db);
-															$GLUE = mysql_fetch_array($SELECT_GLUE);
-															if ($GLUE['content']){
-																$glue = $GLUE['content'];
-																$disabled = ' class="input_disabled" ';
-															}elseif ($_POST['glue'][0]){
-																$glue = $_POST['glue'][0];
-																$disabled = '';
-															}else{
-																$glue = 'Enter IP';
-																$disabled = '';
-															}
-														}else{
-															$glue = 'Enter IP';															
-															$disabled = '';
-														}															
-														?>
-														IP: <input type="text" name="glue[]" id="glue" <?=$disabled;?> value="<?=$glue;?>"/><br /><br />
-													</div>
-													
-													<?
-													if ($_POST){
-														for ($i = 1; $i <= count($_POST['nameserver'])-1; $i++) {
-															$SELECT_GLUE = mysql_query("SELECT content FROM records WHERE name = '".mysql_real_escape_string($_POST['nameserver'][$i])."' AND user_id > 0", $db);
-															$GLUE = mysql_fetch_array($SELECT_GLUE);
-															if ($GLUE['content']){
-																$glue = $GLUE['content'];
-																$disabled = ' class="input_disabled" ';
-															}elseif ($_POST['glue'][$i]){
-																$glue = $_POST['glue'][$i];
-																$disabled = '';
-															}else{
-																$glue = 'Enter IP';
-																$disabled = '';
-															}
-														
-													?>
-													<div>
-                                            			<label class="required">Nameserver <?=$i+1;?></label>
-                                            			<input type="text" name="nameserver[]" id="nameserver" title="Enter nameserver name<br />Eg: ns<?=$i;?>.domain.tld" value="<?if($_POST['nameserver'][$i]){ echo $_POST['nameserver'][$i]; }else{?>ns<?=$i;?>.domain.tld<?}?>"/>
-														&nbsp; 
-														IP: <input type="text" name="glue[]" id="glue" <?=$disabled;?> value="<?=$glue;?>"/>
-														<a href="javascript:void(0)" class="removeclass" title="Click here to remove this nameserver field"><img src="images/ico_remove.png" align="absmiddle"></a>
-														<br /><br />
-														
-													</div>
-													<?}}?> 
-													
-												</div>
-												<a href="javascript:void(0)" id="AddMoreFileBox">Add another Nameserver <img src="images/ico_add.png" align="absmiddle"></a>
-												<br />
-                                        	    
-                                        	
                                             
                                         </div>
                                         <div class="colx2-right">
                                         
                                         	
-                                            <? if ($_SESSION['admin_level'] == 'admin'){?>
                                             <p>
-                                                <label for="user_id" class="required">Domain Name Owner</label>
-                                                <select name="user_id" id="user_id" title="Select an owner" >
-                                                    <option value="" selected="selected">--Select--</option>
-													<? 
-													$SELECT_USERS = mysql_query("SELECT id, username, fullname FROM users WHERE active ='1' ORDER BY username ASC", $db);
-													while ($USERS = mysql_fetch_array($SELECT_USERS)){
-													?>                                                    
-                                                    <option value="<?=$USERS['id'];?>"   <? if ($_POST['user_id'] == $USERS['id']){ echo "selected=\"selected\""; }?> ><?=$USERS['username'];?> <?if ($USERS['fullname']){?>(<?=$USERS['fullname'];?> )<?}?></option>
-													<?}?>                                                    
-                                                    
-                                                </select>
+                                                <label for="priority">Priority</label>
+                                                <input type="text" name="priority" id="priority" title="Enter the Priority (for SRV,MX,etc. or leave 0 for A, CNAME, etc)" value="<?if($_POST['priority']){ echo $_POST['priority']; }elseif ($_GET['action'] == "edit"){ echo stripslashes($RESULT['prio']);}else{ echo 0; } ?>">
                                             </p>
-                                            <?}?>
+												
+                                            <p>
+                                                <label for="ttl" class="required">TTL</label>
+                                                <input type="text" name="ttl" id="ttl" title="Enter the Record TTL (Time To Live)" value="<?if($_POST['ttl']){ echo $_POST['ttl']; }elseif ($_GET['action'] == "edit"){ echo stripslashes($RESULT['ttl']);}else{ echo $CONF['RECORDS_TTL']; } ?>">
+                                            </p>
 											
                                         </div>
                                         
@@ -750,11 +522,13 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                 <legend>&raquo; Action</legend>
                                 <button type="submit"  >Save</button>&nbsp; &nbsp;
                                 <button type="reset"  id="button">Cancel</button>
-                                <input  type="hidden" name="action" id="action" value="add" />
+                                <input  type="hidden" name="action" id="action" value="<?if ($_GET['action'] == 'edit'){ echo 'edit';}else{ echo 'add'; } ?>" />
+                                <input  type="hidden" name="domain_id" id="domain_id" value="<?=$DOMAIN['id'];?>" />
+                                <?if ($_GET['action'] == 'edit'){?><input  type="hidden" name="id" id="id" value="<?=$RESULT['id'];?>" /><?}?>
                            </fieldset>
                         </form>                    
                         
-                        <!-- ADD DOMAIN END -->
+                        <!-- ADD RECORD END -->
                         
                         <br />
                         
@@ -762,35 +536,19 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         
                     <div id="toggler2">
                       
-                    <!-- LIST DOMAINS START -->
+                    <!-- LIST RECORDS START -->
                       
                       <fieldset>
                                 
-                          <legend>&raquo; My Domains List</legend>
+                          <legend>&raquo; DNS Records List</legend>
                         
                       <form name="search_form" action="index.php?section=<?=$SECTION;?>" method="get" class="search_form">
                         <input type="hidden" name="section" value="<?=$SECTION;?>" />
+                        <input  type="hidden" name="domain_id" id="domain_id" value="<?=$DOMAIN['id'];?>" />
                         <table border="0" cellspacing="0" cellpadding="4">
                             <tr>
-                                <td>Domain:</td>
+                                <td>Record:</td>
                                 <td><input type="text" name="q" id="search_field_q" class="input_field" value="<?=$q?>" /></td>
-                                
-								<?if ($_SESSION['admin_level'] == 'admin'){?>                                
-                    			<td>Owner:</td>
-                                <td>
-                                    <select name="search_user_id" class="select_box">
-                                        <option value="">All Owners</option> 
-                                        											<? 
-										$SELECT_USERS = mysql_query("SELECT id, username, fullname FROM users WHERE active ='1' ORDER BY username ASC", $db);
-										while ($USERS = mysql_fetch_array($SELECT_USERS)){
-										?>                                                    
-                                        <option value="<?=$USERS['id'];?>"   <? if ($_GET['search_user_id'] == $USERS['id']){ echo "selected=\"selected\""; }?> ><?=$USERS['username'];?> <?if ($USERS['fullname']){?>(<?=$USERS['fullname'];?>)<?}?></option>
-										<?}?>  
-                                        
-                                    </select>
-                                </td>
-                                <?}?>                                
-                                
                                 <td><button type="submit"  >Search</button></td>
                             </tr>
                         </table> 
@@ -799,7 +557,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                       <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom:15px; margin-top: 15px;">
                         <tr>
                             <td width="36%" height="30">
-                                <h3 style="margin:0"><?=$action_title;?> <? if ($q) { ?><span style="font-size:12px"> (<a href="index.php?section=<?=$SECTION;?>">x</a>)</span><? } ?></h3> 
+                                <h3 style="margin:0"><?=$action_title;?> <? if ($q) { ?><span style="font-size:12px"> (<a href="index.php?section=<?=$SECTION;?>&domain_id=<?=$DOMAIN['id'];?>">x</a>)</span><? } ?></h3> 
                             </td>
                             <td width="28%" align="center">
                                 <? if ($items_number) { ?>
@@ -814,13 +572,12 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                   
                       <table width="100%" border="0" cellspacing="2" cellpadding="5">
                       <tr>
-                        <th><?=create_sort_link("name","Domain Name");?></th>
-                        <th>Nameservers</th>
-                        <th><?=create_sort_link("created","Registered");?> / <?=create_sort_link("change_date","Updated");?></th>
-                        <th><?=create_sort_link("disabled","Domain Status");?></th>
-                        <?if ($_SESSION['admin_level'] == 'admin'){?>
-                        <th><a href="javascript:void(0)" <?if (staff_help()){?>class="tip_south"<?}?> title="Domain Owner">Owner</a></th>
-                        <?}?>
+                        <th><?=create_sort_link("name","Name");?></th>
+                        <th><?=create_sort_link("type","Type");?></th>
+                        <th><?=create_sort_link("content","Content");?></th>
+                        <th><?=create_sort_link("prio","Priority");?></th>
+                        <th><?=create_sort_link("ttl","TTL");?></th>
+                        <th><?=create_sort_link("disabled","Enabled");?></th>
                         <th><a href="javascript:void(0)" <?if (staff_help()){?>class="tip_south"<?}?> title="Use the icons bellow manage your Domain.">Actions</a></th>
                       </tr>
                       <!-- RESULTS START -->
@@ -828,71 +585,17 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                       $i=-1;
                       while($LISTING = mysql_fetch_array($SELECT_RESULTS)){
                       $i++;
-                      
-					  if ($_SESSION['admin_level'] == 'admin'){
-					  	$SELECT_DOMAIN_USER = mysql_query("SELECT username, id FROM users WHERE id = '".$LISTING['user_id']."' ", $db);
-					  	$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
-					  }
-
-					  ?>     
+                      ?>     
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
-                        <td align="left" nowrap><h4> &nbsp; <a href="http://<?=$LISTING['name'];?>" target="_blank" <?if (staff_help()){?>class="tip_south"<?}?> title="Visit web site" ><img src="images/ico_link.png" border="0" align="absmiddle"/></a> &nbsp;<a href="index.php?section=domain_ns&domain=<?=$LISTING['name'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Set Domain Nameservers" ><?=$LISTING['name'];?></a></h4></td>
-                        <td>
-                            <table>
-								<?
-								$r=0;					  
-					  			$SELECT_NAMESERVERS = mysql_query("SELECT content, id FROM `".$mysql_table."` WHERE name = '".$LISTING['name']."' AND type = 'NS' ", $db);
-					  			while ($NAMESERVERS = mysql_fetch_array($SELECT_NAMESERVERS)){
-					  				$SELECT_GLUE = mysql_query("SELECT id, user_id, content FROM `".$mysql_table."` WHERE name = '".$NAMESERVERS['content']."' AND type = 'A'", $db);
-					  				$GLUE = mysql_fetch_array($SELECT_GLUE);
-					  	  		$r++;
-						  		?>
-						  		                         		
-                        		<tr>
-                        			<?if ($NAMESERVERS['content']!='unconfigured' ){?>
-                        	    	<td nowrap="nowrap" align="right" width="60">
-                        	    		<?if ( ( $GLUE['user_id'] == $_SESSION['admin_id'] || $_SESSION['admin_level'] == 'admin') && getTLD($NAMESERVERS['content']) ){?>
-                        	    		<a href="index.php?section=nameservers&action=edit&id=<?=$GLUE['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit this nameserver's Glue/A Record" ><img src="images/ico_edit_ns.png" align="absmiddle"></a> 
-                        	    		<?}elseif (!getTLD($NAMESERVERS['content'])){?>
-                        	    		<a href="javascript:void(0)" <?if (staff_help()){?>class="tip_south"<?}?> title="3rd Party TLD" ><img src="images/ico_arrow_up_left.png" align="absmiddle"></a>
-                        	    		<?}?> 
-                        	    		<strong>ns<?=$r?>:</strong></td>
-                        	    	<?}?>
-                        	    	<td nowrap="nowrap">
-										<?if ($NAMESERVERS['content']=='unconfigured' && getTLD($NAMESERVERS['content'])){?>
-										<span class="red alert_ico"><strong style="font-family: monospace"><a href="index.php?section=domain_ns&domain=<?=$LISTING['name'];?>&action=edit&id=<?=$NAMESERVERS['id'];?>" title="Configure this Domain's Nameserver" <?if (staff_help()){?>class="tip_south"<?}?> ><?=$NAMESERVERS['content'];?></a></strong></span>
-										<?}else{?>
-										<span class="<?if ($NAMESERVERS['content']=='unconfigured'){echo "red alert_ico";}else{ echo "blue";} ?>"><strong style="font-family: monospace"><?=$NAMESERVERS['content'];?></strong></span> <span class="small" style="font-family: monospace">(<?if (getTLD($NAMESERVERS['content'])){ echo $GLUE['content'];}else{ echo "3rd Party TLD";}?>)</span>
-										<?}?> 
-									</td>
-                        	    </tr>
-                        		<?}?>
-                        	</table>                        
-                        </td>
-                        <td align="center" nowrap><?if ($_GET['sort']=='created'){?><strong><?}?>C <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LISTING['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?></td>
-                        <td align="center" >   
-                        <?
-                        if ($_SESSION['admin_level'] == 'admin'){
-                        	$status_title = 'Enable/Disable';
-                        	$toggle = true;
-						}else{
-							if ($LISTING['disabled'] != '1') {
-								$status_title = 'Active';	
-							}else{
-								$status_title = 'Inactive';
-							}
-							$toggle = false;							 
-						}   
-                        ?>
-                        <a href="javascript:void(0)" class="<?if (staff_help()){?>tip_south<?}?> <?if ($toggle){?>toggle_active<?}?> <? if ($LISTING['disabled'] != '1') { ?>activated<? } else { ?>deactivated<? } ?>" <?if ($toggle){?>rel="<?=$LISTING['id']?>"<?}?> title="<?=$status_title;?>"><span><?=$status_title;?></span></a>
-                        </td>
-                        <?if ($_SESSION['admin_level'] == 'admin'){?>
-                        <td align="center" nowrap><a href="index.php?section=users&action=edit&id=<?=$LISTING['user_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="View User details"><?=$DOMAIN_USER['username'];?></a></td>
-                        <?}?>
+                        <td align="left" nowrap><a href="index.php?section=domain&action=edit&id=<?=$LISTING['id'];?><?=$search_vars;?><?=$sort_vars;?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit Record" ><?=$LISTING['name'];?></a></td>
+                        <td align="center" nowrap><?=$LISTING['type'];?></td>
+                        <td align="left" nowrap><?=$LISTING['content'];?></td>
+                        <td align="center" nowrap><?=$LISTING['prio'];?></td>
+                        <td align="center" nowrap><?=$LISTING['ttl'];?></td>
+                        <td align="center" nowrap><a href="javascript:void(0)" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['disabled'] != '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a></td>
                         <td align="center" nowrap="nowrap">
-                            <a href="validate_domain.php?domain=<?=$LISTING['name'];?>" rel="validate_group" title="Validate your DNS Server configuration to enable domain <?=$LISTING['name'];?>" class="<?if (staff_help()){?>tip_south<?}?> validate validate_domain"><span>Validate Domain</span></a> &nbsp; 
-                            <a href="index.php?section=domain_ns&amp;domain=<?=$LISTING['name'];?>" title="Configure Domain Nameserver" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Set Nameserver</span></a> &nbsp; 
-                            <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
+                            <a href="index.php?section=domain&action=edit&id=<?=$LISTING['id'];?><?=$search_vars;?><?=$sort_vars;?>" title="Edit Record" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Edit Record</span></a> &nbsp; 
+                            <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete Record" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete Record</span></a>
                         </td>
                       </tr>
                       <?}?>
@@ -919,11 +622,11 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                     
                     </fieldset>
                     
-                    <!-- LIST DOMAINS END -->
+                    <!-- LIST RECORDS END -->
                     
                     </div>
                         
                 </div>    
                 
-                <!-- DOMAINS SECTION END --> 
+                <!-- DOMAIN RECORDS END --> 
                 

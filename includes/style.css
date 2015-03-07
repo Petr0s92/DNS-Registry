@@ -376,6 +376,19 @@ pre {
     
 }
 
+.maintitle_domain {
+    background: url(../images/ico_domain.png) 8px center no-repeat; 
+    font-family: Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
+    font-size: 20px;
+    border:1px solid #dad7c8; 
+    border-radius: 5px;
+    -moz-border-radius: 5px; 
+    -webkit-border-radius: 5px; 
+    color:#686761; 
+    padding: 5px 5px 5px 28px;
+    
+}
+
 .maintitle_domain_ns {
     background: url(../images/ico_link.png) 8px center no-repeat; 
     font-family: Georgia, "Times New Roman", "Bitstream Charter", Times, serif;

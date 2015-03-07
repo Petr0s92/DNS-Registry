@@ -39,7 +39,7 @@ if ($_GET['domain']){
 }
 
    
-$search_vars = "";
+$search_vars = "&domain=".$d;
 
     
 $q = mysql_real_escape_string($_GET['q'], $db);

@@ -58,6 +58,9 @@ if (isset($_GET['section'])){
 if (isset($SECTION) && $SECTION == 'domains'){
     $maintitle_class = 'maintitle_domains';
     $maintitle_title = 'My Domain Names';
+}elseif (isset($SECTION) && $SECTION == 'domain'){
+    $maintitle_class = 'maintitle_domain';
+    $maintitle_title = 'Manage Hosted Domain';
 }elseif (isset($SECTION) && $SECTION == 'domain_ns'){
     $maintitle_class = 'maintitle_domain_ns';
     $maintitle_title = 'Manage Domain Nameservers';

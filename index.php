@@ -123,6 +123,10 @@ admin_auth();
 					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'NS' AND user_id > 0 GROUP BY name", $db));?></strong></td>
 					</tr>
 					<tr>
+					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Hosted Domains</td>
+					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'SOA' AND user_id > 0 ", $db));?></strong></td>
+					</tr>
+					<tr>
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Nameservers</td>
 					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'A' AND user_id > '0' ", $db));?></strong></td>
 					</tr>
@@ -152,7 +156,7 @@ admin_auth();
 				<td valign="top" id="main">
 
 				<div class="maintitle_bg">
-					<div class="<?=$maintitle_class;?>"><a href="index.php?section=<?=$SECTION;?><?if ($_GET['domain']) { echo "&domain=".$_GET['domain'];}?><?if ($_GET['id']) { echo "&id=".$_GET['id'];}?>"><?=$maintitle_title;?></a></div>
+					<div class="<?=$maintitle_class;?>"><a href="index.php?section=<?=$SECTION;?><?if ($_GET['domain']) { echo "&domain=".$_GET['domain'];}?><?if ($_GET['id']) { echo "&id=".(int)$_GET['id'];}?><?if ($_GET['domain_id']) { echo "&domain_id=".(int)$_GET['domain_id'];}?>"><?=$maintitle_title;?></a></div>
 				</div>    
 
 					<?
