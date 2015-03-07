@@ -964,6 +964,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                       <tr>
                         <th><?=create_sort_link("name","Domain Name");?></th>
                         <th>Nameservers</th>
+                        <th>Total Records</th>
                         <th><?=create_sort_link("created","Registered");?> / <?=create_sort_link("change_date","Updated");?></th>
                         <th><?=create_sort_link("disabled","Domain Status");?></th>
                         <?if ($_SESSION['admin_level'] == 'admin'){?>
@@ -993,6 +994,28 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 					  $SELECT_ISTLD = mysql_query("SELECT id FROM tlds WHERE name = '".$LISTING['name']."' ", $db);
 					  $TLDID = mysql_fetch_array($SELECT_ISTLD);
 					  $ISTLD = mysql_num_rows($SELECT_ISTLD);
+
+
+					  $o=0;
+					  $ns='';
+					  $SELECT_ROOT_NS = mysql_query("SELECT name FROM root_ns WHERE active = '1' ", $db);
+					  $ROOT_NS_TOTAL = mysql_num_rows($SELECT_ROOT_NS);
+					  while ($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
+							$o++;
+							$ns .= "'".$ROOT_NS['name']."'";
+							if ($o < $ROOT_NS_TOTAL){
+								$ns .=", ";
+							}
+					  }
+					  					  
+					  if ($_SESSION['admin_level'] == 'user'){
+							$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' OR ".$mysql_table.".type LIKE '%".$q."%' OR ".$mysql_table.".ttl LIKE '%".$q."%') AND domain_id = '".$DOMAIN['id']."' AND type != 'SOA' AND content NOT IN (".$ns.")". $user_id . "  ";
+					  		$SELECT_DOMAIN_RECORDS = mysql_query("SELECT 1 FROM records WHERE domain_id = '".$HOSTEDID['id']."'  AND type != 'SOA' AND content NOT IN (".$ns.") " . $user_id, $db);
+                      }elseif($_SESSION['admin_level'] == 'admin'){
+					  		$SELECT_DOMAIN_RECORDS = mysql_query("SELECT 1 FROM records WHERE domain_id = '".$HOSTEDID['id']."' " . $user_id, $db);
+                      }
+					  $DOMAIN_RECORDS = mysql_num_rows($SELECT_DOMAIN_RECORDS);
+                      
 					  ?>     
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td align="left" nowrap>
@@ -1047,6 +1070,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         	<?}?>
                         	</table>                        	                        
                         </td>
+                        <td align="center" nowrap><?if ($ISHOSTED){ echo $DOMAIN_RECORDS; }else{ echo "-"; } ?></td>
                         <td align="center" nowrap><?if ($_GET['sort']=='created'){?><strong><?}?>R <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LISTING['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?></td>
                         <td align="center" >   
                         <?
