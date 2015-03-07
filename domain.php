@@ -92,7 +92,7 @@ if (isset($_GET['sort'])){
         $order = "ORDER BY `". mysql_escape_string($_GET['sort']) ."` ". mysql_escape_string($_GET['by']) . " ";
     }
 } else {
-    $order = "ORDER BY `type` ASC, `content` ASC ";
+    $order = "ORDER BY `name` ASC, `content` ASC";
     $_GET['sort'] = "content";
     $_GET['by'] = "asc";
 }
