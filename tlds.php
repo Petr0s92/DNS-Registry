@@ -148,7 +148,7 @@ if ($_POST['action'] == "add" ) {
 						NULL,
 						NULL,
 						'0',
-						'0',
+						'".$new_domain_time."',
 						'0'
 			)", $db);
 			
@@ -167,7 +167,7 @@ if ($_POST['action'] == "add" ) {
 							NULL,
 							NULL,
 							'0',
-							'0',
+							'".$new_domain_time."',
 							'0'
 				)", $db);
 

@@ -189,7 +189,7 @@ if ($_POST['action'] == "add" && $_POST['domain_id']) {
 		$soa_update = update_soa_serial_byid($DOMAIN['id']);
 		               
         if ($INSERT && $soa_update){
-        	if ($_POST['action'] == 'add'){
+        	if ($_POST['formaction'] == 'add'){
 				$add = "&action=add";
         	}
             header("Location: index.php?section=".$SECTION."&saved_success=1".$add.$sort_vars.$search_vars);
@@ -520,8 +520,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                             
                                             <?if ($_GET['action'] != 'edit'){?>
                                             <p>
-                                                <label for="action">Add another record after submit</label>
-                                                <input type="checkbox" name="action" id="action" style="width:12px; margin:7px;" title="Check to add another record after submit" value="add" checked="checked" />
+                                                <label for="formaction">Add another record after submit</label>
+                                                <input type="checkbox" name="formaction" id="formaction" style="width:12px; margin:7px;" title="Check to add another record after submit" value="add" checked="checked" />
                                             </p>
                                             <?}?>                                                                                        
 											
