@@ -189,7 +189,10 @@ if ($_POST['action'] == "add" && $_POST['domain_id']) {
 		$soa_update = update_soa_serial_byid($DOMAIN['id']);
 		               
         if ($INSERT && $soa_update){
-            header("Location: index.php?section=".$SECTION."&saved_success=1".$sort_vars.$search_vars);
+        	if ($_POST['action'] == 'add'){
+				$add = "&action=add";
+        	}
+            header("Location: index.php?section=".$SECTION."&saved_success=1".$add.$sort_vars.$search_vars);
             exit();
         }else{
             $error_occured = TRUE;
@@ -513,6 +516,13 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                                 <label for="ttl" class="required">TTL</label>
                                                 <input type="text" name="ttl" id="ttl" title="Enter the Record TTL (Time To Live)" value="<?if($_POST['ttl']){ echo $_POST['ttl']; }elseif ($_GET['action'] == "edit"){ echo stripslashes($RESULT['ttl']);}else{ echo $CONF['RECORDS_TTL']; } ?>">
                                             </p>
+                                            
+                                            <?if ($_GET['action'] != 'edit'){?>
+                                            <p>
+                                                <label for="action">Add another record after submit</label>
+                                                <input type="checkbox" name="action" id="action" style="width:12px; margin:7px;" title="Check to add another record after submit" value="add" checked="checked" />
+                                            </p>
+                                            <?}?>                                                                                        
 											
                                         </div>
                                         
