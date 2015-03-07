@@ -413,7 +413,10 @@ if ($_GET['action'] == "delete" && $_POST['id']){
 		if ($ISHOSTED){
 			$DELETE = mysql_query("DELETE FROM `domains` WHERE `id`= '".$HOSTEDID['id']."' ",$db);
 			$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `domain_id`= '".$HOSTEDID['id']."' ",$db);
-			$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `name`= '".$DOMAIN['name']."' ". $user_id ,$db);
+			$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `domain_id`= '".$HOSTEDID['id']."' ". $user_id ,$db);
+			$soa_update = true;
+		}else{
+			$soa_update = update_soa_serial($DOMAIN['name'], true);
 		}
 	    
 	    $soa_update = update_soa_serial($DOMAIN['name'], true);
