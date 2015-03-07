@@ -170,6 +170,79 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `Admin_level` (`Admin_level`,`Help`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
 
-
+-- Default admin user
 INSERT INTO `users` (`id`, `username`, `password`, `fullname`, `email`, `description`, `perm_templ`, `active`, `use_ldap`, `Admin_level`, `Help`, `registered`, `last_login`, `last_ip`, `nodeid`) VALUES
 (1, 'admin', 'd033e22ae348aeb5660fc2140aec35850c4da997', 'Administrator - TLD Owner', 'admin@your-domain.tld', 'Administrator with full rights', 1, 1, 0, 'admin', '1', UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), '0.0.0.0', 1);
+
+-- Create meta-zone for slaves automatic zones delete
+INSERT INTO `domains` (`id`, `name`, `master`, `last_check`, `type`, `notified_serial`, `account` ) VALUES (1, 'meta.meta', NULL, NULL, 'MASTER', NULL, NULL);
+INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES 
+(1, 'meta.meta', 'SOA', 'meta.meta root.meta 2015030701 10800 3600 3600 120', '86400', 0, UNIX_TIMESTAMP(), NULL, NULL, 0, 0, 0);
+
+
+-- Create meta-zone TXT record for slaves delete on domain delete
+DELIMITER $$$
+
+DROP TRIGGER IF EXISTS domains_del;
+
+CREATE TRIGGER `domains_del` AFTER DELETE ON `domains`
+FOR EACH ROW 
+BEGIN
+
+    -- Add a record to the records table for the "metazone"
+    -- indicating that a zone is being deleted.
+
+    SET @metazone = 'meta.meta';
+    SET @d_id = OLD.id;
+    SET @d_name = OLD.name;
+    SET @txt = CONCAT('"', 'd=', @d_id, ' ', UTC_TIMESTAMP(), '"');
+
+    -- Remove all records for this zone.
+    -- no need - we handle this already via PHP
+    -- DELETE FROM records WHERE domain_id = @d_id;
+
+    -- Add a NEW record to the metazone detailing which zone we've
+    -- just deleted.
+
+    INSERT INTO records (domain_id, name, ttl, type, content)
+        SELECT id, CONCAT(@d_name, '.', @metazone), 86400, 'TXT', @txt
+        FROM domains WHERE name = @metazone;
+
+    -- Update SOA record in metazone.
+
+    UPDATE records
+        SET content = CONCAT(@metazone, ' root.meta ', UNIX_TIMESTAMP(NOW()), ' 10800 3600 3600 120')
+        WHERE domain_id = (SELECT id FROM domains WHERE name = @metazone)
+              AND type = 'SOA';
+END $$$
+
+DELIMITER ;
+
+
+-- Cleanup meta-zone on new domains
+DELIMITER $$$
+
+DROP TRIGGER IF EXISTS domains_add;
+
+CREATE TRIGGER `domains_add` AFTER INSERT ON `domains`
+FOR EACH ROW BEGIN
+
+    -- Remove a possibly previously 'deleted' zone by deleting its
+    -- record from the "metazone" zone.
+
+    SET @metazone = 'meta.meta';
+    SET @d_name = NEW.name;
+
+    DELETE FROM records
+        WHERE domain_id = (SELECT id FROM domains WHERE name = @metazone)
+             AND name = CONCAT(@d_name, '.', @metazone);
+
+    -- Update SOA record in metazone.
+
+    UPDATE records
+        SET content = CONCAT(@metazone, ' root.meta ', UNIX_TIMESTAMP(NOW()), ' 10800 3600 3600 120')
+        WHERE domain_id = (SELECT id FROM domains WHERE name = @metazone)
+              AND type = 'SOA';
+
+END $$$
+DELIMITER ;

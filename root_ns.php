@@ -147,6 +147,34 @@ if ($_POST['action'] == "add" ) {
         	
         	mysql_query("INSERT INTO `tsigkeys` (name, algorithm, secret) VALUES ( '".addslashes($_POST['name'])."', 'hmac-md5', '".addslashes($_POST['tsig_key'])."' )", $db);
         	
+        	
+			
+			//Insert new Root NS to all existing domains
+			$SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains", $db);
+			while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
+				
+				mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES 
+							('".$DOMAINS['id']."', '".$DOMAINS['name']."', 'NS', '".addslashes($_POST['name'])."', '".$CONF['RECORDS_TTL']."', 0, UNIX_TIMESTAMP(), NULL, NULL, 0, 0, 0) ", $db);
+				
+			
+				//Insert the NS TSIG records for AXFR				
+				mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
+							'".$DOMAINS['id']."', 
+							'TSIG-ALLOW-AXFR',
+							'".addslashes($_POST['name'])."'
+							
+				)", $db);
+				
+    			//Insert the ALSO-NOTIFY records to notify meta-slaves for automatic provision of the new zone on the slaves. 				
+				mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
+							'".$DOMAINS['id']."', 
+							'ALSO-NOTIFY',
+							'".addslashes($_POST['ip']).":".$CONF['META_SLAVE_PORT']."'
+							
+				)", $db);
+						
+			}						
+        	
             header("Location: index.php?section=".$SECTION."&saved_success=1");
             exit();
         }else{
@@ -166,6 +194,8 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     $ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS);
     $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
     $DELETE = mysql_query("DELETE FROM `tsigkeys` WHERE `name`= '".$ROOT_NS['name']."' " ,$db);
+    $DELETE = mysql_query("DELETE FROM `records` WHERE `content`= '".$ROOT_NS['name']."' AND `type` = 'NS' " ,$db);
+    $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content`= '".$ROOT_NS['name']."' " ,$db);
     
     if ($DELETE){
         ob_end_clean();
@@ -177,6 +207,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     exit();
 } 
 
+/*
 // ENABLE/DISABLE RECORD
 if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option'])){
     $id = addslashes($_POST['id']);
@@ -194,6 +225,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
     }
     exit();
 }
+*/
 
 ?>
 
@@ -239,7 +271,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     //DELETE RECORD
                     $('a.delete').click(function () {
                         var record_id = $(this).attr('rel');
-                        if(confirm('Are you sure you want to delete this record?\n\rThis action cannot be undone!\n\r\n\rNOTICE: Deleting a Root Nameserver will not update your TLDs\' already-configured nameservers!')){
+                        if(confirm('Are you sure you want to delete this record?\n\rThis action cannot be undone!')){
                             $.post("index.php?section=<?=$SECTION;?>&action=delete", {
                                 id: record_id
                             }, function(response){
@@ -260,7 +292,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         }
                     });
 
-                    
+                    <?/*
                     //SET ACTIVE FLAG
                     $('a.toggle_active').click(function () {
                         if ($(this).hasClass('activated')){    
@@ -285,7 +317,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         });
                         return false;
                     });
-    
+                    */?>
     
     
                 //CLOSE THE NOTIFICATION BAR
@@ -413,7 +445,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <th><?=create_sort_link("name","Root Nameserver Name");?></th>
                         <th><?=create_sort_link("ip","Root Nameserver IP");?></th>
                         <th>TSIG Key</th>
-                        <th><?=create_sort_link("active", "Active");?></th>
+                        <?/*<th><?=create_sort_link("active", "Active");?></th>*/?>
                         <th>Actions</th>
                       </tr>
                       <!-- RESULTS START -->
@@ -429,9 +461,9 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <td nowrap><?=$LISTING['name'];?></td>
                         <td nowrap><?=$LISTING['ip'];?></td>
                         <td nowrap><?=$TSIG['secret'];?></td>
-                        <td align="center" >
+                        <?/*<td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
-                        </td>
+                        </td>*/?>
                         <td align="center" nowrap="nowrap">
                             <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
                         </td>

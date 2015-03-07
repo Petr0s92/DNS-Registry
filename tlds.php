@@ -179,6 +179,16 @@ if ($_POST['action'] == "add" ) {
 							
 				)", $db);
 				
+    			//Insert the ALSO-NOTIFY records to notify meta-slaves for automatic provision of the new zone on the slaves. 				
+				mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
+							'".$new_domain_id."', 
+							'ALSO-NOTIFY',
+							'".addslashes($ROOT_NS['ip']).":".$CONF['META_SLAVE_PORT']."'
+							
+				)", $db);
+										
+				
+				
 			}
 			        	
         	
