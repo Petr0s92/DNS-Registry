@@ -49,7 +49,7 @@ $SELECT_DOMAIN_USER = mysql_query("SELECT user_id FROM records WHERE domain_id =
 $DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
 
 //If domain_id is invalid redirect to my domains page
-if (!mysql_num_rows($SELECT_DOMAIN) || !$DOMAIN['id'] || !mysql_num_rows($SELECT_DOMAIN_USER) || !$DOMAIN_USER['user_id'] ){
+if (!mysql_num_rows($SELECT_DOMAIN) || !$DOMAIN['id'] || !mysql_num_rows($SELECT_DOMAIN_USER) ){
 	Header ("Location: index.php?section=domains");
 	exit();
 }
