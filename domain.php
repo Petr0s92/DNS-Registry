@@ -72,8 +72,12 @@ while ($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
 	}
 }
 
-$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' OR ".$mysql_table.".type LIKE '%".$q."%' OR ".$mysql_table.".ttl LIKE '%".$q."%') AND domain_id = '".$DOMAIN['id']."' AND type != 'SOA' AND content NOT IN (".$ns.")". $user_id . "  ";
-//$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' ) AND domain_id = '".$DOMAIN['id']."'  ". $user_id . "  ";
+if ($_SESSION['admin_level'] == 'user'){
+	$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' OR ".$mysql_table.".type LIKE '%".$q."%' OR ".$mysql_table.".ttl LIKE '%".$q."%') AND domain_id = '".$DOMAIN['id']."' AND type != 'SOA' AND content NOT IN (".$ns.")". $user_id . "  ";
+}elseif($_SESSION['admin_level'] == 'admin'){
+	$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' OR ".$mysql_table.".type LIKE '%".$q."%' OR ".$mysql_table.".ttl LIKE '%".$q."%') AND domain_id = '".$DOMAIN['id']."' ";
+	//$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' ) AND domain_id = '".$DOMAIN['id']."'  ". $user_id . "  ";
+}
 
   
 // Sorting
