@@ -56,7 +56,19 @@ if ($_SESSION['admin_level'] == 'user'){
 
 }
 
-$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' ) AND type = 'A' ". $user_id ;
+$o=0;
+$tlds='';
+$SELECT_TLDS = mysql_query("SELECT domains.id FROM tlds LEFT JOIN domains on tlds.name=domains.name ", $db);
+$TLDS_TOTAL = mysql_num_rows($SELECT_TLDS);
+while ($TLDS = mysql_fetch_array($SELECT_TLDS)){
+	$o++;
+	$tlds .= "'".$TLDS['id']."'";
+	if ($o < $TLDS_TOTAL){
+		$tlds .=", ";
+	}
+}
+
+$search_query = "WHERE (".$mysql_table.".name LIKE '%".$q."%' OR ".$mysql_table.".content LIKE '%".$q."%' ) AND type = 'A' AND domain_id IN (".$tlds.") ". $user_id ;
 
   
 // Sorting
