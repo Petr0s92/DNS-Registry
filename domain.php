@@ -42,11 +42,14 @@ if ($_SESSION['admin_level'] == 'user'){
 
 $did = mysql_real_escape_string($_GET['domain_id'], $db);
 
-$SELECT_DOMAIN = mysql_query("SELECT name, id FROM domains WHERE id = '".$did."' ".$user_id, $db);
+$SELECT_DOMAIN = mysql_query("SELECT name, id FROM domains WHERE id = '".$did."' ", $db);
 $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
+$SELECT_DOMAIN_USER = mysql_query("SELECT user_id FROM records WHERE domain_id = '".$DOMAIN['id']."' " . $user_id, $db);
+$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
+
 //If domain_id is invalid redirect to my domains page
-if (!mysql_num_rows($SELECT_DOMAIN) || !$DOMAIN['id'] ){
+if (!mysql_num_rows($SELECT_DOMAIN) || !$DOMAIN['id'] || !mysql_num_rows($SELECT_DOMAIN_USER) || !$DOMAIN_USER['user_id'] ){
 	Header ("Location: index.php?section=domains");
 	exit();
 }
@@ -153,9 +156,6 @@ if ( $_GET['action'] == "edit" && $_GET['id'] ) {
 if ($_POST['action'] == "add" && $_POST['domain_id']) {
     
     $errors = array();
-    
-	$SELECT_DOMAIN_USER = mysql_query("SELECT user_id FROM records WHERE domain_id = '".$DOMAIN['id']."' ", $db);
-	$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
       
     if ($validate = validate_input(-1, $DOMAIN['id'], $_POST['type'], $_POST['content'], $_POST['name'], $_POST['priority'], $_POST['ttl'])){
 		$errors['validate'] = $validate;	
@@ -205,9 +205,6 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
     $id = $_POST['id'] = (int)$_POST['id'];
     
     $errors = array();
-    
-	$SELECT_DOMAIN_USER = mysql_query("SELECT user_id FROM records WHERE domain_id = '".$DOMAIN['id']."' ", $db);
-	$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
       
     if ($validate = validate_input($id, $DOMAIN['id'], $_POST['type'], $_POST['content'], $_POST['name'], $_POST['priority'], $_POST['ttl'])){
 		$errors['validate'] = $validate;	
