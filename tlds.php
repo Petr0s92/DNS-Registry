@@ -153,7 +153,7 @@ if ($_POST['action'] == "add" ) {
 			)", $db);
 			
 			//Insert root NS records
-			$SELECT_ROOT_NS = mysql_query("SELECT `name` FROM `root_ns` WHERE `active` = '1' ORDER BY `name` ASC ", $db);
+			$SELECT_ROOT_NS = mysql_query("SELECT `name`, `ip` FROM `root_ns` WHERE `active` = '1' ORDER BY `name` ASC ", $db);
 			while($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
 				
 				mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES (
