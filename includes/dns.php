@@ -183,7 +183,7 @@ function validate_input($rid, $zid, $type, &$content, $name, &$prio, &$ttl) {
 
         case 'OPT': // TODO: implement validation
             break;
-
+*/
         case "PTR":
             if (!is_valid_hostname_fqdn($content, 0)) {
                 return false;
@@ -192,7 +192,7 @@ function validate_input($rid, $zid, $type, &$content, $name, &$prio, &$ttl) {
                 return false;
             }
             break;
-
+/*
         case 'RKEY': // TODO: implement validation
             break;
 
