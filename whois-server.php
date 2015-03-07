@@ -85,7 +85,7 @@ function handle_client($allclient, $socket, $buf) {
 	$DOMAIN_lookup = trim($buf);
 
 	// Select domain and owner from database
-	$SELECT_DOMAIN = mysql_query("SELECT user_id, created, change_date FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND type = 'NS' LIMIT 0,1 ", $db);
+	$SELECT_DOMAIN = mysql_query("SELECT user_id, created, change_date, type FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND ( type = 'NS'  OR type = 'A' ) LIMIT 0,1 ", $db);
 	$DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
 	$SELECT_OWNER = mysql_query("SELECT username, nodeid FROM users WHERE id = '".$DOMAIN['user_id']."' ", $db);
@@ -113,16 +113,31 @@ function handle_client($allclient, $socket, $buf) {
 		$whois_reply .= "Updated Date: \n";
 		$whois_reply .= "\t".date("d-m-Y g:i a",$DOMAIN['change_date'])."\n";
 		$whois_reply .= "\n";
-		$whois_reply .= "Registrant:\n";
-		$whois_reply .= "\tUsername: ".$OWNER['username']."\n";
-		$whois_reply .= "\tNode ID: #".$OWNER['nodeid']."\n";
-		$whois_reply .= "\n";
-		$whois_reply .= "Name Servers:\n";
+		
+		//Show user & nameservers only if domain is delegated.
+		if ($DOMAIN['type'] == 'NS'){
+			if ($OWNER['username'] || $OWNER['nodeid']){
+				$whois_reply .= "Registrant:\n";
+			}
+			if ($OWNER['username']){			
+				$whois_reply .= "\tUsername: ".$OWNER['username']."\n";
+			}
+			if ($OWNER['nodeid']){
+				$whois_reply .= "\tNode ID: #".$OWNER['nodeid']."\n";
+			}
+			if ($OWNER['username'] || $OWNER['nodeid']){
+				$whois_reply .= "\n";
+			}
+		
+			$whois_reply .= "Name Servers:\n";
 
-		//Select domain nameservers
-		$SELECT_NS = mysql_query("SELECT content FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND type='NS' ORDER BY content ASC", $db);
-		while ($NS = mysql_fetch_array($SELECT_NS)){
-			$whois_reply .= "\t".$NS['content']."\n";
+			//Select domain nameservers
+			$SELECT_NS = mysql_query("SELECT content FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND type='NS' ORDER BY content ASC", $db);
+			while ($NS = mysql_fetch_array($SELECT_NS)){
+				$whois_reply .= "\t".$NS['content']."\n";
+			}
+		}else{
+			$whois_reply .= "This is a System domain.\n";
 		}
 
 		$whois_reply .= "\n";
