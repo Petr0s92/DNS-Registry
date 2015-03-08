@@ -173,7 +173,9 @@ if ($_POST['action'] == "add" ) {
 							
 				)", $db);
 				
-				$soa_update = update_soa_serial_byid($DOMAINS['id']);
+				if ($DOMAINS['id'] != '1'){
+					$soa_update = update_soa_serial_byid($DOMAINS['id']);
+				}
 						
 			}
 									
@@ -201,7 +203,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content`= '".$ROOT_NS['name']."' " ,$db);
     
     #Update SOA on all domains
-    $SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains", $db);
+    $SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains WHERE id != '1' ", $db);
 	while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
 			$soa_update = update_soa_serial_byid($DOMAINS['id']);
     }

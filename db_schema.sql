@@ -196,7 +196,7 @@ BEGIN
     SET @d_id = OLD.id;
     SET @d_name = OLD.name;
     SET @txt = CONCAT('"', 'd=', @d_id, ' ', UTC_TIMESTAMP(), '"');
-
+    
     -- Remove all records for this zone.
     -- no need - we handle this already via PHP
     -- DELETE FROM records WHERE domain_id = @d_id;
