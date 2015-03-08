@@ -14,7 +14,7 @@ my $nsdcontrol = '/usr/local/sbin/nsd-control';
 # This NS IP (where NSD listens to and allows AXFR requests)
 my $rootns = '10.1.1.11'; 
 
-# TMP Folder to save received zone NOTIFIES (make sure the folder exists)
+# TMP Folder to save received zone NOTIFIES (make sure the folder exists) (without trailing slash) 
 my $depot = '/tmp/zones'; 
 
 

@@ -13,6 +13,9 @@ my $nsdcontrol = '/usr/local/sbin/nsd-control';
 # This NS IP (where NSD listens to and allows AXFR requests)
 my $rootns = '10.1.1.11'; 
 
+# TMP Folder where nsd_superslave writes incoming zones (without trailing slash)
+my $depot = '/tmp/zones';
+
 
 my $res = Net::DNS::Resolver->new;
 
@@ -48,6 +51,8 @@ foreach my $rr (@zone) {
     if (defined($name)) {
         my $command = "${nsdcontrol} delzone ${name} ";
         system($command);
+        my $command2 = "rm -rf ". $depot ."/". $name ;
+        system($command2);
     }
 
 
