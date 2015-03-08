@@ -172,8 +172,11 @@ if ($_POST['action'] == "add" ) {
 							'".addslashes($_POST['ip']).":".$CONF['META_SLAVE_PORT']."'
 							
 				)", $db);
+				
+				$soa_update = update_soa_serial_byid($DOMAINS['id']);
 						
-			}						
+			}
+									
         	
             header("Location: index.php?section=".$SECTION."&saved_success=1");
             exit();
@@ -196,6 +199,12 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     $DELETE = mysql_query("DELETE FROM `tsigkeys` WHERE `name`= '".$ROOT_NS['name']."' " ,$db);
     $DELETE = mysql_query("DELETE FROM `records` WHERE `content`= '".$ROOT_NS['name']."' AND `type` = 'NS' " ,$db);
     $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content`= '".$ROOT_NS['name']."' " ,$db);
+    
+    #Update SOA on all domains
+    $SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains", $db);
+	while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
+			$soa_update = update_soa_serial_byid($DOMAINS['id']);
+    }
     
     if ($DELETE){
         ob_end_clean();
