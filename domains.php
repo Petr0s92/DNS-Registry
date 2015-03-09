@@ -51,8 +51,16 @@ if ($_SESSION['admin_level'] == 'user'){
         $user_id = " AND user_id = '".$qu."' ";
      
     }else{
-		//$user_id = " AND user_id > '0' ";		
-		$user_id = "  ";		
+		if ($_GET['show_system_domains'] == '1'){
+			$user_id = "  ";
+		}elseif ($_GET['show_system_domains'] == '2'){
+			$user_id = " AND user_id = '0'  ";
+		}else{
+			$user_id = " AND user_id > '0' ";
+		}								
+		
+		$search_vars .= "&show_system_domains=".mysql_real_escape_string($_GET['show_system_domains'], $db);;		
+				
     }
 
 }
@@ -799,15 +807,18 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                             <p>
                                                 <label for="hosted" class="required">Domain Hosting Method</label>
                                                 <select name="hosted" id="hosted" title="Select the domain hosting method" >
-                                                    <option value="hosted"   <?if (!$_POST['hosted'] || $_POST['hosted'] == 'hosted'){   echo "selected=\"selected\"";}?> >Host my Domain here</option>
+                                                    <option value="hosted"   <?if (!$_POST['hosted'] || $_POST['hosted'] == 'hosted'){   echo "selected=\"selected\"";}?> >Managed Hosting</option>
                                                     <option value="nohosted" <?if ($_POST['hosted'] == 'nohosted'){ echo "selected=\"selected\"";}?> >Self Hosted</option>
                                                 </select>
                                             </p>                                            
 
 											
-                                        	<div id="Hosted">This domain will be hosted on our servers</div>
+                                        	<div id="Hosted"><strong>This domain will be hosted on <span class="red">our</span> nameservers.</strong></div>
                                             
-                                            <div id="NoHosted">												
+                                            <div id="NoHosted">
+                                            	<strong>This domain will be hosted on <span class="red">your</span> nameservers</strong>
+                                            	<br />												
+                                            	<br />												
 												<label class="required">Nameserver 1</label>                                            
                                             	<div id="InputsWrapper">
 												
@@ -940,6 +951,14 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                         <option value="<?=$USERS['id'];?>"   <? if ($_GET['search_user_id'] == $USERS['id']){ echo "selected=\"selected\""; }?> ><?=$USERS['username'];?> <?if ($USERS['fullname']){?>(<?=$USERS['fullname'];?>)<?}?></option>
 										<?}?>  
                                         
+                                    </select>
+                                </td>
+                                <td>Show System Domains:</td>
+                                <td>
+                                    <select name="show_system_domains" class="select_box">
+                                        <option value="0" <? if ($_GET['show_system_domains'] != '1' && $_GET['show_system_domains'] != '2'){ echo "selected=\"selected\""; }?> >No</option> 
+                                        <option value="1" <? if ($_GET['show_system_domains'] == '1'){ echo "selected=\"selected\""; }?> >Yes</option> 
+                                        <option value="2" <? if ($_GET['show_system_domains'] == '2'){ echo "selected=\"selected\""; }?> >Only</option> 
                                     </select>
                                 </td>
                                 <?}?>                                

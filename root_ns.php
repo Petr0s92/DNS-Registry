@@ -152,9 +152,11 @@ if ($_POST['action'] == "add" ) {
 			//Insert new Root NS to all existing domains
 			$SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains", $db);
 			while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
+				$SELECT_DOMAIN_USER = mysql_query("SELECT user_id FROM records WHERE domain_id = '".$DOMAINS['id']."' AND ( type = 'NS' OR type = 'SOA' ) LIMIT 0,1 ", $db);
+				$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
 				$new_rootns_time = time();				
 				mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES 
-							('".$DOMAINS['id']."', '".$DOMAINS['name']."', 'NS', '".addslashes($_POST['name'])."', '".$CONF['RECORDS_TTL']."', 0, ".$new_rootns_time.", NULL, NULL, 0, ".$new_rootns_time.", 0) ", $db);
+							('".$DOMAINS['id']."', '".$DOMAINS['name']."', 'NS', '".addslashes($_POST['name'])."', '".$CONF['RECORDS_TTL']."', 0, ".$new_rootns_time.", NULL, NULL, 0, ".$new_rootns_time.", '".$DOMAIN_USER['user_id']."' ) ", $db);
 				
 			
 				//Insert the NS TSIG records for AXFR				
