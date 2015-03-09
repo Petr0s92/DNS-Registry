@@ -40,8 +40,7 @@ function validate_input($rid, $zid, $type, &$content, $name, &$prio, &$ttl) {
     switch ($type) {
 
         case "A":
-			echo "A";
-            if ($return = is_valid_ipv4($content)) {
+			if ($return = is_valid_ipv4($content)) {
                 return $return;
             }
             if ($return = is_valid_rr_cname_exists($name, $rid)) {

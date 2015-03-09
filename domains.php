@@ -117,6 +117,8 @@ $total_pages=$i; // sinolo selidon
 
 //Final Query for records listing
 $SELECT_RESULTS  = mysql_query("SELECT `".$mysql_table."`.* FROM `".$mysql_table."` ".$search_query." ".$order . " LIMIT ".$pageno.", ".$e ,$db);
+$SELECT_LAST_UPDATED  = mysql_query("SELECT `change_date` FROM `".$mysql_table."` ".$search_query." ORDER BY change_date DESC LIMIT 0, 1",$db);
+$LAST_UPDATED = mysql_fetch_array($SELECT_LAST_UPDATED);
 $url_vars = "action=".$_GET['action'] . $sort_vars . $search_vars;
 
 
@@ -313,7 +315,7 @@ if ($_POST['action'] == "add" ) {
 						'".$new_domain_time."',
 						NULL,
 						NULL,
-						'0',
+						'1',
 						'".$new_domain_time."',
 						'".mysql_escape_string($_POST['user_id'])."'
 			)", $db);
@@ -336,7 +338,7 @@ if ($_POST['action'] == "add" ) {
 							'".$new_domain_time."',
 							NULL,
 							NULL,
-							'0',
+							'1',
 							'".$new_domain_time."',
 							'".mysql_escape_string($_POST['user_id'])."'
 				)", $db);
@@ -1037,10 +1039,18 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                             <table>
                             <?if ($ISHOSTED){?>
                             	<tr>
+                            		<?if ($DOMAIN_RECORDS >= 1){?>
                             		<td nowrap="nowrap" align="right" width="33">
                             			<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Manage Domain Records" ><img src="images/ico_edit_ns.png" align="absmiddle"></a>
                             		</td>
-                            		<td nowrap="nowrap"><span class="blue"><strong style="font-family: monospace"><?if ($ISTLD){?>System TLD<?}else{?>Hosted Domain<?}?></strong></span></td>
+                            		<?}?>
+                            		<td nowrap="nowrap">
+                            			<?if ($DOMAIN_RECORDS >= 1){?>
+                            			<span class="blue"><strong style="font-family: monospace"><?if ($ISTLD){?>System TLD<?}else{?>Hosted Domain<?}?></strong></span>
+										<?}else{?>                            			
+                            			<span class="red alert_ico"><strong style="font-family: monospace"><a href="index.php?section=domain&domain_id=<?=$HOSTEDID['id'];?>&action=add" title="Add some records to enable this domain" <?if (staff_help()){?>class="tip_south"<?}?> >No Records yet</a></strong></span>
+                            			<?}?>
+                            		</td>
                             	</tr>
                             <?}else{?>
                             	<?
@@ -1075,7 +1085,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         	</table>                        	                        
                         </td>
                         <td align="center" nowrap><?if ($ISHOSTED){ echo $DOMAIN_RECORDS; }else{ echo "-"; } ?></td>
-                        <td align="center" nowrap><?if ($_GET['sort']=='created'){?><strong><?}?>R <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LISTING['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?></td>
+                        <td align="center" nowrap><?if ($_GET['sort']=='created'){?><strong><?}?>R <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LAST_UPDATED['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?></td>
                         <td align="center" >   
                         <?
                         if (!$ISTLD){

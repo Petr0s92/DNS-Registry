@@ -420,9 +420,9 @@ if ($_GET['action'] == "delete" && $_POST['id']){
                 <div class="mainsubtitle_bg">
                     <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List all Nameservers</a> | <?if ($_GET['action'] == 'edit'){?><a href="index.php?section=<?=$SECTION;?>&action=add<?=$d_vars;?>" class="add"><span>Add Nameserver to Domain</span></a><?}else{?><a href="javascript: void(0)" id="button" class="add">Add Nameserver to Domain</a><?}?> | <a href="index.php?section=domains" class="back"><span>Back to My Domains</span></a></div>
                 </div> 
-                            
-                <br />
                     
+                <h3>Nameservers for Domain: <?=$d;?></h3>
+                
                     <? if ($_GET['saved_success']) { ?>
                         <p class="success"><span style="float: right;"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_east<?}?> close_notification" rel="success" title="Close notification bar"><span>Close Notification Bar</span></a></span>
                         Record saved successfully. <? if ($_GET['change_pass']) echo " Password changed."; ?></p>

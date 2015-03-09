@@ -163,6 +163,24 @@ if ($_POST['action'] == "add" && $_POST['domain_id']) {
 	
     if (count($errors) == 0) {
         
+        //Check if domain is new and inactive and prepare to activate all its records
+
+        //first fetch the active root ns
+		$o=0;
+		$ns='';
+		$SELECT_ROOT_NS = mysql_query("SELECT name FROM root_ns WHERE active = '1' ", $db);
+		$ROOT_NS_TOTAL = mysql_num_rows($SELECT_ROOT_NS);
+		while ($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
+			$o++;
+			$ns .= "'".$ROOT_NS['name']."'";
+			if ($o < $ROOT_NS_TOTAL){
+				$ns .=", ";
+			}
+		}
+        
+        $SELECT_DOMAIN_INACTIVE = mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE domain_id = '".$DOMAIN['id']."'  AND type != 'SOA' AND content NOT IN (".$ns.") ", $db);
+        $DOMAIN_INACTIVE = mysql_num_rows($SELECT_DOMAIN_INACTIVE);
+        
         $new_record_time = time();
         
         //format name
@@ -185,6 +203,11 @@ if ($_POST['action'] == "add" && $_POST['domain_id']) {
             '0',
             '0'            
         )", $db);
+        
+        //Enable domain
+        if ($DOMAIN_INACTIVE==0){
+        	mysql_query("UPDATE `".$mysql_table."` SET disabled='0' WHERE type = 'SOA' OR content IN (".$ns.") ", $db);
+        }
 
 		$soa_update = update_soa_serial_byid($DOMAIN['id']);
 		               
@@ -231,7 +254,7 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
             change_date = '".time()."'
             
             WHERE id= '" . $_POST['id'] . "'",$db);
-                               echo mysql_error();
+            
                                
             $soa_update = update_soa_serial_byid($DOMAIN['id']);
             
