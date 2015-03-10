@@ -118,6 +118,10 @@ if ($_POST['action'] == "add" ) {
     $_POST['name'] = trim($_POST['name']);
     if ($validate = is_valid_hostname_fqdn($_POST['name'], 0) ){
 		$errors['name'] = $validate;		
+	}else{
+		if (mysql_num_rows(mysql_query("SELECT 1 FROM `domains` WHERE `name` = '".mysql_escape_string($_POST['name'])."' ",$db))){
+	    	$errors['name'] = "This domain name is already configured on this system." ;
+	    } 
 	}
 	
 	$_POST['master'] = trim($_POST['master']);
