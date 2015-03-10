@@ -167,6 +167,7 @@ if ($_POST['action'] == "add" ) {
 							
 				)", $db);
 				
+				/* -- no longer needed because of unicast ips section
     			//Insert the ALSO-NOTIFY records to notify meta-slaves for automatic provision of the new zone on the slaves. 				
 				mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
 							'".$DOMAINS['id']."', 
@@ -174,7 +175,7 @@ if ($_POST['action'] == "add" ) {
 							'".addslashes($_POST['ip']).":".$CONF['META_SLAVE_PORT']."'
 							
 				)", $db);
-				
+				*/
 				if ($DOMAINS['id'] != '1'){
 					$soa_update = update_soa_serial_byid($DOMAINS['id']);
 				}
@@ -199,10 +200,17 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     
     $SELECT_ROOT_NS = mysql_query("SELECT `name` FROM `root_ns` WHERE id = '".$id."' ");
     $ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS);
+    //first delete all unicast ips
+    $SELECT_ROOT_NS_UNICAST = mysql_query("SELECT `ip`, `id` FROM `root_ns_unicast` WHERE parent_id = '".$id."' ");
+    while($ROOT_NS_UNICAST = mysql_fetch_array($SELECT_ROOT_NS_UNICAST)){
+		$DELETE = mysql_query("DELETE FROM `root_ns_unicast` WHERE `id`= '".$ROOT_NS_UNICAST['id']."' " ,$db);
+		$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE ip = '".$ROOT_NS_UNICAST['ip']."' ", $db);
+    }
+    //then delete root ns
     $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
     $DELETE = mysql_query("DELETE FROM `tsigkeys` WHERE `name`= '".$ROOT_NS['name']."' " ,$db);
     $DELETE = mysql_query("DELETE FROM `records` WHERE `content`= '".$ROOT_NS['name']."' AND `type` = 'NS' " ,$db);
-    $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content`= '".$ROOT_NS['name']."' " ,$db);
+    //$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content`= '".$ROOT_NS['name']."' " ,$db);
     
     #Update SOA on all domains
     $SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains WHERE id != '1' ", $db);
@@ -392,8 +400,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                             </p>
                                         
                                             <p>
-                                                <label for="ip" class="required">Root Nameserver IP Address</label>
-                                                <input type="text" name="ip" id="ip" title="Enter the Root Nameserver IP Address" value="<? if($_POST['ip']){ echo $_POST['ip']; } ?>">
+                                                <label for="ip" class="required">Root Nameserver Anycast IP Address</label>
+                                                <input type="text" name="ip" id="ip" title="Enter the Root Nameserver Anycast IP Address" value="<? if($_POST['ip']){ echo $_POST['ip']; } ?>">
                                             </p>
                                         </div>
                                         <div class="colx2-right">
@@ -430,7 +438,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <input type="hidden" name="section" value="<?=$SECTION;?>" />
                         <table border="0" cellspacing="0" cellpadding="4">
                             <tr>
-                                <td>Root Nameserver Name:</td>
+                                <td>Search:</td>
                                 <td><input type="text" name="q" id="search_field_q" class="input_field" value="<?=$q?>" /></td>
                                 <td><button type="submit"  >Search</button></td>
                             </tr>
@@ -455,8 +463,9 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                   
                       <table width="100%" border="0" cellspacing="2" cellpadding="5">
                       <tr>
-                        <th><?=create_sort_link("name","Root Nameserver Name");?></th>
-                        <th><?=create_sort_link("ip","Root Nameserver IP");?></th>
+                        <th><?=create_sort_link("name","Root NS Name");?></th>
+                        <th><?=create_sort_link("ip","Root NS Anycast IP");?></th>
+                        <th>Unicast IPs</th>
                         <th>TSIG Key</th>
                         <?/*<th><?=create_sort_link("active", "Active");?></th>*/?>
                         <th>Actions</th>
@@ -468,17 +477,23 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       	  $i++;
                       	  $SELECT_TSIG = mysql_query("SELECT `secret` FROM `tsigkeys` WHERE `name` = '".$LISTING['name']."' ", $db );
                       	  $TSIG = mysql_fetch_array($SELECT_TSIG);
+                      	  
+                      	  $SELECT_UNICAST_IPS = mysql_query("SELECT 1 FROM `root_ns_unicast` WHERE `parent_id` = '".$LISTING['id']."' ", $db );
+                      	  $UNICAST_IPS = mysql_num_rows($SELECT_UNICAST_IPS);
                       	    
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
-                        <td nowrap><?=$LISTING['name'];?></td>
+                        <td nowrap><a href="index.php?section=root_ns_unicast&amp;parent_id=<?=$LISTING['id'];?>" title="Manage Unicast NOTIFY IPs" class="<?if (staff_help()){?>tip_south<?}?>"><?=$LISTING['name'];?></a></td>
                         <td nowrap><?=$LISTING['ip'];?></td>
+                        <td nowrap align="center"><a href="index.php?section=root_ns_unicast&amp;parent_id=<?=$LISTING['id'];?>" title="Manage Unicast NOTIFY IPs" class="<?if (staff_help()){?>tip_south<?}?>"><?=$UNICAST_IPS;?></a></td>
                         <td nowrap><?=$TSIG['secret'];?></td>
                         <?/*<td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
                         </td>*/?>
                         <td align="center" nowrap="nowrap">
+                            <a href="index.php?section=root_ns_unicast&amp;parent_id=<?=$LISTING['id'];?>" title="Manage Unicast NOTIFY IPs" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Manage Unicast NOTIFY IPs</span></a> &nbsp;
                             <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
+                            
                         </td>
                       </tr>
                       <?}?>

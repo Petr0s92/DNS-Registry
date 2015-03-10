@@ -29,14 +29,28 @@ if ($_SESSION['admin_level'] != 'admin'){
     exit();
 }
 
-// include dns validation functions
-require ("./includes/dns.php");
+
+if ($_GET['parent_id']){
+	$pid = mysql_real_escape_string($_GET['parent_id'], $db);
+	$pid_vars = "&parent_id=".$pid	;
+}else{
+	header ("Location: ./index.php?section=root_ns");
+	exit();
+}
+
+   
+$search_vars = "&parent_id=".$pid;
+
 
 //Define current page data
-$mysql_table = 'tlds';
-$sorting_array = array("id", "name", "active", "default");
+$mysql_table = 'root_ns_unicast';
+$sorting_array = array("id", "name", "ip", "active");
 
-$action_title = "All TLDs"; 
+//Select parent root ns to show the name
+$SELECT_ROOT_NS = mysql_query("SELECT name FROM root_ns WHERE id = '".$pid."' ", $db);
+$ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS);
+
+$action_title = "Manage Unicast NOTIFY IPs for Root Nameserver: " . $ROOT_NS['name']; 
     
 $search_vars = "";
     
@@ -45,7 +59,7 @@ if ($q) {
 	$search_vars .= "&q=$q"; 
 	$action_title = "Search: " . $q;
 }
-$search_query = "WHERE ($mysql_table.name LIKE '%$q%' OR $mysql_table.active LIKE '%$q%'  OR $mysql_table.default LIKE '%$q%' )";
+$search_query = "WHERE ($mysql_table.name LIKE '%$q%' OR $mysql_table.ip LIKE '%$q%' OR $mysql_table.active LIKE '%$q%' ) AND parent_id = '".$pid."' ";
 
 
 // Sorting
@@ -110,106 +124,70 @@ $url_vars = "action=".$_GET['action'] . $sort_vars . $search_vars;
 
 
 
+
 //ADD NEW RECORD
-if ($_POST['action'] == "add" ) {
-    
+if ($_POST['action'] == "add" && $_POST['parent_id']) {
+
     $errors = array();
     
     $_POST['name'] = trim($_POST['name']);
-    
-    if ($validate = is_valid_hostname_fqdn($_POST['name'], 0) ){
-		$errors['name'] = $validate;		
-	//}
-    
-    //if (!preg_match("/^(?!-)^(?!\.)[a-z0-9-\.]{1,63}(?<!-)(?<!\.)$/", $_POST['name'])) {
-    //    $errors['name'] = "Please choose a TLD Name with 2 to 10 latin lowercase characters without numbers, spaces and symbols.";
+    if (!preg_match("/^(?!-)^(?!\.)[a-z0-9-\.]{1,63}(?<!-)(?<!\.)$/", $_POST['name'])) {
+        $errors['name'] = "Please choose a Unicast IP Name with 2 to 10 latin lowercase characters without numbers, spaces and symbols.";
     }else{
-        
         if (mysql_num_rows(mysql_query("SELECT id FROM `".$mysql_table."` WHERE `name` = '".addslashes($_POST['name'])."' ",$db))){
-            $errors['name'] = "TLD is already in use." ;
+            $errors['name'] = "This name is already registered on this system." ;
         } 
     }
     
+    $_POST['ip'] = trim($_POST['ip']);
+    if(!filter_var($_POST['ip'], FILTER_VALIDATE_IP)){
+		$errors['ip'] = "Please enter a valid Unicast IP Address.";	
+	}else{
+		if (mysql_num_rows(mysql_query("SELECT id FROM `".$mysql_table."` WHERE `ip` = '".addslashes($_POST['ip'])."' ",$db))){
+            $errors['ip'] = "This IP is already registered on this system." ;
+        }		
+	}							
+    
+    
     if (count($errors) == 0) {
         
-        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, active) VALUES (      
+        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (parent_id, name, ip, active) VALUES (      
+            '" . addslashes($_POST['parent_id']) . "',
             '" . addslashes($_POST['name']) . "',
+            '" . addslashes($_POST['ip']) . "',
             '1'
         )", $db);
 
         if ($INSERT){
         	
-        	//So far so good. Now create the domain on powerdns tables
-			mysql_query("INSERT INTO `domains` (`name`, `type`) VALUES ('".addslashes($_POST['name'])."', 'MASTER')", $db);
-			$new_domain_id = mysql_insert_id($db);
-			$new_domain_time = time();
-			
-			//Insert SOA record
-			mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES (
-						'".$new_domain_id."', 
-						'".addslashes($_POST['name'])."', 
-						'SOA',
-						'".$CONF['DEFAULT_SOA']."',
-						'".$CONF['RECORDS_TTL']."',
-						'0',
-						'".$new_domain_time."',
-						NULL,
-						NULL,
-						'0',
-						'".$new_domain_time."',
-						'0'
-			)", $db);
-			
-			//Insert root NS records
-			$SELECT_ROOT_NS = mysql_query("SELECT `name`, `ip`, `id` FROM `root_ns` WHERE `active` = '1' ORDER BY `name` ASC ", $db);
-			while($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
+        	//Insert new ALSO-NOTIFY IP to all existing domains
+			$SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains", $db);
+			while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
 				
-				mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES (
-							'".$new_domain_id."', 
-							'".addslashes($_POST['name'])."', 
-							'NS',
-							'".$ROOT_NS['name']."',
-							'".$CONF['RECORDS_TTL']."',
-							'0',
-							'".$new_domain_time."',
-							NULL,
-							NULL,
-							'0',
-							'".$new_domain_time."',
-							'0'
-				)", $db);
-
-				//Insert the NS TSIG records for AXFR				
+				//Insert the ALSO-NOTIFY record to notify the root NS on its UNICAST IP. 				
 				mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
-							'".$new_domain_id."', 
-							'TSIG-ALLOW-AXFR',
-							'".$ROOT_NS['name']."'
+							'".$DOMAINS['id']."', 
+							'ALSO-NOTIFY',
+							'".addslashes($_POST['ip'])."'
 							
 				)", $db);
 				
-   				//Insert the ALSO-NOTIFY records with Unicast IPs to notify meta-slaves for automatic provision of the new zone on the slaves. 				
-				$SELECT_UNICAST_NS = mysql_query("SELECT `ip` FROM root_ns_unicast WHERE parent_id = '".$ROOT_NS['id']."' ", $db);
-				while ($UNICAST_NS = mysql_fetch_array($SELECT_UNICAST_NS)){
-					mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
-								'".$new_domain_id."', 
-								'ALSO-NOTIFY',
-								'".addslashes($ROOT_NS['ip'])."'
-								
-					)", $db);
-					mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
-								'".$new_domain_id."', 
-								'ALSO-NOTIFY',
-								'".addslashes($ROOT_NS['ip']).":".$CONF['META_SLAVE_PORT']."'
-								
-					)", $db);
+				//Insert the ALSO-NOTIFY records to notify meta-slaves for automatic provision of the new zone on the slaves. 				
+				mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
+							'".$DOMAINS['id']."', 
+							'ALSO-NOTIFY',
+							'".addslashes($_POST['ip']).":".$CONF['META_SLAVE_PORT']."'
+							
+				)", $db);
+				
+				if ($DOMAINS['id'] != '1'){
+					$soa_update = update_soa_serial_byid($DOMAINS['id']);
 				}
-													
-				
-				
-			}
-			        	
+						
+			}        	
         	
-            header("Location: index.php?section=".$SECTION."&saved_success=1");
+        	
+        	header("Location: index.php?section=".$SECTION."&saved_success=1".$pid_vars);
             exit();
         }else{
             $error_occured = TRUE;
@@ -222,19 +200,19 @@ if ($_POST['action'] == "add" ) {
 
 // DELETE RECORD
 if ($_GET['action'] == "delete" && $_POST['id']){
-    $id = addslashes(str_replace ("tr-", "", $_POST['id']));
+    $id = mysql_real_escape_string(str_replace ("tr-", "", $_POST['id']), $db);
     
-    $SELECT_TLD_NAME = mysql_query("SELECT `name` FROM `tlds` WHERE id = '".$id."' ");
-    $TLD_NAME = mysql_fetch_array($SELECT_TLD_NAME);
-    
-    $SELECT_DOMAIN = mysql_query("SELECT `name`, `id` FROM `domains` WHERE name = '".$TLD_NAME['name']."' ");
-    $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
-    
-    
+    $SELECT_ROOT_NS = mysql_query("SELECT `ip` FROM `".$mysql_table."`  WHERE id = '".$id."' ");
+    $ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS);
     $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
-    $DELETE = mysql_query("DELETE FROM `domains` WHERE `id`= '".$DOMAIN['id']."' " ,$db);
-    $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `domain_id`= '".$DOMAIN['id']."' " ,$db);
-    $DELETE = mysql_query("DELETE FROM `records` WHERE `domain_id`= '".$DOMAIN['id']."' " ,$db);
+    $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content`= '".$ROOT_NS['ip']."' " ,$db);
+    $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content`= '".$ROOT_NS['ip'].":".$CONF['META_SLAVE_PORT']."' " ,$db);
+    
+    #Update SOA on all domains
+    $SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains WHERE id != '1' ", $db);
+	while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
+			$soa_update = update_soa_serial_byid($DOMAINS['id']);
+    }
     
     if ($DELETE){
         ob_end_clean();
@@ -246,6 +224,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     exit();
 } 
 
+/*
 // ENABLE/DISABLE RECORD
 if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option'])){
     $id = addslashes($_POST['id']);
@@ -263,25 +242,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
     }
     exit();
 }
-
-// SET DEFAULT TLD
-if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'])){
-    $id = addslashes($_POST['id']);
-    $option = addslashes($_POST['option']);
-
-    $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `default` = '".$option."' WHERE `id`= '".$id."'",$db);
-    
-    if ($UPDATE) {
-        //print_r($_GET);
-        ob_clean();
-        echo "ok";
-    }else{
-        ob_clean();
-        echo "An error has occured.";
-    }
-    exit();
-}
-
+*/
 
 ?>
 
@@ -319,14 +280,16 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                     <?if (staff_help()){?>
                     //TIPSY for the ADD Form
                     $('#name').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#ip').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#tsig_key').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     <?}?>
                     
 
                     //DELETE RECORD
                     $('a.delete').click(function () {
                         var record_id = $(this).attr('rel');
-                        if(confirm('Are you sure you want to delete this record?\n\rThis action cannot be undone!\n\r\n\WARNING: This action will DELETE **ALL** related domains to this TLD!!!')){
-                            $.post("index.php?section=<?=$SECTION;?>&action=delete", {
+                        if(confirm('Are you sure you want to delete this record?\n\rThis action cannot be undone!')){
+                            $.post("index.php?section=<?=$SECTION;?>&action=delete<?=$pid_vars;?>", {
                                 id: record_id
                             }, function(response){
                                 if (response == "ok"){
@@ -346,7 +309,7 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                         }
                     });
 
-                    
+                    <?/*
                     //SET ACTIVE FLAG
                     $('a.toggle_active').click(function () {
                         if ($(this).hasClass('activated')){    
@@ -371,32 +334,7 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                         });
                         return false;
                     });
-    
-                    
-                    //SET DEFAULT FLAG
-                    $('a.toggle_default').click(function () {
-                        if ($(this).hasClass('activated')){    
-                            var option = '0';
-                        } else if ($(this).hasClass('deactivated')){
-                            var option = '1';
-                        }
-                        var myItem = $(this);
-                        var record_id = $(this).attr('rel');
-                        $.post("index.php?section=<?=$SECTION;?>&action=toggle_default", {
-                            id: record_id,
-                            option: option
-                        }, function(response){
-	                        if (response == "ok"){
-	                            $(myItem).toggleClass('activated');
-	                            $(myItem).toggleClass('deactivated');
-	                        }else{
-	                            $("#notification_fail_response").html('An error occured.' );
-	                            $('.notification_fail').show();
-	                            //alert(response);
-	                        }
-                        });
-                        return false;
-                    });
+                    */?>
     
     
                 //CLOSE THE NOTIFICATION BAR
@@ -413,12 +351,12 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
 
                 </script>
                 
-                <!-- TLDS SECTION START -->
+                <!-- UNICAST IPs SECTION START -->
 
                 <div id="main_content">
                 
                 <div class="mainsubtitle_bg">
-                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List TLDs</a> | <a href="javascript: void(0)" id="button" class="add"><span>Add New TLD</a></div>
+                    <div class="mainsubtitle"><a href="javascript: void(0)" id="button2">List Unicast NOTIFY IPs</a> | <a href="javascript: void(0)" id="button" class="add"><span>Add New Unicast NOTIFY IP</a> | <a href="index.php?section=root_ns" class="back"><span>Back to Root NS</span></a></div>
                 </div> 
                 
                 <br />
@@ -437,7 +375,7 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                         
                     <div id="toggler">
                     
-                        <!-- ADD TLDS START -->
+                        <!-- ADD UNICAST IP START -->
                         <? if (count($errors) > 0) { ?>
                             <div id="errors">
                                 <p>Please check:</p>
@@ -447,18 +385,20 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                             </div>
                         <? } ?>                        
                         
-                        <form id="form" method="post" action="index.php?section=<?=$SECTION;?>&action=add">
+                        <form id="form" method="post" action="index.php?section=<?=$SECTION;?>&action=add&parent_id=<?=$pid;?>">
                             <fieldset>
-                                <legend>&raquo; New TLD</legend>
+                                <legend>&raquo; New Secondary NOTIFY IP</legend>
                                      <div class="columns">
                                         <div class="colx2-left">
                                             <p>
-                                                <label for="name" class="required">TLD Name</label>
-                                                <input type="text" name="name" id="name" title="Enter the TLD Name" value="<? if($_POST['name']){ echo $_POST['name']; } ?>">
+                                                <label for="name" class="required">Unicast IP Name</label>
+                                                <input type="text" name="name" id="name" title="Enter a name to identify this IP. eg: ns1-loc1.tld" value="<? if($_POST['name']){ echo $_POST['name']; } ?>">
                                             </p>
-                                        </div>
-                                        <div class="colx2-right">
-                                            
+                                        
+                                            <p>
+                                                <label for="ip" class="required">Unicast NOTIFY IP Address</label>
+                                                <input type="text" name="ip" id="ip" title="Enter the Unicast NOTIFY IP Address" value="<? if($_POST['ip']){ echo $_POST['ip']; } ?>">
+                                            </p>
                                         </div>
                                      </div>
                            </fieldset>
@@ -467,10 +407,11 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                                 <button type="submit"  >Save</button>&nbsp; &nbsp;
                                 <button type="reset"  id="button">Cancel</button>
                                 <input  type="hidden" name="action" id="action" value="add" />                                
+                                <input  type="hidden" name="parent_id" id="parent_id" value="<?=$pid;?>" />                                
                            </fieldset>
                         </form>                    
                         
-                        <!-- ADD TLDs END -->
+                        <!-- ADD UNICAST IP END -->
                         
                         <br />
                         
@@ -478,17 +419,17 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                         
                     <div id="toggler2">
                       
-                    <!-- LIST TLDs START -->
+                    <!-- LIST UNICAST IPs START -->
                       
                       <fieldset>
                                 
-                          <legend>&raquo; TLDs List</legend>
+                          <legend>&raquo; Unicast NOTIFY IPs List</legend>
                         
                       <form name="search_form" action="index.php?section=<?=$SECTION;?>" method="get" class="search_form">
                         <input type="hidden" name="section" value="<?=$SECTION;?>" />
                         <table border="0" cellspacing="0" cellpadding="4">
                             <tr>
-                                <td>TLD Name:</td>
+                                <td>Search:</td>
                                 <td><input type="text" name="q" id="search_field_q" class="input_field" value="<?=$q?>" /></td>
                                 <td><button type="submit"  >Search</button></td>
                             </tr>
@@ -498,7 +439,7 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                       <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom:15px; margin-top: 15px;">
                         <tr>
                             <td width="36%" height="30">
-                                <h3 style="margin:0"><?=$action_title;?> <? if ($q || $tld_type) { ?><span style="font-size:12px"> (<a href="index.php?section=<?=$SECTION;?>">x</a>)</span><? } ?></h3> 
+                                <h3 style="margin:0"><?=$action_title;?> <? if ($q) { ?><span style="font-size:12px"> (<a href="index.php?section=<?=$SECTION;?><?=$pid_vars;?>">x</a>)</span><? } ?></h3> 
                             </td>
                             <td width="28%" align="center">
                                 <? if ($items_number) { ?>
@@ -513,25 +454,21 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                   
                       <table width="100%" border="0" cellspacing="2" cellpadding="5">
                       <tr>
-                        <th><?=create_sort_link("name","TLD Name");?></th>
-                        <th><?=create_sort_link("default","Default TLD");?></th>
-                        <th><?=create_sort_link("active", "Active");?></th>
+                        <th><?=create_sort_link("name","Name");?></th>
+                        <th><?=create_sort_link("ip","Unicast NOTIFY IP");?></th>
+                        <?/*<th><?=create_sort_link("active", "Active");?></th>*/?>
                         <th>Actions</th>
                       </tr>
                       <!-- RESULTS START -->
                       <?
-                      $i=-1;
                       while($LISTING = mysql_fetch_array($SELECT_RESULTS)){
-                      $i++;  
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
-                        <td nowrap><?=$LISTING['name'];?></td>
-                        <td align="center" >
-                            <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_default <? if ($LISTING['default'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Set Default TLD"><span>Set Default</span></a>
-                        </td>
-                        <td align="center" >
+                        <td nowrap align="center"><?=$LISTING['name'];?></td>
+                        <td nowrap align="center"><?=$LISTING['ip'];?></td>
+                        <?/*<td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
-                        </td>
+                        </td>*/?>
                         <td align="center" nowrap="nowrap">
                             <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
                         </td>
@@ -560,11 +497,11 @@ if ($_GET['action'] == "toggle_default" && $_POST['id'] && isset($_POST['option'
                     
                     </fieldset>
                     
-                    <!-- LIST TLDS END -->
+                    <!-- LIST UNICST IPs END -->
                     
                     </div>
                         
                 </div>    
                 
-                <!-- TLDS SECTION END --> 
+                <!-- UNICAST IPs SECTION END --> 
                 

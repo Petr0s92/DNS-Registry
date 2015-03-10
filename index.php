@@ -194,7 +194,7 @@ admin_auth();
 				<?}?>    
 
 				<div class="maintitle_bg">
-					<div class="<?=$maintitle_class;?>"><a href="index.php?section=<?=$SECTION;?><?if ($_GET['domain']) { echo "&domain=".$_GET['domain'];}?><?if ($_GET['id']) { echo "&id=".(int)$_GET['id'];}?><?if ($_GET['domain_id']) { echo "&domain_id=".(int)$_GET['domain_id'];}?>"><?=$maintitle_title;?></a></div>
+					<div class="<?=$maintitle_class;?>"><a href="index.php?section=<?=$SECTION;?><?if ($_GET['domain']) { echo "&domain=".$_GET['domain'];}?><?if ($_GET['id']) { echo "&id=".(int)$_GET['id'];}?><?if ($_GET['domain_id']) { echo "&domain_id=".(int)$_GET['domain_id'];}?><?if ($_GET['parent_id']) { echo "&parent_id=".$_GET['parent_id'];}?>"><?=$maintitle_title;?></a></div>
 				</div>    
 
 					<?
