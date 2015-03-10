@@ -177,8 +177,15 @@ if ($_POST['action'] == "add" ) {
 				
 			}
 			        	
+			// Run pdns_control retrieve to fetch new slave zone
+			exec ($CONF['PDNS_CONTROL_PATH'] . " --remote-address=".$CONF['PDNS_CONTROL_IP']." --remote-port=".$CONF['PDNS_CONTROL_PORT']." --secret=".$CONF['PDNS_CONTROL_KEY']." retrieve " . escapeshellcmd($_POST['name']));
         	
-            header("Location: index.php?section=".$SECTION."&saved_success=1");
+        	sleep(3);
+        	
+            // Run pdns_control notify to push the new slave zone to our slaves
+			exec ($CONF['PDNS_CONTROL_PATH'] . " --remote-address=".$CONF['PDNS_CONTROL_IP']." --remote-port=".$CONF['PDNS_CONTROL_PORT']." --secret=".$CONF['PDNS_CONTROL_KEY']." notify " . escapeshellcmd($_POST['name']));
+        	
+        	header("Location: index.php?section=".$SECTION."&saved_success=1");
             exit();
         }else{
             $error_occured = TRUE;
