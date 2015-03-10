@@ -1120,7 +1120,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                             	<tr>
                             		<?if ($DOMAIN_RECORDS >= 1){?>
                             		<td nowrap="nowrap" align="right" width="33">
-                            			<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Manage Domain Records" ><img src="images/ico_edit_ns.png" align="absmiddle"></a>
+                            			<?if (!$ISSLAVE){?><a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Manage Domain Records" ><img src="images/ico_edit_ns.png" align="absmiddle"></a><?}?>
                             		</td>
                             		<?}?>
                             		<td nowrap="nowrap">
@@ -1162,7 +1162,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         	<?}?>
                         	</table>                        	                        
                         </td>
-                        <td align="center" nowrap><?if ($ISTLD){ echo "slave"; } elseif ($ISHOSTED){ echo $DOMAIN_RECORDS; }else{ echo "-"; } ?></td>
+                        <td align="center" nowrap><?if ($ISSLAVE){ echo "slave"; } elseif ($ISHOSTED){ echo $DOMAIN_RECORDS; }else{ echo "-"; } ?></td>
                         <td align="center" nowrap><?if (!$ISTLD){?><?if ($_GET['sort']=='created'){?><strong><?}?>R <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LAST_UPDATED['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?><?}?></td>
                         <td align="center" >   
                         <?
