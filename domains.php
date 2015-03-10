@@ -349,7 +349,7 @@ if ($_POST['action'] == "add" ) {
 		    }			
 			
 			//Insert Nameservers for new Domain
-			$SELECT_ROOT_NS = mysql_query("SELECT `name`, `ip` FROM `root_ns` WHERE `active` = '1' ORDER BY `name` ASC ", $db);
+			$SELECT_ROOT_NS = mysql_query("SELECT `name`, `ip`, `id` FROM `root_ns` WHERE `active` = '1' ORDER BY `name` ASC ", $db);
 			while($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
 				
 				$INSERT_NS = mysql_query("INSERT INTO `records` (`domain_id`, `name`, `type`, `content`, `ttl`, `prio`, `change_date`, `ordername`, `auth`, `disabled`, `created`, `user_id`) VALUES (
@@ -379,13 +379,23 @@ if ($_POST['action'] == "add" ) {
 							
 				)", $db);
 				
-    			//Insert the ALSO-NOTIFY records to notify meta-slaves for automatic provision of the new zone on the slaves. 				
-				$INSERT_METASLAVE = mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
-							'".$new_domain_id."', 
-							'ALSO-NOTIFY',
-							'".$ROOT_NS['ip'].":".$CONF['META_SLAVE_PORT']."'
-							
-				)", $db);
+   				//Insert the ALSO-NOTIFY records with Unicast IPs to notify meta-slaves for automatic provision of the new zone on the slaves. 				
+				$SELECT_UNICAST_NS = mysql_query("SELECT `ip` FROM root_ns_unicast WHERE parent_id = '".$ROOT_NS['id']."' ", $db);
+				while ($UNICAST_NS = mysql_fetch_array($SELECT_UNICAST_NS)){
+					mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
+								'".$new_domain_id."', 
+								'ALSO-NOTIFY',
+								'".addslashes($UNICAST_NS['ip'])."'
+								
+					)", $db);
+					mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
+								'".$new_domain_id."', 
+								'ALSO-NOTIFY',
+								'".addslashes($UNICAST_NS['ip']).":".$CONF['META_SLAVE_PORT']."'
+								
+					)", $db);
+				}				
+				
 				
 				if (!$INSERT_TSIG){
 					$insert_errors[] = true;
