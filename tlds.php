@@ -193,13 +193,13 @@ if ($_POST['action'] == "add" ) {
 					mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
 								'".$new_domain_id."', 
 								'ALSO-NOTIFY',
-								'".addslashes($ROOT_NS['ip'])."'
+								'".addslashes($UNICAST_NS['ip'])."'
 								
 					)", $db);
 					mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
 								'".$new_domain_id."', 
 								'ALSO-NOTIFY',
-								'".addslashes($ROOT_NS['ip']).":".$CONF['META_SLAVE_PORT']."'
+								'".addslashes($UNICAST_NS['ip']).":".$CONF['META_SLAVE_PORT']."'
 								
 					)", $db);
 				}
