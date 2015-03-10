@@ -1063,7 +1063,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 					  $HOSTEDID = mysql_fetch_array($SELECT_ISHOSTED);
 					  $ISHOSTED = mysql_num_rows($SELECT_ISHOSTED);
 					  
-					  $SELECT_ISSLAVE = mysql_query("SELECT id FROM domains WHERE name = '".$LISTING['name']."' AND type = 'SLAVE' ", $db);
+					  $SELECT_ISSLAVE = mysql_query("SELECT id FROM domains WHERE id = '".$LISTING['domain_id']."' AND type = 'SLAVE' ", $db);
 					  //$HOSTEDID = mysql_fetch_array($SELECT_ISSLAVE);
 					  $ISSLAVE = mysql_num_rows($SELECT_ISSLAVE);
 					  
