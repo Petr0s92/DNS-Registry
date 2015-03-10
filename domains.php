@@ -258,6 +258,8 @@ if ($_POST['action'] == "add" ) {
 		}else{
 			$errors['user_id'] = "Please choose an owner for the domain.";			
 		}
+    }elseif ($_POST['user_id'] == 'system'){
+		$_POST['user_id'] = '0';
     }
     
     if (count($errors) == 0) {
@@ -414,7 +416,7 @@ if ($_POST['action'] == "add" ) {
 
 // DELETE RECORD
 if ($_GET['action'] == "delete" && $_POST['id']){
-    $id = addslashes(str_replace ("tr-", "", $_POST['id']));
+    $id = mysql_real_escape_string(str_replace ("tr-", "", $_POST['id']), $db);
 
 	if ($_SESSION['admin_level'] == 'user'){
 		$user_id = " AND user_id = '".$_SESSION['admin_id'] . "' ";  	
@@ -439,8 +441,6 @@ if ($_GET['action'] == "delete" && $_POST['id']){
 			$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `domain_id`= '".$HOSTEDID['id']."' ",$db);
 			$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `domain_id`= '".$HOSTEDID['id']."' ". $user_id ,$db);
 			$soa_update = true;
-		}else{
-			$soa_update = update_soa_serial($DOMAIN['name'], true);
 		}
 	    
 	    $soa_update = update_soa_serial($DOMAIN['name'], true);
@@ -459,8 +459,8 @@ if ($_GET['action'] == "delete" && $_POST['id']){
 
 // ENABLE/DISABLE RECORD
 if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option'])){
-    $id = addslashes($_POST['id']);
-    $option = addslashes($_POST['option']);
+    $id = mysql_real_escape_string($_POST['id'], $db);
+    $option = mysql_real_escape_string($_POST['option'], $db);
     
     if ($_SESSION['admin_level'] == 'user'){
 		$user_id = " AND user_id = '".$_SESSION['admin_id'] . "' ";  	
@@ -504,7 +504,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 	    exit();
 	}
 	    
-    $SELECT_GLUE = mysql_query("SELECT content FROM `".$mysql_table."` WHERE name = '".$nameserver."' AND user_id > 0", $db);
+    $SELECT_GLUE = mysql_query("SELECT content FROM `".$mysql_table."` WHERE name = '".$nameserver."' AND type = 'A' AND user_id > 0", $db);
     $GLUE = mysql_fetch_array($SELECT_GLUE);
 
     if ($GLUE['content']){
@@ -809,10 +809,17 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 													$SELECT_TLDs = mysql_query("SELECT name, `default`, `id` FROM tlds WHERE active ='1' ORDER BY name ASC", $db);
 													while ($TLDs = mysql_fetch_array($SELECT_TLDs)){
 														$SELECT_DOMAIN_ID = mysql_query("SELECT id FROM domains WHERE name = '".$TLDs['name']."' ", $db);
-														$DOMAIN_ID = mysql_fetch_array($SELECT_DOMAIN_ID);  
+														$DOMAIN_ID = mysql_fetch_array($SELECT_DOMAIN_ID);
+														
+														//Check if domain is reverse or forward
+														$hostname_labels = explode('.', $TLDs['name']);
+														$label_count = count($hostname_labels);    
+														if ($hostname_labels[$label_count - 1] == "arpa" && ( $CONF['ALLOW_USERS_REVERSE'] == 'yes' || $_SESSION['admin_level'] == 'admin' )) {
 													?>                                                    
                                                     <option value="<?=$TLDs['id'];?>"   <? if ($DOMAIN_ID['id'] && $_POST['tld'] == $TLDs['id']){ echo "selected=\"selected\""; }elseif ($TLDs['default'] == '1' && !$_POST['tld']){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
-													<?}?>                                                    
+													<?}elseif($hostname_labels[$label_count - 1] != "arpa" ){?>
+													<option value="<?=$TLDs['id'];?>"   <? if ($DOMAIN_ID['id'] && $_POST['tld'] == $TLDs['id']){ echo "selected=\"selected\""; }elseif ($TLDs['default'] == '1' && !$_POST['tld']){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
+													<?}}?>                                                    
                                                     
                                                 </select>
                                                 
@@ -907,13 +914,15 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                                 <label for="user_id" class="required">Domain Name Owner</label>
                                                 <select name="user_id" id="user_id" title="Select an owner" >
                                                     <option value="" selected="selected">--Select--</option>
-													<? 
+												    <? 
 													$SELECT_USERS = mysql_query("SELECT id, username, fullname FROM users WHERE active ='1' ORDER BY username ASC", $db);
 													while ($USERS = mysql_fetch_array($SELECT_USERS)){
 													?>                                                    
                                                     <option value="<?=$USERS['id'];?>"   <? if ($_POST['user_id'] == $USERS['id']){ echo "selected=\"selected\""; }?> ><?=$USERS['username'];?> <?if ($USERS['fullname']){?>(<?=$USERS['fullname'];?> )<?}?></option>
-													<?}?>                                                    
-                                                    
+													<?}?>
+													<?if ($_SESSION['admin_level'] == 'admin'){?>
+                                                    <option value="system"   <? if ($_POST['user_id'] == "system"){ echo "selected=\"selected\""; }?> >----System Zone----</option>
+													<?}?>													
                                                 </select>
                                             </p>
                                             <?}?>
@@ -1062,6 +1071,8 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         		&nbsp; 
                         		<?if ($ISTLD){?>
                         			<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Managed Domain Records" ><img src="images/nav_tlds.png" border="0" align="absmiddle"/></a>
+                        		<?}elseif ($ISHOSTED){?>
+                        			<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Managed Domain Records" ><img src="images/nav_domains.png" border="0" align="absmiddle"/></a>
                         		<?}else{?>
                         			<a href="http://<?=$LISTING['name'];?>" target="_blank" <?if (staff_help()){?>class="tip_south"<?}?> title="Visit web site" ><img src="images/ico_link.png" border="0" align="absmiddle"/></a>
                         		<?}?> 
@@ -1079,7 +1090,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                             		<?}?>
                             		<td nowrap="nowrap">
                             			<?if ($DOMAIN_RECORDS >= 1){?>
-                            			<span class="blue"><strong style="font-family: monospace"><?if ($ISTLD){?>System TLD<?}else{?>Hosted Domain<?}?></strong></span>
+                            			<span class="<?if ($ISTLD){?>red<?}elseif ($LISTING['user_id'] == '0'){?>blue<?}else{?>green<?}?>"><strong style="font-family: monospace"><?if ($ISTLD){?>--System TLD--<?}elseif ($LISTING['user_id'] == '0'){?>--System Zone--<?}else{?>--Hosted Domain--<?}?></strong></span>
 										<?}else{?>                            			
                             			<span class="red alert_ico"><strong style="font-family: monospace"><a href="index.php?section=domain&domain_id=<?=$HOSTEDID['id'];?>&action=add" title="Add some records to enable this domain" <?if (staff_help()){?>class="tip_south"<?}?> >No Records yet</a></strong></span>
                             			<?}?>
@@ -1094,8 +1105,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 					  				$GLUE = mysql_fetch_array($SELECT_GLUE);
 					  	  		$r++;
 						  		?>
-						  		                         		
-                        		<tr>
+						  		<tr>
                         			<?if ($NAMESERVERS['content']!='unconfigured' ){?>
                         	    	<td nowrap="nowrap" align="right" width="60">
                         	    		<?if ( ( $GLUE['user_id'] == $_SESSION['admin_id'] || $_SESSION['admin_level'] == 'admin') && getTLD($NAMESERVERS['content']) ){?>

@@ -184,11 +184,11 @@ function validate_input($rid, $zid, $type, &$content, $name, &$prio, &$ttl) {
             break;
 */
         case "PTR":
-            if (!is_valid_hostname_fqdn($content, 0)) {
-                return false;
+            if ($return = is_valid_hostname_fqdn($content, 0)) {
+                return $return;
             }
-            if (!is_valid_hostname_fqdn($name, 1)) {
-                return false;
+            if ($return = is_valid_hostname_fqdn($name, 1)) {
+                return $return;
             }
             break;
 /*
@@ -396,10 +396,10 @@ function is_valid_hostname_fqdn(&$hostname, $wildcard) {
 //    if ($dns_top_level_tld_check && $label_count == 1) {
 //        return false;
 //    }
-
+        
     foreach ($hostname_labels as $hostname_label) {
         if ($wildcard == 1 && !isset($first)) {
-            if (!preg_match('/^(\*|[\w-\/]+)$/', $hostname_label)) {
+        	if (!preg_match('/^(\*|[\w-\/]+)$/', $hostname_label)) {
                 //error(ERR_DNS_HN_INV_CHARS);
                 return "You have invalid characters in your hostname";
             }
@@ -408,7 +408,7 @@ function is_valid_hostname_fqdn(&$hostname, $wildcard) {
             if (!preg_match('/^[\w-\/]+$/', $hostname_label)) {
                 //error(ERR_DNS_HN_INV_CHARS);
                 return "You have invalid characters in your hostname";
-            }
+            }  
         }
         if (substr($hostname_label, 0, 1) == "-") {
             //error(ERR_DNS_HN_DASH);

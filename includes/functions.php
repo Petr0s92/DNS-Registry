@@ -411,14 +411,23 @@ function update_soa_serial ($tld, $domain=false){
 	global $db;
 	
 	if ($domain){
-		$tld_parts = explode (".", $tld);
+	
+		//Skip soa serial update if domain is reverse (is that ok? need to check it further)
+		$hostname_labels = explode('.', $tld);
+		$label_count = count($hostname_labels);    
+		if ($hostname_labels[$label_count - 1] == "arpa" ) {
+            return true;
+		}else{
+			$tld_parts = explode (".", $tld);
+			
+			$tld_parts[0] = false;
+			$tld = implode(".", $tld_parts);
+			$tld =  substr($tld, 1);
+																	
+			//$tld_parts_rev = array_reverse($tld_parts);
+			//$tld = $tld_parts_rev[0];
 		
-		$tld_parts[0] = false;
-		$tld = implode(".", $tld_parts);
-		$tld =  substr($tld, 1);
-																
-		//$tld_parts_rev = array_reverse($tld_parts);
-		//$tld = $tld_parts_rev[0];
+		}
 	
 	}
 	

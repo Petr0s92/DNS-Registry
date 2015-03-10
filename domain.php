@@ -59,11 +59,13 @@ $hostname_labels = explode('.', $DOMAIN['name']);
 $label_count = count($hostname_labels);    
 if ($hostname_labels[$label_count - 1] == "arpa" ) {
 	$ISREVERSE = true;
+	$mgmt_title = "hosted Reverse Zone";
 }else{
 	$ISREVERSE = false;
+	$mgmt_title = "hosted Domain";
 }
 
-$action_title = "Manage Hosted Domain: " . $DOMAIN['name']; 
+$action_title = "Manage ".$mgmt_title.": " . $DOMAIN['name']; 
     
 $search_vars = "&domain_id=".$DOMAIN['id'];
     
@@ -168,6 +170,22 @@ if ($_POST['action'] == "add" && $_POST['domain_id']) {
     $errors = array();
     
     $_POST['name'] = strtolower($_POST['name']); // powerdns only searches for lower case records
+
+    if ($ISREVERSE && ! is_numeric($_POST['name'])){
+		$errors['name'] = "The record name must be an IP octet.";		
+	}
+      
+    if ($ISREVERSE && filter_var($_POST['content'], FILTER_VALIDATE_IP) ){
+		$errors['content'] = "The content must be a dns name.";		
+	}
+    
+    if (!$_POST['content']){
+		$errors['content'] = "Please fill in the record content.";		
+	}
+      
+    if (!$_POST['ttl'] || !is_numeric($_POST['ttl'])){
+		$errors['content'] = "Please fill in the TTL.";		
+	}
       
     if ($validate = validate_input(-1, $DOMAIN['id'], $_POST['type'], $_POST['content'], $_POST['name'], $_POST['priority'], $_POST['ttl'])){
 		$errors['validate'] = $validate;	

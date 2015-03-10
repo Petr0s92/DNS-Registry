@@ -114,7 +114,8 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (19, 'META_SLAVE_PORT', '5353', 'Port for Meta-Slave', 'panel'),
 (20, 'NAMESERVERS_IP_RANGE', '10.0.0.0/8', 'Allowed IPs for Nameservers registration. Type ''any'' to allow all IPs.', 'panel'),
 (21, 'TERMS_URL', 'http://www.your-domain.tld/terms', 'Terms And Conditions URL for users to accept during registration. Leave empty to disable.', 'panel'),
-(22, 'SUPPORT_URL', 'http://www.your-domain.tld/forum', 'Support URL. Will be shown on the left menu. Leave empty to disable', 'panel');
+(22, 'SUPPORT_URL', 'http://www.your-domain.tld/forum', 'Support URL. Will be shown on the left menu. Leave empty to disable', 'panel'),
+(23, 'ALLOW_USERS_REVERSE', 'yes', 'Allow users to create zones under .in-addr.arpa TLDs. Use yes/no to enable/disable.', 'panel');
 
 
 DROP TABLE IF EXISTS `supermasters`;
