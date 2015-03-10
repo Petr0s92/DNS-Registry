@@ -71,6 +71,19 @@ CREATE TABLE IF NOT EXISTS `root_ns` (
   KEY `active` (`active`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
+CREATE TABLE IF NOT EXISTS `root_ns_unicast` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `parent_id` int(10) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `ip` varchar(15) NOT NULL,
+  `active` enum('1','0') NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_index` (`name`),
+  KEY `active` (`active`),
+  KEY `parent_id` (`parent_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
+
+
 
 DROP TABLE IF EXISTS `sessions`;
 CREATE TABLE IF NOT EXISTS `sessions` (
