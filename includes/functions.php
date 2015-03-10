@@ -76,6 +76,9 @@ if (isset($SECTION) && $SECTION == 'domains'){
 }elseif (isset($SECTION) && $SECTION == 'root_ns_unicast'){
     $maintitle_class = 'maintitle_root_ns_unicast';
     $maintitle_title = 'Root Nameservers Unicast NOTIFY IPs';
+}elseif (isset($SECTION) && $SECTION == 'slave_zones'){
+    $maintitle_class = 'maintitle_slave_zones';
+    $maintitle_title = 'Slave Zones';
 }elseif (isset($SECTION) && $SECTION == 'users'){
     $maintitle_class = 'maintitle_users';
     $maintitle_title = 'User Management';

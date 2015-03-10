@@ -284,6 +284,11 @@ pre {
     padding:0 5px 0 25px 
 }
 
+#navigation li.menu_slave_zones a span { 
+    background: url(../images/nav_slaves.png) 5px center no-repeat; 
+    padding:0 5px 0 25px 
+}
+
 #navigation li.menu_users a span { 
     background: url(../images/nav_staff.png) 5px center no-repeat; 
     padding:0 5px 0 25px 
@@ -443,6 +448,19 @@ pre {
 
 .maintitle_root_ns_unicast {
     background: url(../images/nav_root_ns.png) 8px center no-repeat; 
+    font-family: Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
+    font-size: 20px;
+    border:1px solid #dad7c8; 
+    border-radius: 5px;
+    -moz-border-radius: 5px; 
+    -webkit-border-radius: 5px; 
+    color:#686761; 
+    padding: 5px 5px 5px 28px;
+    
+}
+
+.maintitle_slave_zones {
+    background: url(../images/nav_slaves.png) 8px center no-repeat; 
     font-family: Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
     font-size: 20px;
     border:1px solid #dad7c8; 
