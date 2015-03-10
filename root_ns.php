@@ -211,7 +211,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
     $DELETE = mysql_query("DELETE FROM `tsigkeys` WHERE `name`= '".$ROOT_NS['name']."' " ,$db);
     $DELETE = mysql_query("DELETE FROM `records` WHERE `content`= '".$ROOT_NS['name']."' AND `type` = 'NS' " ,$db);
-    //$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content`= '".$ROOT_NS['name']."' " ,$db);
+    $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content`= '".$ROOT_NS['name']."' " ,$db);
     
     #Update SOA on all domains
     $SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains WHERE id != '1' ", $db);
