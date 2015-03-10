@@ -1163,7 +1163,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         	</table>                        	                        
                         </td>
                         <td align="center" nowrap><?if ($ISSLAVE){ echo "slave"; } elseif ($ISHOSTED){ echo $DOMAIN_RECORDS; }else{ echo "-"; } ?></td>
-                        <td align="center" nowrap><?if (!$ISTLD){?><?if ($_GET['sort']=='created'){?><strong><?}?>R <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LAST_UPDATED['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?><?}?></td>
+                        <td align="center" nowrap><?if (!$ISSLAVE){?><?if ($_GET['sort']=='created'){?><strong><?}?>R <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LAST_UPDATED['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?><?}?></td>
                         <td align="center" >   
                         <?
                         if (!$ISTLD && !$ISSLAVE){
