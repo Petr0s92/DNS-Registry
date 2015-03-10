@@ -1081,7 +1081,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         		&nbsp; 
                         		<?if ($ISTLD){?>
                         			<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Managed Domain Records" ><img src="images/nav_tlds.png" border="0" align="absmiddle"/></a>
-                        		<?}elseif ($ISHOSTED && $LISTING['user_id'] != '0'){?>
+                        		<?}elseif ($ISHOSTED && $LISTING['user_id'] == '0'){?>
                         			<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Managed Domain Records" ><img src="images/nav_domains.png" border="0" align="absmiddle"/></a>
                         		<?}else{?>
                         			<a href="http://<?=$LISTING['name'];?>" target="_blank" <?if (staff_help()){?>class="tip_south"<?}?> title="Visit web site" ><img src="images/ico_link.png" border="0" align="absmiddle"/></a>
