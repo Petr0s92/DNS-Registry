@@ -529,7 +529,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 													<option value="SPF"   <? if ($_POST['type'] == 'SPF'){   echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'SPF'){   echo "selected=\"selected\""; }?> >SPF</option>
 													<option value="NS"    <? if ($_POST['type'] == 'NS'){    echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'NS'){    echo "selected=\"selected\""; }?> >NS</option>
 													<option value="SRV"   <? if ($_POST['type'] == 'SRV'){   echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'SRV'){   echo "selected=\"selected\""; }?> >SRV</option>
-													<option value="PTR"   <? if ($_POST['type'] == 'PTR'){   echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'PTR'){   echo "selected=\"selected\""; }elseif ($ISREVERSE == true && !$_POST && !$_GET['action'] == 'edit'){ echo "selected=\"selected\""; }?> >PTR</option>
+													<option value="PTR"   <? if ($_POST['type'] == 'PTR'){   echo "selected=\"selected\""; }elseif ($_GET['action'] == "edit" && $RESULT['type'] == 'PTR'){   echo "selected=\"selected\""; }elseif ($ISREVERSE == true && !$_POST && $_GET['action'] != 'edit'){ echo "selected=\"selected\""; }?> >PTR</option>
                                                 </select>
                                             </p>
                                             
