@@ -58,6 +58,19 @@ if ($_SESSION['admin_level'] == 'user'){
 			$user_id = "  ";
 		}elseif ($_GET['show_system_domains'] == '2'){
 			$user_id = " AND user_id = '0'  ";
+		}elseif ($_GET['show_system_domains'] == '3'){
+			$o=0;
+			$sl_zn = "";
+			$SELECT_SLAVE_ZONES = mysql_query("SELECT id FROM domains WHERE type = 'SLAVE' ", $db);
+			$SLAVE_ZONES_TOTAL = mysql_num_rows($SELECT_SLAVE_ZONES);
+			while($SLAVE_ZONES = mysql_fetch_array($SELECT_SLAVE_ZONES)){
+				$o++;
+				$sl_zn .= "'".$SLAVE_ZONES['id']."'";
+				if ($o < $SLAVE_ZONES_TOTAL){
+					$sl_zn .=", ";
+				}				
+			}
+			$user_id = " AND user_id = 0 AND domain_id IN ( ".$sl_zn." ) ";
 		}else{
 			$user_id = " AND user_id > '0' ";
 		}								
@@ -130,6 +143,7 @@ $total_pages=$i; // sinolo selidon
 $SELECT_RESULTS  = mysql_query("SELECT `".$mysql_table."`.* FROM `".$mysql_table."` ".$search_query." ".$order . " LIMIT ".$pageno.", ".$e ,$db);
 $SELECT_LAST_UPDATED  = mysql_query("SELECT `change_date` FROM `".$mysql_table."` ".$search_query." ORDER BY change_date DESC LIMIT 0, 1",$db);
 $LAST_UPDATED = mysql_fetch_array($SELECT_LAST_UPDATED);
+
 $url_vars = "action=".$_GET['action'] . $sort_vars . $search_vars;
 
 
@@ -992,6 +1006,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                         <option value="0" <? if ($_GET['show_system_domains'] != '1' && $_GET['show_system_domains'] != '2'){ echo "selected=\"selected\""; }?> >No</option> 
                                         <option value="1" <? if ($_GET['show_system_domains'] == '1'){ echo "selected=\"selected\""; }?> >Yes</option> 
                                         <option value="2" <? if ($_GET['show_system_domains'] == '2'){ echo "selected=\"selected\""; }?> >Only</option> 
+                                        <option value="2" <? if ($_GET['show_system_domains'] == '3'){ echo "selected=\"selected\""; }?> >Slaves</option> 
                                     </select>
                                 </td>
                                 <?}?>                                
@@ -1048,6 +1063,11 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 					  $HOSTEDID = mysql_fetch_array($SELECT_ISHOSTED);
 					  $ISHOSTED = mysql_num_rows($SELECT_ISHOSTED);
 					  
+					  $SELECT_ISSLAVE = mysql_query("SELECT id FROM domains WHERE name = '".$LISTING['name']."' AND type = 'SLAVE' ", $db);
+					  //$HOSTEDID = mysql_fetch_array($SELECT_ISSLAVE);
+					  $ISSLAVE = mysql_num_rows($SELECT_ISSLAVE);
+					  
+					  
 					  $SELECT_ISTLD = mysql_query("SELECT id FROM tlds WHERE name = '".$LISTING['name']."' ", $db);
 					  $TLDID = mysql_fetch_array($SELECT_ISTLD);
 					  $ISTLD = mysql_num_rows($SELECT_ISTLD);
@@ -1079,14 +1099,19 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         <td align="left" nowrap>
 	                        <h4>
                         		&nbsp; 
-                        		<?if ($ISTLD){?>
-                        			<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Managed Domain Records" ><img src="images/nav_tlds.png" border="0" align="absmiddle"/></a>
-                        		<?}elseif ($ISHOSTED && $LISTING['user_id'] == '0'){?>
-                        			<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Managed Domain Records" ><img src="images/nav_domains.png" border="0" align="absmiddle"/></a>
-                        		<?}else{?>
+                        		<?if ($ISSLAVE){?>
                         			<a href="http://<?=$LISTING['name'];?>" target="_blank" <?if (staff_help()){?>class="tip_south"<?}?> title="Visit web site" ><img src="images/ico_link.png" border="0" align="absmiddle"/></a>
-                        		<?}?> 
-                        		&nbsp;<a href="index.php?section=<?if ($ISHOSTED){?>domain&amp;domain_id=<?=$HOSTEDID['id'];?><?}else{?>domain_ns&domain=<?=$LISTING['name'];?><?}?>" <?if (staff_help()){?>class="tip_south"<?}?> title="<?if ($ISHOSTED){?>Manage Domain Records<?}else{?>Set Domain Nameservers<?}?>" ><?=$LISTING['name'];?></a>
+                        			&nbsp;<a href="http://<?=$LISTING['name'];?>" target="_blank" <?if (staff_help()){?>class="tip_south"<?}?> title="Visit web site" ><?=$LISTING['name'];?></a>
+                        		<?}else{?>
+                        			<?if ($ISTLD){?>
+                        				<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Managed Domain Records" ><img src="images/nav_tlds.png" border="0" align="absmiddle"/></a>
+                        			<?}elseif ($ISHOSTED && $LISTING['user_id'] == '0'){?>
+                        				<a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Managed Domain Records" ><img src="images/nav_domains.png" border="0" align="absmiddle"/></a>
+                        			<?}else{?>
+                        				<a href="http://<?=$LISTING['name'];?>" target="_blank" <?if (staff_help()){?>class="tip_south"<?}?> title="Visit web site" ><img src="images/ico_link.png" border="0" align="absmiddle"/></a>
+                        			<?}?> 
+                        			&nbsp;<a href="index.php?section=<?if ($ISHOSTED){?>domain&amp;domain_id=<?=$HOSTEDID['id'];?><?}else{?>domain_ns&domain=<?=$LISTING['name'];?><?}?>" <?if (staff_help()){?>class="tip_south"<?}?> title="<?if ($ISHOSTED){?>Manage Domain Records<?}else{?>Set Domain Nameservers<?}?>" ><?=$LISTING['name'];?></a>
+                        		<?}?>
 	                        </h4>
                         </td>
                         <td>
@@ -1141,7 +1166,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         <td align="center" nowrap><?if ($_GET['sort']=='created'){?><strong><?}?>R <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LAST_UPDATED['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?></td>
                         <td align="center" >   
                         <?
-                        if (!$ISTLD){
+                        if (!$ISTLD && !$ISSLAVE){
                         	
                         if ($_SESSION['admin_level'] == 'admin'){
                         	$status_title = 'Enable/Disable';
@@ -1162,14 +1187,16 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         <td align="center" nowrap><?if ($LISTING['user_id'] > 0){?><a href="index.php?section=users&action=edit&id=<?=$LISTING['user_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="View User details"><?}?><?=$DOMAIN_USER['username'];?><?if ($LISTING['user_id'] > 0){?></a><?}?></td>
                         <?}?>
                         <td align="center" nowrap="nowrap">
-                            <?if (!$ISHOSTED){?>
-                            <a href="validate_domain.php?domain=<?=$LISTING['name'];?>" rel="validate_group" title="Validate your DNS Server configuration to enable domain <?=$LISTING['name'];?>" class="<?if (staff_help()){?>tip_south<?}?> validate validate_domain"><span>Validate Domain</span></a> &nbsp;
-                            <a href="index.php?section=domain_ns&amp;domain=<?=$LISTING['name'];?>" title="Configure Domain Nameserver" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Set Nameserver</span></a> &nbsp;
-                            <?}else{?> 
-                            <a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" title="Manage Domain Records" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Manage Domain Records</span></a> &nbsp;
-                            <?}?> 
-                            <?if (!$ISTLD){?>
-                            <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
+                            <?if (!$ISSLAVE){?>
+	                            <?if (!$ISHOSTED){?>
+	                            <a href="validate_domain.php?domain=<?=$LISTING['name'];?>" rel="validate_group" title="Validate your DNS Server configuration to enable domain <?=$LISTING['name'];?>" class="<?if (staff_help()){?>tip_south<?}?> validate validate_domain"><span>Validate Domain</span></a> &nbsp;
+	                            <a href="index.php?section=domain_ns&amp;domain=<?=$LISTING['name'];?>" title="Configure Domain Nameserver" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Set Nameserver</span></a> &nbsp;
+	                            <?}else{?> 
+	                            <a href="index.php?section=domain&amp;domain_id=<?=$HOSTEDID['id'];?>" title="Manage Domain Records" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Manage Domain Records</span></a> &nbsp;
+	                            <?}?> 
+	                            <?if (!$ISTLD){?>
+	                            <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
+	                            <?}?>
                             <?}?>
                         </td>
                       </tr>
