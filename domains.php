@@ -1006,7 +1006,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                         <option value="0" <? if ($_GET['show_system_domains'] != '1' && $_GET['show_system_domains'] != '2'){ echo "selected=\"selected\""; }?> >No</option> 
                                         <option value="1" <? if ($_GET['show_system_domains'] == '1'){ echo "selected=\"selected\""; }?> >Yes</option> 
                                         <option value="2" <? if ($_GET['show_system_domains'] == '2'){ echo "selected=\"selected\""; }?> >Only</option> 
-                                        <option value="2" <? if ($_GET['show_system_domains'] == '3'){ echo "selected=\"selected\""; }?> >Slaves</option> 
+                                        <option value="3" <? if ($_GET['show_system_domains'] == '3'){ echo "selected=\"selected\""; }?> >Slaves</option> 
                                     </select>
                                 </td>
                                 <?}?>                                
