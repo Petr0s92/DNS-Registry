@@ -161,7 +161,7 @@ if ($_POST['action'] == "add" && $_POST['parent_id']) {
         if ($INSERT){
         	
         	//Insert new ALSO-NOTIFY IP to all existing domains
-			$SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains", $db);
+			$SELECT_DOMAINS = mysql_query("SELECT id, name, type FROM domains", $db);
 			while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
 				
 				//Insert the ALSO-NOTIFY record to notify the root NS on its UNICAST IP. 				
@@ -180,7 +180,7 @@ if ($_POST['action'] == "add" && $_POST['parent_id']) {
 							
 				)", $db);
 				
-				if ($DOMAINS['id'] != '1'){
+				if ($DOMAINS['id'] != '1'&& $DOMAINS['type'] != 'SLAVE'){
 					$soa_update = update_soa_serial_byid($DOMAINS['id']);
 				}
 						

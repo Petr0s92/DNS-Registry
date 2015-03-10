@@ -150,7 +150,7 @@ if ($_POST['action'] == "add" ) {
         	
 			
 			//Insert new Root NS to all existing domains
-			$SELECT_DOMAINS = mysql_query("SELECT id, name FROM domains", $db);
+			$SELECT_DOMAINS = mysql_query("SELECT id, name, type FROM domains", $db);
 			while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
 				$SELECT_DOMAIN_USER = mysql_query("SELECT user_id FROM records WHERE domain_id = '".$DOMAINS['id']."' AND ( type = 'NS' OR type = 'SOA' ) LIMIT 0,1 ", $db);
 				$DOMAIN_USER = mysql_fetch_array($SELECT_DOMAIN_USER);
@@ -176,7 +176,7 @@ if ($_POST['action'] == "add" ) {
 							
 				)", $db);
 				*/
-				if ($DOMAINS['id'] != '1'){
+				if ($DOMAINS['id'] != '1'&& $DOMAINS['type'] != 'SLAVE'){
 					$soa_update = update_soa_serial_byid($DOMAINS['id']);
 				}
 						

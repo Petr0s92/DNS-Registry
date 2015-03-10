@@ -282,7 +282,8 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
 		$errors['content'] = "Please enter the IP Address of the nameserver.";
     } else {
 		if(filter_var($_POST['content'], FILTER_VALIDATE_IP)){
-			if ( ip2long($_POST['content']) <= ip2long("10.255.255.255") && ip2long("10.0.0.0") <=  ip2long($_POST['content']) )  {
+			//if ( ip2long($_POST['content']) <= ip2long("10.255.255.255") && ip2long("10.0.0.0") <=  ip2long($_POST['content']) )  {
+			if ($CONF['NAMESERVERS_IP_RANGE'] == 'any' || netMatch($CONF['NAMESERVERS_IP_RANGE'], $_POST['content'])){
 												
 			}else{
 				$errors['content'] = "The IP you entered is not valid.";	
