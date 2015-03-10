@@ -54,22 +54,26 @@ if ($_SESSION['admin_level'] == 'user'){
         $user_id = " AND user_id = '".$qu."' ";
      
     }else{
+
+    	// Get all slave domains
+		$o=0;
+		$sl_zn = "";
+		$SELECT_SLAVE_ZONES = mysql_query("SELECT id FROM domains WHERE type = 'SLAVE' ", $db);
+		$SLAVE_ZONES_TOTAL = mysql_num_rows($SELECT_SLAVE_ZONES);
+		while($SLAVE_ZONES = mysql_fetch_array($SELECT_SLAVE_ZONES)){
+			$o++;
+			$sl_zn .= "'".$SLAVE_ZONES['id']."'";
+			if ($o < $SLAVE_ZONES_TOTAL){
+				$sl_zn .=", ";
+			}				
+		}
+
+		
 		if ($_GET['show_system_domains'] == '1'){
-			$user_id = "  ";
+			$user_id = " ";
 		}elseif ($_GET['show_system_domains'] == '2'){
-			$user_id = " AND user_id = '0'  ";
+			$user_id = " AND user_id = '0' AND domain_id NOT IT ( ".$sl_zn." ) ";
 		}elseif ($_GET['show_system_domains'] == '3'){
-			$o=0;
-			$sl_zn = "";
-			$SELECT_SLAVE_ZONES = mysql_query("SELECT id FROM domains WHERE type = 'SLAVE' ", $db);
-			$SLAVE_ZONES_TOTAL = mysql_num_rows($SELECT_SLAVE_ZONES);
-			while($SLAVE_ZONES = mysql_fetch_array($SELECT_SLAVE_ZONES)){
-				$o++;
-				$sl_zn .= "'".$SLAVE_ZONES['id']."'";
-				if ($o < $SLAVE_ZONES_TOTAL){
-					$sl_zn .=", ";
-				}				
-			}
 			$user_id = " AND user_id = 0 AND domain_id IN ( ".$sl_zn." ) ";
 		}else{
 			$user_id = " AND user_id > '0' ";
