@@ -29,6 +29,9 @@ if ($_SESSION['admin_level'] != 'admin'){
     exit();
 }
 
+// include dns validation functions
+require ("./includes/dns.php");
+
 //Define current page data
 $mysql_table = 'tlds';
 $sorting_array = array("id", "name", "active", "default");
@@ -113,8 +116,13 @@ if ($_POST['action'] == "add" ) {
     $errors = array();
     
     $_POST['name'] = trim($_POST['name']);
-    if (!preg_match("/^(?!-)^(?!\.)[a-z0-9-\.]{1,63}(?<!-)(?<!\.)$/", $_POST['name'])) {
-        $errors['name'] = "Please choose a TLD Name with 2 to 10 latin lowercase characters without numbers, spaces and symbols.";
+    
+    if ($validate = is_valid_hostname_fqdn($_POST['name'], 0) ){
+		$errors['name'] = $validate;		
+	//}
+    
+    //if (!preg_match("/^(?!-)^(?!\.)[a-z0-9-\.]{1,63}(?<!-)(?<!\.)$/", $_POST['name'])) {
+    //    $errors['name'] = "Please choose a TLD Name with 2 to 10 latin lowercase characters without numbers, spaces and symbols.";
     }else{
         
         if (mysql_num_rows(mysql_query("SELECT id FROM `".$mysql_table."` WHERE `name` = '".addslashes($_POST['name'])."' ",$db))){

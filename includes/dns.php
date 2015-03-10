@@ -432,15 +432,15 @@ function is_valid_hostname_fqdn(&$hostname, $wildcard) {
         }
         if (count($array) != 2) {
             //error(ERR_DNS_HOSTNAME);
-            return "Invalid hostname";
+            return "Invalid Reverse Name";
         }
         if (!is_numeric($array[0]) || $array[0] < 0 || $array[0] > 255) {
             //error(ERR_DNS_HOSTNAME);
-            return "Invalid hostname";
+            return "Invalid Reverse Name";
         }
         if (!is_numeric($array[1]) || $array[1] < 25 || $array[1] > 31) {
             //error(ERR_DNS_HOSTNAME);
-            return "Invalid hostname";
+            return "Invalid Reverse Name";
         }
     } else {
         if (substr_count($hostname, "/") > 0) {

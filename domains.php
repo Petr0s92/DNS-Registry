@@ -23,6 +23,9 @@
 // Protect page from anonymous users
 admin_auth();
 
+// include dns validation functions
+require ("./includes/dns.php");
+
 
 //Define current page data
 $mysql_table = 'records';
@@ -155,9 +158,20 @@ if ($_POST['action'] == "add" ) {
     }
     
     $_POST['name'] = trim($_POST['name']);
-    if (!preg_match("/^(?!-)[a-z0-9-]{1,63}(?<!-)$/", $_POST['name'])) {
+    
+    $hostname_labels = explode('.', $_POST['name'] . "." . $TLD['name']);
+    $label_count = count($hostname_labels);    
+    
+    //If reverse domain validate differently
+    if ($hostname_labels[$label_count - 1] == "arpa" ) {
+    	$lookup_domain = $_POST['name'] . "." . $TLD['name'];
+    	if ($validate = is_valid_hostname_fqdn($lookup_domain, 0) ){
+			$errors['name'] = $validate;
+		}
+	//If forward domain do our validation
+	}elseif (!preg_match("/^(?!-)[a-z0-9-]{1,63}(?<!-)$/", $_POST['name'])) {
         $errors['name'] = "Please choose a valid domain name. Only lowercase alphanumeric characters are allowed and a dash (-). Domain cannot start or end with a dash.";
-    } else {
+	}else{
     	if (strlen($_POST['name']) > 62){
 			$errors['name'] = "Please choose a shorter domain name.";	
     	}elseif (strlen($_POST['name']) < 2){
@@ -797,7 +811,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 														$SELECT_DOMAIN_ID = mysql_query("SELECT id FROM domains WHERE name = '".$TLDs['name']."' ", $db);
 														$DOMAIN_ID = mysql_fetch_array($SELECT_DOMAIN_ID);  
 													?>                                                    
-                                                    <option value="<?=$TLDs['id'];?>"   <? if ($DOMAIN_ID['id'] && $_POST['tld'] == $TLDs['id']){ echo "selected=\"selected\""; }elseif ($TLDs['default'] == '1'){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
+                                                    <option value="<?=$TLDs['id'];?>"   <? if ($DOMAIN_ID['id'] && $_POST['tld'] == $TLDs['id']){ echo "selected=\"selected\""; }elseif ($TLDs['default'] == '1' && !$_POST['tld']){echo "selected=\"selected\"";}?> >.<?=$TLDs['name'];?></option>
 													<?}?>                                                    
                                                     
                                                 </select>
