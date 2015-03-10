@@ -204,7 +204,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     $SELECT_ROOT_NS_UNICAST = mysql_query("SELECT `ip`, `id` FROM `root_ns_unicast` WHERE parent_id = '".$id."' ");
     while($ROOT_NS_UNICAST = mysql_fetch_array($SELECT_ROOT_NS_UNICAST)){
 		$DELETE = mysql_query("DELETE FROM `root_ns_unicast` WHERE `id`= '".$ROOT_NS_UNICAST['id']."' " ,$db);
-		$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE ip = '".$ROOT_NS_UNICAST['ip']."' ", $db);
+		$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content` = '".$ROOT_NS_UNICAST['ip']."' ", $db);
     }
     //then delete root ns
     $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
