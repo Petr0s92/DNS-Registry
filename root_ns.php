@@ -198,13 +198,14 @@ if ($_POST['action'] == "add" ) {
 if ($_GET['action'] == "delete" && $_POST['id']){
     $id = addslashes(str_replace ("tr-", "", $_POST['id']));
     
-    $SELECT_ROOT_NS = mysql_query("SELECT `name` FROM `root_ns` WHERE id = '".$id."' ");
+    $SELECT_ROOT_NS = mysql_query("SELECT `name`, `id` FROM `root_ns` WHERE id = '".$id."' ");
     $ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS);
     //first delete all unicast ips
-    $SELECT_ROOT_NS_UNICAST = mysql_query("SELECT `ip`, `id` FROM `root_ns_unicast` WHERE parent_id = '".$id."' ");
+    $SELECT_ROOT_NS_UNICAST = mysql_query("SELECT `ip`, `id` FROM `root_ns_unicast` WHERE parent_id = '".$ROOT_NS['id']."' ");
     while($ROOT_NS_UNICAST = mysql_fetch_array($SELECT_ROOT_NS_UNICAST)){
 		$DELETE = mysql_query("DELETE FROM `root_ns_unicast` WHERE `id`= '".$ROOT_NS_UNICAST['id']."' " ,$db);
 		$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content` = '".$ROOT_NS_UNICAST['ip']."' ", $db);
+		$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `content` = '".$ROOT_NS_UNICAST['ip'].":".$CONF['META_SLAVE_PORT']."' ", $db);
     }
     //then delete root ns
     $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
