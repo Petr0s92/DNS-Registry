@@ -72,7 +72,7 @@ if ($_SESSION['admin_level'] == 'user'){
 		if ($_GET['show_system_domains'] == '1'){
 			$user_id = " ";
 		}elseif ($_GET['show_system_domains'] == '2'){
-			$user_id = " AND user_id = '0' AND domain_id NOT IT ( ".$sl_zn." ) ";
+			$user_id = " AND user_id = '0' AND domain_id NOT IN ( ".$sl_zn." ) ";
 		}elseif ($_GET['show_system_domains'] == '3'){
 			$user_id = " AND user_id = 0 AND domain_id IN ( ".$sl_zn." ) ";
 		}else{
