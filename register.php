@@ -59,7 +59,7 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
     
     $_POST['nodeid'] = (int)$_POST['nodeid'];    
     if ($_POST['nodeid'] <1){ 
-    	$errors['admin_level'] = "Please enter your NodeID #" ; 
+    	$errors['nodeid'] = "Please enter your NodeID #" ; 
     }    
     
     $_POST['email'] = trim($_POST['email']);
@@ -75,6 +75,11 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
             $errors['email'] = "Email is already in use." ;
         } 
     }
+    
+    $_POST['terms'] = (int)$_POST['terms'];    
+    if ($_POST['terms'] != 1 && $CONF['TERMS_URL']){ 
+    	$errors['terms'] = "You must accept the <a href=\"".$CONF['TERMS_URL']."\" target=\"_blank\">Terms and Conditions</a>." ; 
+    }    
     
     if (count($errors) == 0) {
         
@@ -163,6 +168,11 @@ $(function() {
         <label for="email" class="required">Email:</label>
         <input name="email" id="email" type="text" size="20" maxlength="255" class="input_field" value="<?=$_POST['email']?>" />
         
+        <?if ($CONF['TERMS_URL']){?>
+        <br />
+        <br />
+        <input type="checkbox" name="terms" id="terms" class="required" value="1"<? if ($_POST['terms'] == '1'){ echo " checked=\"checked\""; }?> /> Accept <a href="<?=$CONF['TERMS_URL'];?>" target="_blank">Terms and Conditions</a>
+        <?}?>
         <div class="clr">&nbsp;</div>
 
         <input type="submit" name="go" id="go" value="Register" class="button_primary" />

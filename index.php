@@ -148,12 +148,50 @@ admin_auth();
 					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'A' AND user_id = '".$_SESSION['admin_id']."' ", $db));?></strong></td>
 					</tr>
 					</table>
+					<br />
+					
+					<?if ($_SESSION['admin_level'] == 'admin'){?>
+						<h2 class="sidebar_title"></h2>
+						<a href="index.php?force_soa_update=1&return=<?=urlencode($_SERVER['REQUEST_URI']);?>" class="tip_south" title="This will force a SOA Serial Update to all Domains on the system to force slaves to sync their zones. Use only when nessescary.">Force SOA Serial Update</a>
+						<br />
+						<br />
+					<?}?>
+					<?if ($CONF['TERMS_URL'] || $CONF['SUPPORT_URL']){?>
+						<h2 class="sidebar_title"></h2>
+					<?}?>
+					<?if ($CONF['TERMS_URL']){?>
+						<a href="<?=$CONF['TERMS_URL'];?>" target="_blank">Terms and Conditions</a>
+						<br />
+						<br />
+					<?}?>
+					<?if ($CONF['SUPPORT_URL']){?>
+						<a href="<?=$CONF['SUPPORT_URL'];?>" target="_blank">Get Support</a>
+					<?}?>
 
 				</td>
 				<!-- SIDEBAR END -->
 				<td class="main_content_spacer"></td>
 			
 				<td valign="top" id="main">
+
+				<?if ($_GET['soa_updated'] == '1' && $_SESSION['admin_level'] == 'admin'){?>
+				<script>
+                $(function() {    
+	                //CLOSE THE SOA NOTIFICATION BAR
+	                $("a.close_notification").click(function() {
+	                    var bar_class = $(this).attr('rel');
+	                    //alert(bar_class);
+	                    $('.'+bar_class).hide();
+	                    return false;
+	                });
+				});
+                </script>
+                				
+				<div class="maintitle_bg">
+					<p class="success"><span style="float: right;"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_east<?}?> close_notification" rel="success" title="Close notification bar"><span>Close Notification Bar</span></a></span>
+                        SOA Update was successful.</p>
+                </div>
+				<?}?>    
 
 				<div class="maintitle_bg">
 					<div class="<?=$maintitle_class;?>"><a href="index.php?section=<?=$SECTION;?><?if ($_GET['domain']) { echo "&domain=".$_GET['domain'];}?><?if ($_GET['id']) { echo "&id=".(int)$_GET['id'];}?><?if ($_GET['domain_id']) { echo "&domain_id=".(int)$_GET['domain_id'];}?>"><?=$maintitle_title;?></a></div>

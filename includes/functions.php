@@ -453,6 +453,22 @@ function getTLD ($domain){
 	
 	return false;
 	
+}
+
+
+// Force SOA serial update to all domains to force slaves sync
+if ($_GET['force_soa_update'] == '1' && $_SESSION['admin_level'] == 'admin' && $_GET['return']){
+
+	$SELECT_DOMAINS = mysql_query("SELECT id FROM domains", $db);
+	while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
+		if ($DOMAINS['id'] != '1'){
+			$soa_update = update_soa_serial_byid($DOMAINS['id']);
+		}
+	}
+	
+	header ("Location: " . urldecode($_GET['return']) . "&soa_updated=1");
+	exit();
+	
 } 
   
 ?>
