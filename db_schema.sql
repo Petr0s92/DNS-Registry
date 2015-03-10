@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS `records` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
 ALTER TABLE `records` ADD CONSTRAINT `records_ibfk_1` FOREIGN KEY (`domain_id`) REFERENCES `domains` (`id`) ON DELETE CASCADE;
+ALTER TABLE `domainmetadata` ADD CONSTRAINT `records_ibfk_2` FOREIGN KEY (`domain_id`) REFERENCES `domains` (`id`) ON DELETE CASCADE;
 
 DROP TABLE IF EXISTS `root_ns`;
 CREATE TABLE IF NOT EXISTS `root_ns` (

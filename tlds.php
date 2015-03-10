@@ -222,19 +222,26 @@ if ($_POST['action'] == "add" ) {
 
 // DELETE RECORD
 if ($_GET['action'] == "delete" && $_POST['id']){
-    $id = addslashes(str_replace ("tr-", "", $_POST['id']));
+    $id = mysql_real_escape_string(str_replace ("tr-", "", $_POST['id']), $db);
     
-    $SELECT_TLD_NAME = mysql_query("SELECT `name` FROM `tlds` WHERE id = '".$id."' ");
+    $SELECT_TLD_NAME = mysql_query("SELECT `name` FROM `".$mysql_table."` WHERE id = '".$id."' ");
     $TLD_NAME = mysql_fetch_array($SELECT_TLD_NAME);
     
     $SELECT_DOMAIN = mysql_query("SELECT `name`, `id` FROM `domains` WHERE name = '".$TLD_NAME['name']."' ");
     $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
     
     
+    //delete tld
     $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
+    //delete tld from domains table
     $DELETE = mysql_query("DELETE FROM `domains` WHERE `id`= '".$DOMAIN['id']."' " ,$db);
-    $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `domain_id`= '".$DOMAIN['id']."' " ,$db);
-    $DELETE = mysql_query("DELETE FROM `records` WHERE `domain_id`= '".$DOMAIN['id']."' " ,$db);
+    //$DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `domain_id`= '".$DOMAIN['id']."' " ,$db);
+    //delete records under tld
+    //$DELETE = mysql_query("DELETE FROM `records` WHERE `domain_id`= '".$DOMAIN['id']."' " ,$db);
+
+	//delte hosted domains under tld    
+    $DELETE = mysql_query("DELETE FROM `domains` WHERE `name` LIKE '%.".$TLD_NAME['name']."' " ,$db);
+    //$DELETE = mysql_query("DELETE FROM `records` WHERE `name` LIKE '%.".$TLD_NAME['name']."' " ,$db);
     
     if ($DELETE){
         ob_end_clean();
