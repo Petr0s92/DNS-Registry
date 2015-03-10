@@ -1125,7 +1125,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                             		<?}?>
                             		<td nowrap="nowrap">
                             			<?if ($DOMAIN_RECORDS >= 1){?>
-                            			<span class="<?if ($ISTLD){?>red<?}elseif ($LISTING['user_id'] == '0'){?>blue<?}else{?>green<?}?>"><strong style="font-family: monospace"><?if ($ISTLD){?>--System TLD--<?}elseif ($LISTING['user_id'] == '0'){?>--System Zone--<?}else{?>--Hosted Domain--<?}?></strong></span>
+                            			<span class="<?if ($ISTLD){?>red<?}elseif ($LISTING['user_id'] == '0'){?>blue<?}else{?>green<?}?>"><strong style="font-family: monospace"><?if ($ISTLD){?>--System TLD--<?}elseif ($ISSLAVE){?>--Slave Zone--<?}elseif ($LISTING['user_id'] == '0'){?>--System Zone--<?}else{?>--Hosted Domain--<?}?></strong></span>
 										<?}else{?>                            			
                             			<span class="red alert_ico"><strong style="font-family: monospace"><a href="index.php?section=domain&domain_id=<?=$HOSTEDID['id'];?>&action=add" title="Add some records to enable this domain" <?if (staff_help()){?>class="tip_south"<?}?> >No Records yet</a></strong></span>
                             			<?}?>
@@ -1162,8 +1162,8 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         	<?}?>
                         	</table>                        	                        
                         </td>
-                        <td align="center" nowrap><?if ($ISHOSTED){ echo $DOMAIN_RECORDS; }else{ echo "-"; } ?></td>
-                        <td align="center" nowrap><?if ($_GET['sort']=='created'){?><strong><?}?>R <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LAST_UPDATED['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?></td>
+                        <td align="center" nowrap><?if ($ISTLD){ echo "slave"; } elseif ($ISHOSTED){ echo $DOMAIN_RECORDS; }else{ echo "-"; } ?></td>
+                        <td align="center" nowrap><?if (!$ISTLD){?><?if ($_GET['sort']=='created'){?><strong><?}?>R <?=date("d-m-Y g:i a", $LISTING['created']);?><?if ($_GET['sort']=='created'){?></strong><?}?><br /><?if ($_GET['sort']=='change_date'){?><strong><?}?>U <?=date("d-m-Y g:i a", $LAST_UPDATED['change_date']);?><?if ($_GET['sort']=='change_date'){?></strong><?}?><?}?></td>
                         <td align="center" >   
                         <?
                         if (!$ISTLD && !$ISSLAVE){
