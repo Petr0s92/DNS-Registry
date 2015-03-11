@@ -11,8 +11,8 @@ my $metazone = 'meta.meta';
 # Full Path to nsd-control 
 my $nsdcontrol = '/usr/local/sbin/nsd-control'; 
 
-# This NS IP (where NSD listens to and allows AXFR requests)
-my $rootns = '10.1.1.11'; 
+# This Root NS Unicast (secondary) IP (where NSD listens to for AXFR requests)
+my $rootns = '10.1.1.211'; 
 
 # TMP Folder to save received zone NOTIFIES (make sure the folder exists) (without trailing slash) 
 my $depot = '/tmp/zones'; 
@@ -55,8 +55,9 @@ sub notify_handler {
     # BIND: rndc addzone ${qname} IN '......;'
 
 #    my $command = "rndc addzone ${qname} in '{type slave; file \"${qname}\"; masters { 172.16.153.102;};};'";
-    my $command = "${nsdcontrol} addzone ${qname} superslave";
-
+    my $command = "${nsdcontrol} addzone ${qname} superslave &";
+    
+    
     if (open(DB, "> $path")) {
         print DB $command, "\n";
         close(DB);
@@ -67,7 +68,14 @@ sub notify_handler {
     #        and maybe SERVFAIL (not that it's of any use)
 
     system($command);
+    
 
+    if ($metazone ne $qname){
+		# also add each new zone to BIND caching NS as Stub Zone
+    	system("/usr/local/bin/bind_add_stub.sh ${qname} ${rootns} &");
+	}
+	    
+    
     $rcode = "NOERROR";
     return ($rcode, [], [], [],
             { aa => 1, opcode => 'NS_NOTIFY_OP'} );

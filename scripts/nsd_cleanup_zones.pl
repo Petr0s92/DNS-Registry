@@ -8,10 +8,10 @@ use Net::DNS;
 my $metazone = 'meta.meta';  
 
 # Full Path to nsd-control 
-my $nsdcontrol = '/usr/local/sbin/nsd-control'; 
+my $nsdcontrol = '/usr/local/sbin/nsd-control';
 
-# This NS IP (where NSD listens to and allows AXFR requests)
-my $rootns = '10.1.1.11'; 
+# This Root NS Unicast (secondary) IP (where NSD listens to for AXFR requests)
+my $rootns = '10.1.1.211'; 
 
 # TMP Folder where nsd_superslave writes incoming zones (without trailing slash)
 my $depot = '/tmp/zones';
@@ -53,6 +53,12 @@ foreach my $rr (@zone) {
         system($command);
         my $command2 = "rm -rf ". $depot ."/". $name ;
         system($command2);
+
+		if ($metazone ne $name){
+        	# clean stub zone from BIND
+        	system("/usr/local/bin/bind_del_stub.sh ".$name );
+		}
+
     }
 
 
