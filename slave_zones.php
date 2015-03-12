@@ -445,18 +445,19 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <tr>
                         <th><?=create_sort_link("name","Slave Zone Name");?></th>
                         <th><?=create_sort_link("master","Master Server IP");?></th>
+                        <th>Total Records Fetched</th>
                         <?/*<th><?=create_sort_link("active", "Active");?></th>*/?>
                         <th>Actions</th>
                       </tr>
                       <!-- RESULTS START -->
                       <?
-                      $i=-1;
                       while($LISTING = mysql_fetch_array($SELECT_RESULTS)){
-                      $i++;  
+                      $TOTAL_RECORDS = mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE domain_id = '".$LISTING['id']."' ", $db));
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap align="center"><?=$LISTING['name'];?></td>
                         <td nowrap align="center"><?=$LISTING['master'];?></td>
+                        <td nowrap align="center"><?=$TOTAL_RECORDS;?></td>
                         <?/*<td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
                         </td>
