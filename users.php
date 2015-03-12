@@ -232,6 +232,20 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
     	$errors['admin_level'] = "Please enter your NodeID #" ; 
     }
     
+    $_POST['wireless_community'] = trim($_POST['wireless_community']);    
+    if (!$_POST['wireless_community']){ 
+    	$errors['wireless_community'] = "Please enter your Wireless Community Name" ; 
+    }
+    
+    $_POST['default_ttl_domains'] = (int)$_POST['default_ttl_domains'];    
+    if ($_POST['default_ttl_domains'] <1){ 
+    	$errors['default_ttl_domains'] = "Please enter a valid Domains TTL" ; 
+    }
+        
+    $_POST['default_ttl_records'] = (int)$_POST['default_ttl_records'];    
+    if ($_POST['default_ttl_records'] <1){ 
+    	$errors['default_ttl_records'] = "Please enter a valid Domains TTL" ; 
+    }    
     
     $_POST['email'] = trim($_POST['email']);
     if ($_POST['email']){
@@ -251,6 +265,9 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
             description = '" . addslashes($_POST['description']) . "',
             Admin_level = '" . addslashes($_POST['Admin_level']) . "',
             nodeid = '" . addslashes($_POST['nodeid']) . "',
+            wireless_community  = '" . mysql_escape_string(htmlspecialchars($_POST['wireless_community']))  . "',
+            default_ttl_domains  = '" . mysql_escape_string($_POST['default_ttl_domains'])  . "',
+            default_ttl_records = '" . mysql_escape_string($_POST['default_ttl_records'])  . "',
             Help = '" . addslashes($_POST['Help']) . "'
             
             WHERE id= '" . $_POST['id'] . "'",$db);
@@ -347,10 +364,13 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     $('#username').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#fullname').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#nodeid').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#wireless_community').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#description').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#email').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#password').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#password2').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#default_ttl_domains').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#default_ttl_records').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#Admin_level').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#Help').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     <?}?>
@@ -484,6 +504,11 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                             </p>
                                             
                                             <p>
+                                                <label for="wireless_community" class="required">Wireless Community Name</label>
+                                                <input type="text" name="wireless_community" id="wireless_community" title="Enter your Wireless Community Name. eg: AWMN" value="<? if($_POST['wireless_community']){ echo $_POST['wireless_community']; }else{ echo stripslashes($RESULT['wireless_community']);} ?>">
+                                            </p>
+                                            
+                                            <p>
                                                 <label for="fullname">Fullname</label>
                                                 <input type="text" name="fullname" id="fullname" title="Enter the Fullname" value="<? if ($_GET['action'] == "edit"){ echo stripslashes($RESULT['fullname']);}elseif($_POST['fullname']){ echo $_POST['fullname']; } ?>">
                                             </p>
@@ -520,7 +545,18 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                                 <label for="email" class="required">E-Mail</label>
                                                 <input type="text" name="email" id="email" title="Enter the Email" value="<? if ($_GET['action'] == "edit"){ echo stripslashes($RESULT['email']);}elseif($_POST['email']){ echo $_POST['email']; } ?>">
                                             </p>
+                                            
                                             <p>
+                                                <label for="default_ttl_domains">Default TTL for new Domains (for NS/SOA)</label>
+                                                <input type="text" name="default_ttl_domains" id="default_ttl_domains" title="Enter a default TTL for new Domains. This will be applied to SOA/NS records" value="<? if($_POST['default_ttl_domains']){ echo $_POST['default_ttl_domains']; }elseif ($RESULT['default_ttl_domains']){ echo stripslashes($RESULT['default_ttl_domains']);}else{ echo $CONF['RECORDS_TTL'];} ?>">
+                                            </p>
+                                            
+                                            <p>
+                                                <label for="default_ttl_records">Default TTL for new Records (for hosted domains)</label>
+                                                <input type="text" name="default_ttl_records" id="default_ttl_records" title="Enter a default TTL for new Records. This will be applied to hosted domains records" value="<? if($_POST['default_ttl_records']){ echo $_POST['default_ttl_records']; }elseif ($RESULT['default_ttl_records']){ echo stripslashes($RESULT['default_ttl_records']);}else{ echo $CONF['RECORDS_TTL'];} ?>">
+                                            </p>
+											
+											<p>
                                                 <label for="Help">Help Annotations</label>
                                                 <input type="checkbox" name="Help" id="Help" style="width:12px; margin:7px;" title="Check to enable Help Annotations" value="1"<? if ($_GET['action'] == 'edit' && $RESULT['Help'] == '1'){ echo " checked=\"checked\""; }elseif($_POST['Help'] =='1') echo " checked=\"checked\"";?> />
                                             </p>

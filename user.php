@@ -63,6 +63,22 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
     	$errors['admin_level'] = "Please enter your NodeID #" ; 
     }
         
+    $_POST['wireless_community'] = trim($_POST['wireless_community']);    
+    if (!$_POST['wireless_community']){ 
+    	$errors['wireless_community'] = "Please enter your Wireless Community Name" ; 
+    }
+    
+    $_POST['default_ttl_domains'] = (int)$_POST['default_ttl_domains'];    
+    if ($_POST['default_ttl_domains'] <1){ 
+    	$errors['default_ttl_domains'] = "Please enter a valid Domains TTL" ; 
+    }
+        
+    $_POST['default_ttl_records'] = (int)$_POST['default_ttl_records'];    
+    if ($_POST['default_ttl_records'] <1){ 
+    	$errors['default_ttl_records'] = "Please enter a valid Domains TTL" ; 
+    }
+        
+        
     $_POST['email'] = trim($_POST['email']);
     if ($_POST['email']){
         if (!preg_match("/^([a-zA-Z0-9]+([\.+_-][a-zA-Z0-9]+)*)@(([a-zA-Z0-9]+((\.|[-]{1,2})[a-zA-Z0-9]+)*)\.[a-zA-Z]{2,7})$/", $_POST['email'])) {
@@ -79,7 +95,10 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
             email     = '" . mysql_escape_string($_POST['email'])     . "',
             fullname = '" . mysql_escape_string($_POST['fullname']) . "',
             description  = '" . mysql_escape_string($_POST['description'])  . "',
-            nodeid  = '" . mysql_escape_string($_POST['nodeid'])  . "'
+            nodeid  = '" . mysql_escape_string($_POST['nodeid'])  . "',
+            wireless_community  = '" . mysql_escape_string(htmlspecialchars($_POST['wireless_community']))  . "',
+            default_ttl_domains  = '" . mysql_escape_string($_POST['default_ttl_domains'])  . "',
+            default_ttl_records = '" . mysql_escape_string($_POST['default_ttl_records'])  . "'
             
             WHERE id= '" . addslashes($id) . "'",$db);
         
@@ -111,11 +130,14 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
                     //TIPSY for the EDIT Form
                     $('#username').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#nodeid').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#wireless_community').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#fullname').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#description').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#email').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#password').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#password2').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#default_ttl_domains').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#default_ttl_records').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     <?}?>
                     
     
@@ -178,6 +200,11 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
                                             </p>
                                             
                                             <p>
+                                                <label for="wireless_community" class="required">Wireless Community Name</label>
+                                                <input type="text" name="wireless_community" id="wireless_community" title="Enter your Wireless Community Name. eg: AWMN" value="<? if($_POST['wireless_community']){ echo $_POST['wireless_community']; }else{ echo stripslashes($RESULT['wireless_community']);} ?>">
+                                            </p>
+                                            
+                                            <p>
                                                 <label for="fullname">Fullname</label>
                                                 <input type="text" name="fullname" id="fullname" title="Enter the Fullname" value="<? if($_POST['fullname']){ echo $_POST['fullname']; }else{ echo stripslashes($RESULT['fullname']);} ?>">
                                             </p>
@@ -207,8 +234,16 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
                                                 <input type="text" name="email" id="email" title="Enter the Email" value="<? if($_POST['email']){ echo $_POST['email']; }else{ echo stripslashes($RESULT['email']);} ?>">
                                             </p>
                                             
-
+                                            <p>
+                                                <label for="default_ttl_domains">Default TTL for new Domains (for NS/SOA)</label>
+                                                <input type="text" name="default_ttl_domains" id="default_ttl_domains" title="Enter a default TTL for new Domains. This will be applied to SOA/NS records" value="<? if($_POST['default_ttl_domains']){ echo $_POST['default_ttl_domains']; }elseif ($RESULT['default_ttl_domains']){ echo stripslashes($RESULT['default_ttl_domains']);}else{ echo $CONF['RECORDS_TTL'];} ?>">
+                                            </p>
                                             
+                                            <p>
+                                                <label for="default_ttl_records">Default TTL for new Records (for hosted domains)</label>
+                                                <input type="text" name="default_ttl_records" id="default_ttl_records" title="Enter a default TTL for new Records. This will be applied to hosted domains records" value="<? if($_POST['default_ttl_records']){ echo $_POST['default_ttl_records']; }elseif ($RESULT['default_ttl_records']){ echo stripslashes($RESULT['default_ttl_records']);}else{ echo $CONF['RECORDS_TTL'];} ?>">
+                                            </p>
+											                                           
                                         </div>
                                         
                                      </div>

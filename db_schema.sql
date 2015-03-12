@@ -187,6 +187,9 @@ CREATE TABLE IF NOT EXISTS `users` (
   `last_login` int(10) NOT NULL,
   `last_ip` varchar(15) NOT NULL,
   `nodeid` int(10) NOT NULL,
+  `wireless_community` VARCHAR(100) NOT NULL,
+  `default_ttl_domains` int(10) NOT NULL DEFAULT '86400',
+  `default_ttl_records` int(10) NOT NULL DEFAULT '86400',
   PRIMARY KEY (`id`),
   KEY `Admin_level` (`Admin_level`,`Help`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;

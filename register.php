@@ -60,7 +60,12 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
     $_POST['nodeid'] = (int)$_POST['nodeid'];    
     if ($_POST['nodeid'] <1){ 
     	$errors['nodeid'] = "Please enter your NodeID #" ; 
-    }    
+    }
+    
+    $_POST['wireless_community'] = trim($_POST['wireless_community']);    
+    if (!$_POST['wireless_community']){ 
+    	$errors['wireless_community'] = "Please enter your Wireless Community Name" ; 
+    }        
     
     $_POST['email'] = trim($_POST['email']);
     if ($_POST['email']){
@@ -83,11 +88,14 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
     
     if (count($errors) == 0) {
         
-        $INSERT = mysql_query("INSERT INTO `users` (username, password, email, nodeid, fullname, Admin_level, Help, active, registered) VALUES (      
+        $INSERT = mysql_query("INSERT INTO `users` (username, password, email, nodeid, wireless_community, default_ttl_domains, default_ttl_records, fullname, Admin_level, Help, active, registered) VALUES (      
             '" . mysql_real_escape_string($_POST['username']) . "',
             '" . sha1($_POST['password']) . "',
             '" . mysql_real_escape_string($_POST['email']) . "',
             '" . mysql_real_escape_string($_POST['nodeid']) . "',
+            '" . mysql_escape_string(htmlspecialchars($_POST['wireless_community'])) . "',
+            '" . mysql_real_escape_string($CONF['RECORDS_TTL']) . "',
+            '" . mysql_real_escape_string($CONF['RECORDS_TTL']) . "',
             '" . mysql_real_escape_string($_POST['fullname']) . "',
             'user',
             '1',
@@ -159,6 +167,8 @@ $(function() {
         <input name="username" id="username" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['username']?>" />
         <label for="nodeid" class="required">NodeID #:</label>
         <input name="nodeid" id="nodeid" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['nodeid']?>" />
+        <label for="wireless_community" class="required">Wireless Community:</label>
+        <input name="wireless_community" id="wireless_community" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['wireless_community']?>" />
         <label for="fullname">Fullname:</label>
         <input name="fullname" id="fullname" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['fullname']?>" />
         <label for="password" class="required">Password: </label>
