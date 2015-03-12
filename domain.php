@@ -33,6 +33,9 @@ $sorting_array = array("id", "name", "content", "type", "ttl", "prio", "domain_i
 
 // ----------------------------------------------------------------------
 
+if ($_SESSION['admin_default_ttl_records']){
+	$CONF['RECORDS_TTL'] = $_SESSION['admin_default_ttl_records'];
+}
 
 if ($_SESSION['admin_level'] == 'user'){
 	$user_id = " AND user_id = '".$_SESSION['admin_id']."' ";

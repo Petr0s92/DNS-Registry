@@ -96,7 +96,7 @@ if (isset($SECTION) && $SECTION == 'domains'){
 #########################################
 
 // create sessions - cookie
-function admin_create_sessions($id,$username,$password,$remember, $help, $level, $impersonate=false){
+function admin_create_sessions($id,$username,$password,$remember, $help, $level, $default_ttl_domains, $default_ttl_records,  $impersonate=false){
     global $CONF, $db, $_SESSION;
     
     if ($impersonate == true){
@@ -117,13 +117,15 @@ function admin_create_sessions($id,$username,$password,$remember, $help, $level,
     $_SESSION['admin_sha1part'] = substr(sha1($password),0,10);
     $_SESSION['admin_help'] = $help;
     $_SESSION['admin_level'] = $level;
+    $_SESSION['admin_default_ttl_domains'] = $default_ttl_domains;
+    $_SESSION['admin_default_ttl_records'] = $default_ttl_records;
     
     if (!$_SESSION['admin_orig']){
 		mysql_query("UPDATE users SET last_login = UNIX_TIMESTAMP(), last_ip = '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'  WHERE id = '" . $id ."'", $db);		
     }
     	    
     if(isset($remember)){
-        setcookie($CONF['COOKIE_NAME'], $_SESSION['admin_id'] . "||" . $_SESSION['admin_username']  ."||" . $_SESSION['admin_sha1part']. "||" . $_SESSION['admin_help'], time()+60*60*24*15, "/");
+        setcookie($CONF['COOKIE_NAME'], $_SESSION['admin_id'] . "||" . $_SESSION['admin_username']  ."||" . $_SESSION['admin_sha1part']. "||" . $_SESSION['admin_help'] . "||" . $_SESSION['admin_default_ttl_domains'] . "||" . $_SESSION['admin_default_ttl_records'], time()+60*60*24*15, "/");
         return;
     }
 }
@@ -139,7 +141,7 @@ function admin_login($username,$password,$remember){
 
     if ($user_check) { 
         $USER = @mysql_fetch_array($USER_SELECT);
-        admin_create_sessions($USER['id'], $USER['username'], $USER['password'], $remember, $USER['Help'], $USER['Admin_level']);
+        admin_create_sessions($USER['id'], $USER['username'], $USER['password'], $remember, $USER['Help'], $USER['Admin_level'], $USER['default_ttl_domains'], $USER['default_ttl_records']);
         return true;
     } else {         
         return false;
@@ -174,7 +176,7 @@ function admin_logged(){
         if ($USER_CHECK) {
             $USER = @mysql_fetch_array($USER_SELECT);
             if (substr(sha1($USER['password']),0,10) == $cookie[2]) {
-                admin_create_sessions($USER['id'], $USER['username'], $USER['password'], 1, $USER['Help'], $USER['Admin_level']);
+                admin_create_sessions($USER['id'], $USER['username'], $USER['password'], 1, $USER['Help'], $USER['Admin_level'], $USER['default_ttl_domains'], $USER['default_ttl_records']);
                 return true;
             }
         } else {
@@ -255,7 +257,7 @@ if ($_GET['action'] == 'switch_user' && $_POST['user_id'] && ($_SESSION['admin_l
 		$user_level = 'user';
 	}	
 	
-	admin_create_sessions($SWITCH_USER['id'],$SWITCH_USER['username'],$SWITCH_USER['password'],$remember, 1, $user_level, $impersonate);
+	admin_create_sessions($SWITCH_USER['id'],$SWITCH_USER['username'],$SWITCH_USER['password'],$remember, 1, $user_level, $SWITCH_USER['default_ttl_domains'], $SWITCH_USER['default_ttl_records'], $impersonate);
 	
 	exit('ok');
 	

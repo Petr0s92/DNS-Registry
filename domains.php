@@ -43,6 +43,10 @@ if ($q) {
     $action_title = "Search: " . $q;
 }
 
+if ($_SESSION['admin_default_ttl_domains']){
+	$CONF['RECORDS_TTL'] = $_SESSION['admin_default_ttl_domains'];
+}
+
 if ($_SESSION['admin_level'] == 'user'){
 	$user_id = " AND user_id = '".$_SESSION['admin_id']."' ";
 }else{
