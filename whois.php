@@ -30,7 +30,7 @@ admin_auth();
 		<div style="width:500px; text-align:left">
 
 			<center><h2><?=$CONF['APP_NAME'];?> Web Whois</h2></center>
-			<center><b>Enter the IP or Domain Name you are trying to lookup.</b></center>
+			<center><b>Enter the Domain Name you are trying to lookup.</b></center>
 			<br />
 			<center>
 				<form method='get' action='index.php'>
