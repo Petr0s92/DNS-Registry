@@ -2,6 +2,12 @@
 
 #USAGE bind_add_stub.sh DOMAIN MASTER_IP
 
+# give it time for the slave to fetch the zone from master
+# before we add the stub zone to bind
+
+sleep 60
+
+# Add stub zone to BIND
 /usr/sbin/rndc addzone $1 in "
 {
         type stub;
@@ -11,8 +17,4 @@
         };
 };"
 
-# give it time for the slave to fetch the zone from master
-# before we reload bind to make the new stub zone work
-
-sleep 60
-rndc reload
+/usr/sbin/rndc flush
