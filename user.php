@@ -93,8 +93,8 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
         $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET
             username  = '" . mysql_escape_string($_POST['username'])  . "',
             email     = '" . mysql_escape_string($_POST['email'])     . "',
-            fullname = '" . mysql_escape_string($_POST['fullname']) . "',
-            description  = '" . mysql_escape_string($_POST['description'])  . "',
+            fullname = '" . mysql_escape_string(htmlspecialchars($_POST['fullname'])) . "',
+            description  = '" . mysql_escape_string(htmlspecialchars($_POST['description']))  . "',
             nodeid  = '" . mysql_escape_string($_POST['nodeid'])  . "',
             wireless_community  = '" . mysql_escape_string(htmlspecialchars($_POST['wireless_community']))  . "',
             default_ttl_domains  = '" . mysql_escape_string($_POST['default_ttl_domains'])  . "',

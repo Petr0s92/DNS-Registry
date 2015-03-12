@@ -633,6 +633,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <tr>
                         <th><?=create_sort_link("username","Username");?></th>
                         <th><?=create_sort_link("nodeid","NodeID");?></th>
+                        <th><?=create_sort_link("wireless_community","Wireless Community");?></th>
                         <th><?=create_sort_link("fullname", "Fullname");?></th>
                         <th>Total Domains</th>
                         <th><?=create_sort_link("email", "Email");?></th>
@@ -652,6 +653,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap><a href="index.php?section=<?=$SECTION;?>&action=edit&id=<?=$LISTING['id'];?>" title="Edit user" class="<?if (staff_help()){?>tip_south<?}?>"><?=$LISTING['username'];?></a></td>
                         <td >#<?=$LISTING['nodeid'];?></td>
+                        <td ><?=$LISTING['wireless_community'];?></td>
                         <td ><?=$LISTING['fullname'];?></td>
                         <td  align="center"><?= mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'NS' AND user_id = '".$LISTING['id']."' GROUP BY name ", $db));?></td>
                         <td align="center"><a href="mailto:<?=$LISTING['email'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Send Email to user"><?=$LISTING['email'];?></a></td>
