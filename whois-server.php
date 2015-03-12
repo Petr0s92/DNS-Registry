@@ -134,7 +134,14 @@ function handle_client($allclient, $socket, $buf) {
 			//Select domain nameservers
 			$SELECT_NS = mysql_query("SELECT content FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND type='NS' ORDER BY content ASC", $db);
 			while ($NS = mysql_fetch_array($SELECT_NS)){
-				$whois_reply .= "\t".$NS['content']."\n";
+				$SELECT_GLUE = mysql_query("SELECT content FROM records WHERE name = '".$NS['content']."' AND type='NS' ");
+				$GLUE = mysql_fetch_array($SELECT_GLUE);
+				if ($GLUE['content']){
+					$glue = "(".$GLUE['content'].")";
+				}else{
+					$glue = '';
+				}
+				$whois_reply .= "\t".$NS['content'].$glue."\n";
 			}
 		}else{
 			$whois_reply .= "This is a System domain.\n";
