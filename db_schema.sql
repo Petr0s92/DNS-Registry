@@ -133,7 +133,8 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (24, 'PDNS_CONTROL_KEY', 'PUT_YOUR_SECRET_HERE', 'Secret Key to pdns_control', 'panel'),
 (25, 'PDNS_CONTROL_PATH', '/usr/bin/pdns_control', 'Full path to pdns_control executable', 'panel'),
 (26, 'PDNS_CONTROL_IP', '127.0.0.1', 'IP for pdns_control', 'panel'),
-(27, 'PDNS_CONTROL_PORT', '53000', 'Port for pdns_control', 'panel');
+(27, 'PDNS_CONTROL_PORT', '53000', 'Port for pdns_control', 'panel'),
+(28, 'WHOIS_SERVER', 'whois.tld', 'Whois server. It will appear on the left menu. Leave empty to disable', 'panel');
 
 
 DROP TABLE IF EXISTS `supermasters`;

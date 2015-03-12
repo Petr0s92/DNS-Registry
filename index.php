@@ -66,7 +66,8 @@ admin_auth();
 			<li class="menu_home"><a href="index.php" <? if ($SECTION=='' || !$SECTION) echo " class=\"selected\""; ?>><span>Dashboard</span></a></li>
 			<li class="menu_domains"><a href="index.php?section=domains" title="Manage your Domain Names" <? if ($SECTION=='domains' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='domains' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='domains' && staff_help()){?>class="tip_south"<?}?> ><span>My Domain Names</span></a></li>
 			<li class="menu_nameservers"><a href="index.php?section=nameservers" title="Manage your Nameservers & Glue records" <? if ($SECTION=='nameservers' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='nameservers' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='nameservers' && staff_help()){?>class="tip_south"<?}?> ><span>My Nameservers</span></a></li>
-			<? 
+			<li class="menu_whois"><a href="index.php?section=whois" title="WHOIS Lookup" <? if ($SECTION=='whois' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='whois' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='whois' && staff_help()){?>class="tip_south"<?}?> ><span>Web Whois</span></a></li>
+            <? 
 			if ($_SESSION['admin_level'] == 'admin'){
 			?><li class="menu_tlds"><a href="index.php?section=tlds" title="Managed allowed TLDs" <? if ($SECTION=='tlds' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='tlds' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='tlds' && staff_help()){?>class="tip_south"<?}?> ><span>TLDs</span></a></li>
 			<li class="menu_root_ns"><a href="index.php?section=root_ns" title="Manage Root Nameservers" <? if ($SECTION=='root_ns' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='root_ns' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='root_ns' && staff_help()){?>class="tip_south"<?}?> ><span>Root Nameservers</span></a></li>
@@ -113,12 +114,43 @@ admin_auth();
 			<!-- SIDEBAR START -->
 				<td valign="top" id="sidebar">
 
+					<?
+					$o=0;
+					$tlds=false;
+					$SELECT_TLDS = mysql_query("SELECT domains.id FROM tlds LEFT JOIN domains on tlds.name=domains.name ", $db);
+					$TLDS_TOTAL = mysql_num_rows($SELECT_TLDS);
+					while ($TLDS = mysql_fetch_array($SELECT_TLDS)){
+						$o++;
+						$tlds .= "'".$TLDS['id']."'";
+						if ($o < $TLDS_TOTAL){
+							$tlds .=", ";
+						}
+					}
+					if ($tlds){
+						$tldsq = " AND domain_id IN (".$tlds.") ";
+					}
+					?>
+					
 					<h2 class="sidebar_title">Registry Stats</h2>
 					<table width="100%" border="0" cellspacing="2" cellpadding="2">
 					<tr>
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total TLDs</td>
 					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM tlds WHERE active ='1' ", $db));?></strong></td>
 					</tr>
+					<?if ($_SESSION['admin_level'] == 'admin'){?>
+					<tr>
+					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Slave Zones</td>
+					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM domains WHERE type ='SLAVE' ", $db));?></strong></td>
+					</tr>
+					<tr>
+					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Root Nameservers</td>
+					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM root_ns WHERE active = '1' ", $db));?></strong></td>
+					</tr>
+					<tr>
+					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Unicast Nameservers</td>
+					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM root_ns_unicast WHERE active = '1' ", $db));?></strong></td>
+					</tr>
+					<?}?>
 					<tr>
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Domains</td>
 					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'NS' AND user_id > 0 GROUP BY name", $db));?></strong></td>
@@ -129,7 +161,7 @@ admin_auth();
 					</tr>
 					<tr>
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Nameservers</td>
-					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'A' AND user_id > '0' ", $db));?></strong></td>
+					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'A' AND user_id > '0' " . $tldsq, $db));?></strong></td>
 					</tr>
 					<tr>
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Users</td>
@@ -145,8 +177,12 @@ admin_auth();
 					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'NS' AND user_id = '".$_SESSION['admin_id']."' GROUP BY name", $db));?></strong></td>
 					</tr>
 					<tr>
+					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">My Hosted Domains Total</td>
+					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'SOA' AND user_id = ".$_SESSION['admin_id']." ", $db));?></strong></td>
+					</tr>
+					<tr>
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">My Nameservers Total</td>
-					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'A' AND user_id = '".$_SESSION['admin_id']."' ", $db));?></strong></td>
+					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'A' AND user_id = '".$_SESSION['admin_id']."' " . $tldsq, $db));?></strong></td>
 					</tr>
 					</table>
 					<br />
@@ -157,8 +193,13 @@ admin_auth();
 						<br />
 						<br />
 					<?}?>
-					<?if ($CONF['TERMS_URL'] || $CONF['SUPPORT_URL']){?>
+					<?if ($CONF['TERMS_URL'] || $CONF['SUPPORT_URL'] || $CONF['WHOIS_SERVER']){?>
 						<h2 class="sidebar_title"></h2>
+					<?}?>
+					<?if ($CONF['WHOIS_SERVER']){?>
+						WHOIS Server: <strong><?=$CONF['WHOIS_SERVER'];?></strong>
+						<br />
+						<br />
 					<?}?>
 					<?if ($CONF['TERMS_URL']){?>
 						<a href="<?=$CONF['TERMS_URL'];?>" target="_blank">Terms and Conditions</a>

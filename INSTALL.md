@@ -6,6 +6,7 @@
 * PHP cli
 * MySQL 5.5
 * PEAR Net_DNS 1.0.7
+* PEAR Net_WHOIS 1.0.5
 * PEAR System_Daemon 1.0.0
 * PERL Net::DNS
 * PERL Net::DNS::Nameserver

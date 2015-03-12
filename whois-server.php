@@ -137,7 +137,7 @@ function handle_client($allclient, $socket, $buf) {
 				$SELECT_GLUE = mysql_query("SELECT content FROM records WHERE name = '".$NS['content']."' AND type='A' ");
 				$GLUE = mysql_fetch_array($SELECT_GLUE);
 				if ($GLUE['content']){
-					$glue = "(".$GLUE['content'].")";
+					$glue = " (Glue: ".$GLUE['content'].")";
 				}else{
 					$glue = '';
 				}

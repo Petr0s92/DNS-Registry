@@ -9,6 +9,7 @@ Also used code and libraries from:
 * jQuery Tipsy http://onehackoranother.com/projects/jquery/tipsy/
 
 * PHP Pear Net_DNS Library http://pear.php.net/package/Net_DNS
+* PHP Pear Net_WHOIS Library http://pear.php.net/package/Net_WHOIS
 * PHP Pear System_Daemon Library http://pear.php.net/package/System_Daemon
 * All icons used are in the public domain found on http://www.iconfinder.com
 * Parts of code for records validation and SOA manipulation are borrowed from Poweradmin http://www.poweradmin.org

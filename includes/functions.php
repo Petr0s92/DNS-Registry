@@ -67,6 +67,9 @@ if (isset($SECTION) && $SECTION == 'domains'){
 }elseif (isset($SECTION) && $SECTION == 'nameservers'){
     $maintitle_class = 'maintitle_nameservers';
     $maintitle_title = 'Nameservers Registration (Glue Records)';
+}elseif (isset($SECTION) && $SECTION == 'whois'){
+    $maintitle_class = 'maintitle_whois';
+    $maintitle_title = 'Web WHOIS Lookup';
 }elseif (isset($SECTION) && $SECTION == 'tlds'){
     $maintitle_class = 'maintitle_tlds';
     $maintitle_title = 'Allowed Top Level Domains (TLDs)';

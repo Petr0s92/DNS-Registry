@@ -110,7 +110,7 @@ $sort_vars = "&sort=".$_GET['sort']."&by=".$_GET['by'];
 
 // Paging
 $count = mysql_query("SELECT id FROM ".$mysql_table." ".$search_query,$db);
-$items_number  = mysql_num_rows($count);
+$items_number  = mysql_num_rows($count) - 1; // minus 1 because we hide meta.meta zone
 if ($_GET['items_per_page'] && is_numeric($_GET['items_per_page'])){
     $_SESSION['items_per_page'] = $_GET['items_per_page'];
 }
