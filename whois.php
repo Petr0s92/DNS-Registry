@@ -49,7 +49,6 @@ admin_auth();
 				$data = $whois->query($_input, $CONF['WHOIS_ADDRESS']);
 				echo "<br />";
 				echo "<pre>";
-				$data = iconv('UTF-8', 'ASCII//IGNORE', $data );
 				if ($data == "Unable to open socket"){
 					echo $CONF['WHOIS_ADDRESS'] . "whois server is down.";
 				}else{
