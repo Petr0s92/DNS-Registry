@@ -14,7 +14,7 @@ my $nsdcontrol = '/usr/local/sbin/nsd-control';
 my $rootns = '10.1.1.211'; 
 
 # TMP Folder where nsd_superslave writes incoming zones (without trailing slash)
-my $depot = '/tmp/zones';
+my $depot = '/data/tmp/zones';
 
 
 my $res = Net::DNS::Resolver->new;

@@ -15,7 +15,7 @@ my $nsdcontrol = '/usr/local/sbin/nsd-control';
 my $rootns = '10.1.1.211'; 
 
 # TMP Folder to save received zone NOTIFIES (make sure the folder exists) (without trailing slash) 
-my $depot = '/tmp/zones'; 
+my $depot = '/data/tmp/zones'; 
 
 
 sub notify_handler {

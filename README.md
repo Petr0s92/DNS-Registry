@@ -25,7 +25,7 @@ There are two modes of registering domains. Self Hosting where you define your o
 The zones are written on a MySQL Database and served via PowerDNS with it's MySQL Backend.
 PowerDNS acts as a hidden master pushing each zone (change) to its configured Slaves which are running NSD.
 
-For a rough installation guide check INSTALL.md.
+For a rough installation guide check docs/
 
 See CREDITS.md for other software used in this system.
 

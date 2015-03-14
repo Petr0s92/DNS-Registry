@@ -6,4 +6,4 @@
 sleep 1
 /usr/sbin/rndc reload
 /usr/sbin/rndc flush
-rm -rf /var/cache/bind/$1.stub
+rm -rf /data/bind/var/cache/bind/$1.stub
