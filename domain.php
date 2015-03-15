@@ -398,7 +398,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     });
                     
                     //Init
-                    <?if ($_POST['action'] || $_GET['action'] == 'edit' || $_GET['action'] == 'add'){?>
+                    <?if ($_POST['action'] || $_GET['action'] == 'edit' || $_GET['action'] == 'add' || $items_number == 0){?>
                         $( "#toggler" ).show();
                        	$('#name').focus();
     				<?}else{?>

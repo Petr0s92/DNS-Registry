@@ -934,7 +934,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 													$SELECT_USERS = mysql_query("SELECT id, username, fullname FROM users WHERE active ='1' ORDER BY username ASC", $db);
 													while ($USERS = mysql_fetch_array($SELECT_USERS)){
 													?>                                                    
-                                                    <option value="<?=$USERS['id'];?>"   <? if ($_POST['user_id'] == $USERS['id']){ echo "selected=\"selected\""; }?> ><?=$USERS['username'];?> <?if ($USERS['fullname']){?>(<?=$USERS['fullname'];?> )<?}?></option>
+                                                    <option value="<?=$USERS['id'];?>"   <? if ($_POST['user_id'] == $USERS['id']){ echo "selected=\"selected\""; }elseif ($_SESSION['admin_id'] == $USERS['id']){ echo "selected=\"selected\"";}?> ><?=$USERS['username'];?> <?if ($USERS['fullname']){?>(<?=$USERS['fullname'];?> )<?}?></option>
 													<?}?>
 													<?if ($_SESSION['admin_level'] == 'admin'){?>
                                                     <option value="system"   <? if ($_POST['user_id'] == "system"){ echo "selected=\"selected\""; }?> >----System Zone----</option>
