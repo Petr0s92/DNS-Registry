@@ -6,7 +6,7 @@
 * DHCP Server on the LAN where the R-Pi will be connected. Static lease -MUST- be assigned for R-Pi's MAC Address.
 
 # Installation:
-Download and install latest (*2015-02-18 as of this writing*) **Minibian** distro image from here https://minibianpi.wordpress.com/
+Download latest (*2015-02-18 as of this writing*) **Minibian** distro image from here https://minibianpi.wordpress.com/
 
 Install image to your SD Card. Instructions here: https://minibianpi.wordpress.com/setup/
 
@@ -69,9 +69,9 @@ Now we are ready to install and configure our services.
 **Install required packages**
 
 ```
-apt-get install build-essential bind9 bind9utils bind9-host bash-completion dnsutils lrzsz telnet \
+apt-get install nano build-essential bind9 bind9utils bind9-host bash-completion dnsutils lrzsz telnet \
 iotop iptraf htop curl traceroute mtr-tiny nano whois libevent-dev libssl-dev screen rsync libnet-dns-perl \
-php5-cli php5-curl php5-sqlite php5-dev php-pear
+php5-cli php5-curl php5-sqlite php5-dev php-pear sudo
 ```
 
 `pear install Net_DNS`

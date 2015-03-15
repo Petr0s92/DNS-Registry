@@ -21,10 +21,10 @@
 *                                                                             *
 *-----------------------------------------------------------------------------*/
 
-
+error_reporting(E_ALL ^ E_NOTICE);
 
 // Script arguments
-// provision_root_ns.php "ANYCAST_NS_IP" "UNICAST_NS_IP" "ANYCAST_CACHE_IP" "ROOT_NS_NAME" "CP_URL" "TSIG_KEY" "USER_SSH_KEY"
+$SCRIPT_USAGE = "Usage: provision_root_ns.php \"ANYCAST_NS_IP\" \"UNICAST_NS_IP\" \"ANYCAST_CACHE_IP\" \"ROOT_NS_NAME\" \"CP_URL\" \"TSIG_KEY\" \"USER_SSH_KEY\"\n";
 
 //Assign script arguments to vars
 $ANYCAST_NS_IP    = trim($argv[1]);
@@ -37,31 +37,31 @@ $USER_SSH_KEY     = trim($argv[7]);
 
 //Validate input
 if(!filter_var($ANYCAST_NS_IP, FILTER_VALIDATE_IP)){
-	exit("Invalid ANYCAST_NS_IP\n");
+	exit("Invalid ANYCAST_NS_IP\n".$SCRIPT_USAGE);
 }
 
 if(!filter_var($UNICAST_NS_IP, FILTER_VALIDATE_IP)){
-	exit("Invalid UNICAST_NS_IP\n");
+	exit("Invalid UNICAST_NS_IP\n".$SCRIPT_USAGE);
 }
 
 if(!filter_var($ANYCAST_CACHE_IP, FILTER_VALIDATE_IP)){
-	exit("Invalid ANYCAST_CACHE_IP\n");
+	exit("Invalid ANYCAST_CACHE_IP\n".$SCRIPT_USAGE);
 }
 
 if (!preg_match("/^(?!-)^(?!\.)[a-z0-9-\.]{1,63}(?<!-)(?<!\.)$/", $ROOT_NS_NAME)) {
-	exit("Invalid ROOT_NS_NAME\n");
+	exit("Invalid ROOT_NS_NAME\n".$SCRIPT_USAGE);
 }
 
 if (!$CP_URL) {
-	exit("Invalid Control Panel URL.\n");
+	exit("Invalid Control Panel URL.\n".$SCRIPT_USAGE);
 }
 
 if (strlen($TSIG_KEY) <= 15) {
-	exit("Invalid TSIG_KEY. Need at least 16 chars key.\n");
+	exit("Invalid TSIG_KEY. Need at least 16 chars key.\n".$SCRIPT_USAGE);
 }
 
 if (strlen($USER_SSH_KEY) > 1 && preg_match("/^(ssh-rsa|ssh-dss) AAAA[0-9A-Za-z+\\/]+[=]{0,3}/", $USER_SSH_KEY) != 1 ){
-	exit("Invalid USER_SSH_KEY. Enter a valid User SSH Public Key.\n");
+	exit("Invalid USER_SSH_KEY. Enter a valid User SSH Public Key.\n".$SCRIPT_USAGE);
 }
 
 
@@ -108,7 +108,13 @@ $hostname_parts_rev[0] = false;
 $hostname_parts = array_reverse($hostname_parts_rev);
 $hostname = $hostname_parts[0];
 
-file_put_contents ("/etc/hostnaeme", $hostname);
+file_put_contents ("/etc/hostname", $hostname . "\n");
+
+
+//Configure hosts file
+$HOSTS_FILE = file_get_contents("/etc/hosts");
+$HOSTS_FILE = str_replace("raspberrypi", $ROOT_NS_NAME . " " . $hostname , $HOSTS_FILE); 
+file_put_contents("/etc/hosts", $HOSTS_FILE); 
 
 
 
@@ -132,6 +138,9 @@ if (file_exists("/dev/sda")){
 //Copy data-skel to /data
 system("cp -a /data-skel/* /data/");
 
+//Create new SSH Host Keys
+system("rm -rf /etc/ssh/ssh_host_*");
+system("/usr/sbin/dpkg-reconfigure openssh-server");
 
 
 //Configure NSD
@@ -170,7 +179,7 @@ file_put_contents("/usr/local/bin/bind_sync_zones.php", $SYNC_ZONES_CONF);
 
 
 //Fetch SSH Public Keys
-$curl = curl_init($CP_URL);
+$curl = curl_init($CP_URL . "?fetch_ssh_keys=1");
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 if (stristr($CP_URL,"https://")){
 	curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
@@ -199,9 +208,9 @@ file_put_contents("/home/owner/.ssh/authorized_keys", $USER_SSH_KEY);
 
 
 //All services configured, enable them on boot
-system("update-rc nsd defaults");
-system("update-rc bind9 defaults");
-system("update-rc cron defaults");
+system("/usr/sbin/update-rc.d nsd defaults");
+system("/usr/sbin/update-rc.d bind9 defaults");
+system("/usr/sbin/update-rc.d cron defaults");
 
 //enable superslave on boot
 $SUPERSLAVE_BOOT = file_get_contents("/etc/rc.local");
@@ -209,8 +218,9 @@ $SUPERSLAVE_BOOT = str_replace("#screen -dmS nsd_superslave /usr/local/bin/nsd_s
 file_put_contents("/etc/rc.local", $SUPERSLAVE_BOOT);
 
  
+echo "Root Namesever Provisioned OK! Rebooting to apply new configuration.\n";
+ 
 //Configuration Complete! Reboot to apply!
-
 system ("init 6");
 
 ?>
