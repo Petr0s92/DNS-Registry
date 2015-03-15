@@ -159,13 +159,20 @@ if ($_POST['action'] == "add" ) {
 	
 	$_POST['nodeid'] = (int)$_POST['nodeid'];    
     if ($_POST['nodeid'] <1){ 
-    	$errors['admin_level'] = "Please enter your NodeID #" ; 
+    	$errors['nodeid'] = "Please enter your NodeID #" ; 
+    }
+    
+    $_POST['ssh_key'] = trim($_POST['ssh_key']);    
+    if (strlen($_POST['ssh_key']) > 1 && preg_match("/^(ssh-rsa|ssh-dss) AAAA[0-9A-Za-z+\\/]+[=]{0,3}/", $_POST['ssh_key']) != 1 ){ 
+    	$errors['ssh_key'] = "Enter a valid SSH Public Key" ; 
     }
     
     $_POST['email'] = trim($_POST['email']);
-    if ($_POST['Email']){
-        if (!preg_match("/^([a-zA-Z0-9]+([\.+_-][a-zA-Z0-9]+)*)@(([a-zA-Z0-9]+((\.|[-]{1,2})[a-zA-Z0-9]+)*)\.[a-zA-Z]{2,7})$/", $_POST['Email'])) {
+    if ($_POST['email']){
+        if (!preg_match("/^([a-zA-Z0-9]+([\.+_-][a-zA-Z0-9]+)*)@(([a-zA-Z0-9]+((\.|[-]{1,2})[a-zA-Z0-9]+)*)\.[a-zA-Z]{2,7})$/", $_POST['email'])) {
             $errors['email'] = "The Email address you gave is not valid" ;
+        }elseif (mysql_num_rows(mysql_query("SELECT 1 FROM users WHERE email = '".$_POST['email']."' ", $db))){
+			$errors['email'] = "The Email address you gave is already in use." ;
         }
     }elseif(!$_POST['email']){
         $errors['email'] = "Please enter the Email address";
@@ -173,7 +180,7 @@ if ($_POST['action'] == "add" ) {
     
     if (count($errors) == 0) {
         
-        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (username, password, email, fullname, description, Admin_level, nodeid, Help, active, registered) VALUES (      
+        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (username, password, email, fullname, description, Admin_level, nodeid, ssh_key, wireless_community, Help, active, registered) VALUES (      
             '" . addslashes($_POST['username']) . "',
             '" . sha1($_POST['password']) . "',
             '" . addslashes($_POST['email']) . "',
@@ -181,6 +188,8 @@ if ($_POST['action'] == "add" ) {
             '" . addslashes($_POST['description']) . "',
             '" . addslashes($_POST['Admin_level']) . "',
             '" . addslashes($_POST['nodeid']) . "',
+            '" . addslashes($_POST['ssh_key']) . "',
+            '" . addslashes($_POST['wireless_community']) . "',
             '1',
             '1',
             UNIX_TIMESTAMP()
@@ -229,8 +238,13 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
     
     $_POST['nodeid'] = (int)$_POST['nodeid'];    
     if ($_POST['nodeid'] <1){ 
-    	$errors['admin_level'] = "Please enter your NodeID #" ; 
+    	$errors['nodeid'] = "Please enter your NodeID #" ; 
     }
+    
+    $_POST['ssh_key'] = trim($_POST['ssh_key']);    
+    if (strlen($_POST['ssh_key']) > 1 && preg_match("/^(ssh-rsa|ssh-dss) AAAA[0-9A-Za-z+\\/]+[=]{0,3}/", $_POST['ssh_key']) != 1 ){ 
+    	$errors['ssh_key'] = "Enter a valid SSH Public Key" ; 
+    }    
     
     $_POST['wireless_community'] = trim($_POST['wireless_community']);    
     if (!$_POST['wireless_community']){ 
@@ -251,6 +265,8 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
     if ($_POST['email']){
         if (!preg_match("/^([a-zA-Z0-9]+([\.+_-][a-zA-Z0-9]+)*)@(([a-zA-Z0-9]+((\.|[-]{1,2})[a-zA-Z0-9]+)*)\.[a-zA-Z]{2,7})$/", $_POST['email'])) {
             $errors['email'] = "The Email address you gave is not valid" ;
+        }elseif (mysql_num_rows(mysql_query("SELECT 1 FROM users WHERE email = '".$_POST['email']."' AND id != '". $_POST['id']."' ", $db))){
+			$errors['email'] = "The Email address you gave is already in use." ;
         }
     }elseif(!$_POST['email']){
         $errors['email'] = "Please enter the Email address";
@@ -265,6 +281,7 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
             description = '" . addslashes($_POST['description']) . "',
             Admin_level = '" . addslashes($_POST['Admin_level']) . "',
             nodeid = '" . addslashes($_POST['nodeid']) . "',
+            ssh_key = '" . addslashes($_POST['ssh_key']) . "',
             wireless_community  = '" . mysql_escape_string(htmlspecialchars($_POST['wireless_community']))  . "',
             default_ttl_domains  = '" . mysql_escape_string($_POST['default_ttl_domains'])  . "',
             default_ttl_records = '" . mysql_escape_string($_POST['default_ttl_records'])  . "',
@@ -364,6 +381,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     $('#username').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#fullname').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#nodeid').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#ssh_key').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#wireless_community').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#description').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#email').tipsy({trigger: 'focus', gravity: 'w', fade: true});
@@ -543,7 +561,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                             
                                             <p>
                                                 <label for="email" class="required">E-Mail</label>
-                                                <input type="text" name="email" id="email" title="Enter the Email" value="<? if ($_GET['action'] == "edit"){ echo stripslashes($RESULT['email']);}elseif($_POST['email']){ echo $_POST['email']; } ?>">
+                                                <input type="text" name="email" id="email" title="Enter the Email" value="<?if($_POST['email']){ echo $_POST['email']; }elseif ($_GET['action'] == "edit"){ echo stripslashes($RESULT['email']);} ?>">
                                             </p>
                                             
                                             <p>
@@ -556,7 +574,13 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                                 <input type="text" name="default_ttl_records" id="default_ttl_records" title="Enter a default TTL for new Records. This will be applied to hosted domains records" value="<? if($_POST['default_ttl_records']){ echo $_POST['default_ttl_records']; }elseif ($RESULT['default_ttl_records']){ echo stripslashes($RESULT['default_ttl_records']);}else{ echo $CONF['RECORDS_TTL'];} ?>">
                                             </p>
 											
-											<p>
+											
+                                            <p>
+                                                <label for="ssh_key">SSH Public Key</label>
+                                                <input type="text" name="ssh_key" id="ssh_key" title="Enter user's SSH Public Key for Root NS access" value="<? if($_POST['ssh_key']){ echo $_POST['ssh_key']; }elseif ($_GET['action'] == "edit"){ echo stripslashes($RESULT['ssh_key']);} ?>">
+                                            </p>
+                                            
+                                            <p>
                                                 <label for="Help">Help Annotations</label>
                                                 <input type="checkbox" name="Help" id="Help" style="width:12px; margin:7px;" title="Check to enable Help Annotations" value="1"<? if ($_GET['action'] == 'edit' && $RESULT['Help'] == '1'){ echo " checked=\"checked\""; }elseif($_POST['Help'] =='1') echo " checked=\"checked\"";?> />
                                             </p>
@@ -640,6 +664,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <th><?=create_sort_link("registered", "Registered");?></th>
                         <th><?=create_sort_link("last_login", "Last Login");?></th>
                         <th><?=create_sort_link("last_ip", "Last IP");?></th>
+                        <?/*<th><?=create_sort_link("ssh_key", "SSH Key");?></th>*/?>
                         <th><?=create_sort_link("Admin_level", "Admin_level");?></th>
                         <th><?=create_sort_link("active", "Active");?></th>
                         <th>Actions</th>
@@ -660,6 +685,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <td nowrap align="center" ><?=date("d-m-Y g:i a", $LISTING['registered']);?></td>
                         <td nowrap align="center" ><?if ($LISTING['last_login']){ echo date("d-m-Y g:i a", $LISTING['last_login']); }else{ echo "Never"; }?></td>
                         <td align="center" ><?if ($LISTING['last_ip']){ echo $LISTING['last_ip'];}else{ echo 'None'; }?></td>
+                        <?/*<td align="center" ><?if ($LISTING['ssh_key']){ echo $LISTING['ssh_key'];}else{ echo 'None'; }?></td>*/?>
                         <td align="center" ><?=$LISTING['Admin_level'];?></td>
                         <td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>

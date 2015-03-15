@@ -1,12 +1,13 @@
 # Requirements:
 
-* Linux (CentOS or Debian/Ubuntu)
+* Linux (CentOS/Fedora or Debian/Ubuntu)
 * Apache 2+
 * PHP 5.2+
 * PHP cli
-* MySQL 5.5
+* MySQL 5.1+
 * PEAR Net_DNS 1.0.7
 * PEAR Net_WHOIS 1.0.5
+* phpseclib
 * PEAR System_Daemon 1.0.0
 
 # Installation:

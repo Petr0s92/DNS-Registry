@@ -22,8 +22,8 @@
 *-----------------------------------------------------------------------------*/
 
 //CONFIGURATION
-$CONF['unicast_ip'] = '10.1.1.214';
-$CONF['control_panel_url'] = 'https://www.own/registry/index.php?fetch_slaves_tlds=1';
+$CONF['unicast_ip'] = '--YOUR--ROOT-NS--UNICAST--IP--HERE--';
+$CONF['control_panel_url'] = 'https://your.domain/path/to/index.php?fetch_slaves_tlds=1';
 $CONF['sqlite_db'] = '/data/bind/zones.sqlite';
 $CONF['rndc'] = '/usr/sbin/rndc';
 $CONF['bind_zones_path'] = '/data/bind/var/cache/bind';

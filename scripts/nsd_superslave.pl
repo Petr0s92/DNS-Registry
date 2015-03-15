@@ -12,7 +12,7 @@ my $metazone = 'meta.meta';
 my $nsdcontrol = '/usr/local/sbin/nsd-control'; 
 
 # This Root NS Unicast (secondary) IP (where NSD listens to for AXFR requests)
-my $rootns = '10.1.1.211'; 
+my $rootns = '--YOUR--ROOT-NS--UNICAST--IP--HERE--'; 
 
 # TMP Folder to save received zone NOTIFIES (make sure the folder exists) (without trailing slash) 
 my $depot = '/data/tmp/zones'; 

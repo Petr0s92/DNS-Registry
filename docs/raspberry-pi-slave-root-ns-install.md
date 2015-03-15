@@ -347,7 +347,7 @@ Upload them to the Raspberry-Pi on `/usr/local/bin`
 
 Make them executable with `chmod +x nsd_superslave.pl nsd_cleanup_zone.php bind_sync_zones.php bind_add_stub.sh`
 
-Edit `nsd_superslave.pl` and set `my $rootns = '10.1.1.211';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`).
+Edit `nsd_superslave.pl` and set `my $rootns = '--YOUR--ROOT-NS--UNICAST--IP--HERE--';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`).
 
 Set nsd_superslave to start on boot:
 
@@ -363,7 +363,7 @@ To check the daemon's output during operation run `screen -r -d nsd_superslave`
 
 Edit `nsd_cleanup_zones.php` to match your installation.
 
-Set `$CONF['unicast_ip'] = '10.1.1.214';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`
+Set `$CONF['unicast_ip'] = '--YOUR--ROOT-NS--UNICAST--IP--HERE--';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`
 
 Create cleanup script text db file with:
 
@@ -379,7 +379,7 @@ And enter the following to run every 10 minutes
 
 Edit `bind_sync_zones.php` to match your installation.
 
-Set `$CONF['unicast_ip'] = '10.1.1.214';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`
+Set `$CONF['unicast_ip'] = '--YOUR--ROOT-NS--UNICAST--IP--HERE--';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`
 
 create a new crontab as root to run the cleanup script every 10minutes (or however ofter you feel best) `crontab -e`  
 

@@ -47,7 +47,7 @@ $mysql_table = 'root_ns_unicast';
 $sorting_array = array("id", "name", "ip", "active");
 
 //Select parent root ns to show the name
-$SELECT_ROOT_NS = mysql_query("SELECT name FROM root_ns WHERE id = '".$pid."' ", $db);
+$SELECT_ROOT_NS = mysql_query("SELECT name, ip FROM root_ns WHERE id = '".$pid."' ", $db);
 $ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS);
 
 $action_title = "Manage Unicast NOTIFY IPs for Root Nameserver: " . $ROOT_NS['name']; 
@@ -146,6 +146,45 @@ if ($_POST['action'] == "add" && $_POST['parent_id']) {
 		if (mysql_num_rows(mysql_query("SELECT id FROM `".$mysql_table."` WHERE `ip` = '".addslashes($_POST['ip'])."' ",$db))){
             $errors['ip'] = "This IP is already registered on this system." ;
         }		
+	}
+	
+	
+	if ($_POST['Provision'] == '1'){
+		
+	    $_POST['real_ip'] = trim($_POST['real_ip']);
+	    if(!filter_var($_POST['real_ip'], FILTER_VALIDATE_IP)){
+			$errors['real_ip'] = "Please enter a valid Real IP Address.";	
+		}
+		
+	    $_POST['cache_ip'] = trim($_POST['cache_ip']);
+	    if(!filter_var($_POST['cache_ip'], FILTER_VALIDATE_IP)){
+			$errors['cache_ip'] = "Please enter a valid Anycast Cache IP Address.";	
+		}
+
+	    $_POST['owner_ssh_key'] = trim($_POST['owner_ssh_key']);    
+	    if (strlen($_POST['owner_ssh_key']) > 1 && preg_match("/^(ssh-rsa|ssh-dss) AAAA[0-9A-Za-z+\\/]+[=]{0,3}/", $_POST['owner_ssh_key']) != 1 ){ 
+    		$errors['owner_ssh_key'] = "Enter a valid SSH Public Key" ; 
+	    }
+	    
+	    $SELECT_TSIG = mysql_query("SELECT secret FROM tsigkeys WHERE name = '".$ROOT_NS['name']."' ", $db);
+	    if (mysql_num_rows($SELECT_TSIG)){
+			$TSIG = mysql_fetch_array($SELECT_TSIG);	
+	    }else{
+			$errors['tsig'] = "Could not fetch TSIG key for " . $ROOT_NS['name'];
+	    }
+	    
+	    //Looking good, proceed with connecting to the new root ns to provision the configuration
+		if (count($errors) == 0) {
+		
+			// run ssh here
+			$ssh_command = "/usr/local/bin/provision_root_ns.php '" . $ROOT_NS['ip'] ."' '"  . $_POST['ip'] . "' '" . $_POST['cache_ip'] . "' '" . $ROOT_NS['name'] . "' '" . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . "' '" . $TSIG['secret'] . "' '" . $_POST['owner_ssh_key'] . "' ";
+			
+			if ( ssh_client2($_POST['real_ip'], $ssh_command) == false){
+				$errors['provision'] = "Automatic Provisioning Failed :( Please configure the Root NS manually.";
+			}		
+		}    
+	    
+		
 	}							
     
     
@@ -282,6 +321,10 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     $('#name').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#ip').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#tsig_key').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#Provision').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#real_ip').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#cache_ip').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#owner_ssh_key').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     <?}?>
                     
 
@@ -344,6 +387,23 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     $('.'+bar_class).hide();
                     return false;
                 });
+                
+                
+                //SHOW/HIDE INPUT FIELDS BASED ON DROPDOWN MENU SELECTION
+                <?if ($_POST['Provision'] == '1') {?>
+                $('#Provision_form').show();
+                <?}else{?>
+                $('#Provision_form').hide();
+                <?}?>
+                
+                $('#Provision').click(function(){
+                    //var myval = $('value',this).val();
+                    if( $(this).is(':checked')) {
+                        $('#Provision_form').show();
+                    }else{
+                        $('#Provision_form').hide();
+                    }
+                });                  
 
                 
                 });
@@ -399,6 +459,38 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                                 <label for="ip" class="required">Unicast NOTIFY IP Address</label>
                                                 <input type="text" name="ip" id="ip" title="Enter the Unicast NOTIFY IP Address" value="<? if($_POST['ip']){ echo $_POST['ip']; } ?>">
                                             </p>
+                                            
+                                            <p>
+                                                <label for="Provision">Provision new Root NS Image</label>
+                                                <input type="checkbox" name="Provision" id="Provision" style="width:12px; margin:7px;" title="Automatic Provision of new Root NS installation. Use with caution." value="1" <? if ($_POST['Provision'] == '1'){ echo " checked=\"checked\""; }?> />
+                                            </p>
+                                            
+                                            
+                                        </div>
+                                        
+                                        <div class="colx2-right">
+                                            
+                                            <div id="Provision_form">
+                                            
+	                                            <p>
+	                                                <label for="real_ip" class="required">Root NS Real IP</label>
+	                                                <input type="text" name="real_ip" id="real_ip" title="Enter the real root NS IP Address (the one assigned by DHCP)" value="<? if($_POST['real_ip']){ echo $_POST['real_ip']; } ?>">
+	                                            </p>
+
+	                                            <p>
+	                                                <label for="cache_ip" class="required">Anycast Cache IP Address</label>
+	                                                <input type="text" name="cache_ip" id="cache_ip" title="Enter the Anycast Cache IP Address (for BIND)" value="<? if($_POST['cache_ip']){ echo $_POST['cache_ip']; } ?>">
+	                                            </p>
+	                                            
+	                                            
+                                            	<p>
+	                                                <label for="owner_ssh_key" class="required">Owner SSH Public Key</label>
+	                                                <input type="text" name="owner_ssh_key" id="owner_ssh_key" title="Enter the Root NS owner SSH Public Key for read only access" value="<? if($_POST['owner_ssh_key']){ echo $_POST['owner_ssh_key']; } ?>">
+	                                            </p>
+	                                            
+	                                            
+                                            </div>
+                                                                                    
                                         </div>
                                      </div>
                            </fieldset>

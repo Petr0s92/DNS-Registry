@@ -530,6 +530,62 @@ if ($_GET['fetch_slaves_tlds'] == "1"){
     }
     
     exit();
-} 
+}
+
+
+// SEND JSON WITH PUBLIC SSH KEYS
+if ($_GET['fetch_ssh_keys'] == "1"){
+	    
+    $ROOT_NS = mysql_num_rows(mysql_query("SELECT 1 FROM root_ns_unicast WHERE ip = '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."' AND active = '1' ", $db));
+    if ($ROOT_NS == '1'){
+    	$o = 0;
+		$SELECT_USERS = mysql_query("SELECT username, ssh_key FROM users WHERE active = '1' AND Admin_level = 'admin' ", $db);
+		while($USERS = mysql_fetch_array($SELECT_USERS)){
+			if ($USERS['ssh_key']){
+				$keys[$o]['username'] = $USERS['username'];
+				$keys[$o]['ssh_key']  = $USERS['ssh_key'];
+				$o++;
+			}
+		}
+		
+		ob_clean();		
+		if ($keys){
+			echo json_encode($keys);
+		}else{
+			echo json_encode("none");
+		}
+    }else{
+    	ob_clean();
+		echo json_encode('access denied');
+    }
+    
+    exit();
+}
+
+//SSH Connection Client
+function ssh_client2($IP,$COMMAND){
+	global $CONF;
+	
+	require('Net/SSH2.php');
+	require('Crypt/RSA.php');	
+
+	$ssh = new Net_SSH2($IP);
+	
+	$key = new Crypt_RSA();
+	$key->loadKey($CONF['MASTER_SSH_KEY_PRIVATE']);
+	
+	if (!$ssh->login("root", $key)) {
+		return false;
+	}
+
+	if ($data = $ssh->exec($COMMAND) ){
+		return $data;
+	}else{
+		return false;
+	}
+
+	$ssh->disconnect();	
+
+}  
   
 ?>

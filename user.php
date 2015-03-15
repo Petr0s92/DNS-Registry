@@ -45,7 +45,7 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
         $errors['username'] = "Please choose a username with 3 to 30 latin characters &amp; numbers without spaces and symbols. Hyphens '-' and underscores '_' are allowed but the username cannot begin with either of those 2 characters.";
     } else {
         
-        if (mysql_num_rows(mysql_query("SELECT id FROM `".$mysql_table."` WHERE `Username` = '".addslashes($_POST['username'])."'  AND id != '".addslashes($id)."' ",$db))){
+        if (mysql_num_rows(mysql_query("SELECT id FROM `".$mysql_table."` WHERE `Username` = '".mysql_escape_string($_POST['username'])."'  AND id != '".mysql_escape_string($id)."' ",$db))){
             $errors['username'] = "Username is already in use." ;
         } 
     }
@@ -83,6 +83,8 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
     if ($_POST['email']){
         if (!preg_match("/^([a-zA-Z0-9]+([\.+_-][a-zA-Z0-9]+)*)@(([a-zA-Z0-9]+((\.|[-]{1,2})[a-zA-Z0-9]+)*)\.[a-zA-Z]{2,7})$/", $_POST['email'])) {
             $errors['email'] = "The Email address you gave is not valid" ;
+        }elseif (mysql_num_rows(mysql_query("SELECT 1 FROM users WHERE email = '".$_POST['email']."' AND id != '".mysql_escape_string($id)."' ", $db))){
+			$errors['email'] = "The Email address you gave is already in use." ;
         }
     }elseif(!$_POST['email']){
         $errors['email'] = "Please enter the Email address";
@@ -100,10 +102,10 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
             default_ttl_domains  = '" . mysql_escape_string($_POST['default_ttl_domains'])  . "',
             default_ttl_records = '" . mysql_escape_string($_POST['default_ttl_records'])  . "'
             
-            WHERE id= '" . addslashes($id) . "'",$db);
+            WHERE id= '" . mysql_escape_string($id) . "'",$db);
         
         if ($change_pass) {
-            $UPDATE_PASS = mysql_query("UPDATE `".$mysql_table."` SET password = '" . sha1($_POST['password']) . "' WHERE id= '" . addslashes($id) . "'",$db);
+            $UPDATE_PASS = mysql_query("UPDATE `".$mysql_table."` SET password = '" . sha1($_POST['password']) . "' WHERE id= '" . mysql_escape_string($id) . "'",$db);
         }
         
         if ($UPDATE){

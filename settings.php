@@ -49,13 +49,12 @@ if ( $_GET['action'] == "edit" && $_GET['id'] ) {
 if ($_POST['action'] == "edit" && $_POST['id']) {
     
     $id = $_POST['id'] = (int)$_POST['id'];
-    $change_pass = 0;    
     
     $errors = array();
     
     
     $_POST['Value'] = trim($_POST['Value']);
-    if (!$_POST['Value']) {
+    if (!isset($_POST['Value'])) {
         $errors['value'] = "Please fill in the setting value.";
     }
         
@@ -248,7 +247,7 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap><a href="index.php?section=<?=$SECTION;?>&action=edit&id=<?=$LISTING['id'];?>" title="Edit setting" class="<?if (staff_help()){?>tip_south<?}?>"><?=$LISTING['Name'];?></a></td>
-                        <td ><?=$LISTING['Value'];?></td>
+                        <td ><?=wordwrap($LISTING['Value'], 80, "\n", true);?></td>
                         <td><?=$LISTING['Description'];?></td>
                         <td align="center" nowrap="nowrap"><a href="index.php?section=<?=$SECTION;?>&amp;action=edit&amp;id=<?=$LISTING['id'];?>" title="Edit" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Edit</span></a></td>
 					  </tr>

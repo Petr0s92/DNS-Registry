@@ -99,9 +99,9 @@ DROP TABLE IF EXISTS `settings`;
 CREATE TABLE IF NOT EXISTS `settings` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `Name` varchar(100) NOT NULL,
-  `Value` varchar(255) NOT NULL,
-  `Description` varchar(100) NOT NULL,
-  `Type` varchar(50) NOT NULL,
+  `Value` text,
+  `Description` varchar(255) NOT NULL,
+  `Type` varchar(20) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=12 ;
 
@@ -134,7 +134,10 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (25, 'PDNS_CONTROL_PATH', '/usr/bin/pdns_control', 'Full path to pdns_control executable', 'panel'),
 (26, 'PDNS_CONTROL_IP', '127.0.0.1', 'IP for pdns_control', 'panel'),
 (27, 'PDNS_CONTROL_PORT', '53000', 'Port for pdns_control', 'panel'),
-(28, 'WHOIS_SERVER', 'whois.tld', 'Whois server. It will appear on the left menu. Leave empty to disable', 'panel');
+(28, 'WHOIS_SERVER', 'whois.tld', 'Whois server. It will appear on the left menu. Leave empty to disable', 'panel'),
+(29, 'MASTER_SSH_KEY_PRIVATE', '', 'SSH Private Key for automatic root ns provisioning', 'panel'),
+(30, 'MASTER_SSH_KEY_PUBLIC', '', 'SSH Public Key for automatic root ns provisioning', 'panel'),
+(31, 'ROOT_NS_SSH_PORT', '22', 'SSH Port for Root NS', 'panel');
 
 
 CREATE TABLE IF NOT EXISTS `slave_zones` (
@@ -199,6 +202,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `registered` int(10) NOT NULL,
   `last_login` int(10) NOT NULL,
   `last_ip` varchar(15) NOT NULL,
+  `ssh_key` text,
   `nodeid` int(10) NOT NULL,
   `wireless_community` VARCHAR(100) NOT NULL,
   `default_ttl_domains` int(10) NOT NULL DEFAULT '86400',

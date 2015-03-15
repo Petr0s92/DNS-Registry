@@ -22,7 +22,7 @@
 *-----------------------------------------------------------------------------*/
 
 //CONFIGURATION
-$CONF['unicast_ip'] = '10.1.1.214';
+$CONF['unicast_ip'] = '--YOUR--ROOT-NS--UNICAST--IP--HERE--';
 $CONF['metazone']   = 'meta.meta'; // leave this as is
 $CONF['nsdcontrol'] = '/usr/local/sbin/nsd-control';
 $CONF['zones_path'] = '/data/tmp/zones';
