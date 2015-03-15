@@ -339,11 +339,11 @@ Create symbolic link to log file for easy access
 
 Meta-slave is a small perl script that listens for NOTIFYs from the Master and issues commands to NSD to create new zones automatically.
 
-On the scripts folder of DNS-Registry panel you will find 1 perl and 2 PHP files. `nsd_superslave.pl nsd_cleanup_zones.php bind_sync_zones.php` 
+On the scripts folder of DNS-Registry panel you will find 1 perl 1 .sh and 2 PHP files. `nsd_superslave.pl nsd_cleanup_zones.php bind_sync_zones.php bind_add_stub.sh` 
 
 Upload them to the Raspberry-Pi on `/usr/local/bin`
 
-Make them executable with `chmod +x nsd_superslave.pl nsd_cleanup_zone.php bind_sync_zones.php`
+Make them executable with `chmod +x nsd_superslave.pl nsd_cleanup_zone.php bind_sync_zones.php bind_add_stub.sh`
 
 Edit `nsd_superslave.pl` and set `my $rootns = '10.1.1.211';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`).
 
