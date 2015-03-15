@@ -276,6 +276,7 @@ options {
         allow-new-zones yes;
         max-cache-size 128m;
         query-source address --YOUR--ROOT-NS--CACHING--UNICAST--IP--HERE--;
+        allow-transfer { };
 };
 
 logging{
