@@ -569,7 +569,7 @@ function ssh_client2($IP,$COMMAND){
 	require('Net/SSH2.php');
 	require('Crypt/RSA.php');	
 
-	$ssh = new Net_SSH2($IP);
+	$ssh = new Net_SSH2($IP, $CONF['ROOT_NS_SSH_PORT']);
 	
 	$key = new Crypt_RSA();
 	$key->loadKey($CONF['MASTER_SSH_KEY_PRIVATE']);
