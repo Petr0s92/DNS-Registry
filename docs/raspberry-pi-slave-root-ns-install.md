@@ -275,6 +275,7 @@ options {
         allow-recursion-on { 10.0.0.0/8; 127.0.0.1; };
         allow-new-zones yes;
         max-cache-size 128m;
+        query-source address --YOUR--ROOT-NS--CACHING--UNICAST--IP--HERE--;
 };
 
 logging{
