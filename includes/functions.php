@@ -479,10 +479,14 @@ function getTLD ($domain){
 // Force SOA serial update to all domains to force slaves sync
 if ($_GET['force_soa_update'] == '1' && $_SESSION['admin_level'] == 'admin' && $_GET['return']){
 
-	$SELECT_DOMAINS = mysql_query("SELECT id, type FROM domains", $db);
+	$SELECT_DOMAINS = mysql_query("SELECT id, type, name FROM domains", $db);
 	while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
 		if ($DOMAINS['id'] != '1' && $DOMAINS['type'] != 'SLAVE'){
 			$soa_update = update_soa_serial_byid($DOMAINS['id']);
+			
+			// Run pdns_control notify to push the new SOA update to our slaves immediately
+			exec ($CONF['PDNS_CONTROL_PATH'] . " --remote-address=".$CONF['PDNS_CONTROL_IP']." --remote-port=".$CONF['PDNS_CONTROL_PORT']." --secret=".$CONF['PDNS_CONTROL_KEY']." notify " . escapeshellcmd($DOMAINS['name']));
+        	
 		}
 	}
 	
