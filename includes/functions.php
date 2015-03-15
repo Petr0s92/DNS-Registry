@@ -484,8 +484,8 @@ if ($_GET['force_soa_update'] == '1' && $_SESSION['admin_level'] == 'admin' && $
 		if ($DOMAINS['id'] != '1' && $DOMAINS['type'] != 'SLAVE'){
 			$soa_update = update_soa_serial_byid($DOMAINS['id']);
 			
-			// Run pdns_control notify to push the new SOA update to our slaves immediately
-			exec ($CONF['PDNS_CONTROL_PATH'] . " --remote-address=".$CONF['PDNS_CONTROL_IP']." --remote-port=".$CONF['PDNS_CONTROL_PORT']." --secret=".$CONF['PDNS_CONTROL_KEY']." notify " . $DOMAINS['name'] . " &" );
+			// Run pdns_control notify to push the new SOA update to our slaves immediately. Fire and forget.
+			exec ($CONF['PDNS_CONTROL_PATH'] . " --remote-address=".$CONF['PDNS_CONTROL_IP']." --remote-port=".$CONF['PDNS_CONTROL_PORT']." --secret=".$CONF['PDNS_CONTROL_KEY']." notify " . $DOMAINS['name'] . " > /dev/null 2>/dev/null &" );
         	
 		}
 	}
