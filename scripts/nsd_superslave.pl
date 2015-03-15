@@ -58,7 +58,7 @@ sub notify_handler {
     # BIND: rndc addzone ${qname} IN '......;'
 
 #    my $command = "rndc addzone ${qname} in '{type slave; file \"${qname}\"; masters { 172.16.153.102;};};'";
-    my $command = "${nsdcontrol} addzone ${qname} superslave";
+    my $command = "${nsdcontrol} addzone ${qname} superslave &";
     
     
     if (open(DB, "> $path")) {
@@ -82,7 +82,12 @@ sub notify_handler {
     #        and maybe SERVFAIL (not that it's of any use)
 
     system($command);
-	    
+    
+    if ($metazone ne $qname){
+		# also add each new zone to BIND caching NS as Stub Zone
+    	system("/usr/local/bin/bind_add_stub.sh ${qname} ${rootns} &");
+	}    
+
     
     $rcode = "NOERROR";
     return ($rcode, [], [], [],

@@ -321,8 +321,8 @@ Create BIND directories
 ```
 mkdir /data/bind
 mkdir /data/bind/var
-mkdir /data/bind/cache
-mkdir /data/bind/cache/bind
+mkdir /data/bind/var/cache
+mkdir /data/bind/var/cache/bind
 mkdir /data/bind/var/log 
 chown bind.bind -R /data/bind
 ```
