@@ -17,6 +17,9 @@ my $rootns = '10.1.1.211';
 # TMP Folder to save received zone NOTIFIES (make sure the folder exists) (without trailing slash) 
 my $depot = '/data/tmp/zones'; 
 
+# TMP Folder to save received zone NOTIFIES (make sure the folder exists) (without trailing slash) 
+my $cleanupdb = '/data/tmp/deleted_zones.txt'; 
+
 
 sub notify_handler {
     my ($qname, $qclass, $qtype, $peerhost,$query,$conn) = @_;
@@ -55,25 +58,30 @@ sub notify_handler {
     # BIND: rndc addzone ${qname} IN '......;'
 
 #    my $command = "rndc addzone ${qname} in '{type slave; file \"${qname}\"; masters { 172.16.153.102;};};'";
-    my $command = "${nsdcontrol} addzone ${qname} superslave &";
+    my $command = "${nsdcontrol} addzone ${qname} superslave";
     
     
     if (open(DB, "> $path")) {
         print DB $command, "\n";
         close(DB);
     }
+    
+	# Clear cleanup script db in case the domain was previously deleted
+    open( FILE, "<$cleanupdb" ); 
+    my @LINES = <FILE>; 
+    close( FILE ); 
+    open( FILE, ">$cleanupdb" ); 
+    foreach my $LINE ( @LINES ) { 
+        print FILE $LINE unless ( $LINE =~ m/$qname/ ); 
+    } 
+    close( FILE );   
+    
 
     # FIXME: too "heavy". Ensure non-blocking, maybe as a kind of queue?
     # FIXME: maybe unreliable, but attempt to obtain return code of 'addzone'
     #        and maybe SERVFAIL (not that it's of any use)
 
     system($command);
-    
-
-    if ($metazone ne $qname){
-		# also add each new zone to BIND caching NS as Stub Zone
-    	system("/usr/local/bin/bind_add_stub.sh ${qname} ${rootns} &");
-	}
 	    
     
     $rcode = "NOERROR";

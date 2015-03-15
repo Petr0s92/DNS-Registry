@@ -71,8 +71,10 @@ Now we are ready to install and configure our services.
 ```
 apt-get install build-essential bind9 bind9utils bind9-host bash-completion dnsutils lrzsz telnet \
 iotop iptraf htop curl traceroute mtr-tiny nano whois libevent-dev libssl-dev screen rsync libnet-dns-perl \
-php5-cli php5-curl php5-sqlite php5-dev
+php5-cli php5-curl php5-sqlite php5-dev php-pear
 ```
+
+`pear install Net_DNS`
 
 **Disable crond logging**
 
@@ -337,17 +339,13 @@ Create symbolic link to log file for easy access
 
 Meta-slave is a small perl script that listens for NOTIFYs from the Master and issues commands to NSD to create new zones automatically.
 
-On the scripts folder of DNS-Registry panel you will find 2 perl files. `nsd_superslave.pl nsd_cleanup_zones.pl` 
+On the scripts folder of DNS-Registry panel you will find 1 perl and 2 PHP files. `nsd_superslave.pl nsd_cleanup_zones.php bind_sync_zones.php` 
 
 Upload them to the Raspberry-Pi on `/usr/local/bin`
 
-Make `nsd_superslave.pl` and `nsd_cleanup_zones.pl` executable with `chmod +x nsd_superslave.pl nsd_cleanup_zone.pl`
+Make them executable with `chmod +x nsd_superslave.pl nsd_cleanup_zone.php bind_sync_zones.php`
 
-Edit both and set `my $rootns = '10.1.1.211';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`).
-
-Also copy `bind_add_stub.sh` and `bind_del_stub.sh` to /usr/local/bin and run `chmod +x bind_add_stub.sh bind_del_stub.sh` to make them executable.
-
-Modify them as/if needed.
+Edit `nsd_superslave.pl` and set `my $rootns = '10.1.1.211';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`).
 
 Set nsd_superslave to start on boot:
 
@@ -361,9 +359,28 @@ To check the daemon's output during operation run `screen -r -d nsd_superslave`
 
 **Slave automatic zone cleanup**
 
+Edit `nsd_cleanup_zones.php` to match your installation.
+
+Set `$CONF['unicast_ip'] = '10.1.1.214';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`
+
+Create cleanup script text db file with:
+
+`touch /data/tmp/deleted_zones.txt`
+
+Create a new crontab as root to run the cleanup script every 10minutes (or however ofter you feel best) `crontab -e`  
+
+And enter the following to run every 10 minutes
+
+`*/10 * * * * /usr/local/bin/nsd_cleanup_zones.php > /dev/null 2>&1`
+
+**BIND caching NS automatic slave & stub zones sync**
+
+Edit `bind_sync_zones.php` to match your installation.
+
+Set `$CONF['unicast_ip'] = '10.1.1.214';` to your Root NS Unicast IP (as configured previously on `/etc/network/interfaces`
+
 create a new crontab as root to run the cleanup script every 10minutes (or however ofter you feel best) `crontab -e`  
 
 And enter the following to run every 10 minutes
 
-`*/10 * * * * /usr/local/bin/nsd_cleanup_zones.pl > /dev/null 2>&1`
-
+`*/10 * * * * /usr/local/bin/bind_sync_zones.php > /dev/null 2>&1`
