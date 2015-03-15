@@ -33,8 +33,8 @@ if ($_SESSION['admin_level'] != 'admin'){
 require ("./includes/dns.php");
 
 //Define current page data
-$mysql_table = 'domains';
-$sorting_array = array("id", "name", "master");
+$mysql_table = 'slave_zones';
+$sorting_array = array("id", "name", "masters");
 
 $action_title = "Manage Slave Zones"; 
     
@@ -45,7 +45,7 @@ if ($q) {
 	$search_vars .= "&q=$q"; 
 	$action_title = "Search: " . $q;
 }
-$search_query = "WHERE ($mysql_table.name LIKE '%$q%' OR $mysql_table.master LIKE '%$q%' ) AND type = 'SLAVE' ";
+$search_query = "WHERE $mysql_table.name LIKE '%$q%' OR $mysql_table.masters LIKE '%$q%' ";
 
 
 // Sorting
@@ -54,7 +54,7 @@ if (isset($_GET['sort'])){
     	if ($_GET['by'] !== "desc" && $_GET['by'] !== "asc") {
         	$_GET['by'] = "desc";
     	}
-    	$order = "ORDER BY `". addslashes($_GET['sort']) ."` ". addslashes($_GET['by']) . " ";
+    	$order = "ORDER BY `". mysql_real_escape_string($_GET['sort']) ."` ". mysql_real_escape_string($_GET['by']) . " ";
 	}
 }else{
 	$order = "ORDER BY `name` ASC ";
@@ -119,72 +119,37 @@ if ($_POST['action'] == "add" ) {
     if ($validate = is_valid_hostname_fqdn($_POST['name'], 0) ){
 		$errors['name'] = $validate;		
 	}else{
-		if (mysql_num_rows(mysql_query("SELECT 1 FROM `domains` WHERE `name` = '".mysql_escape_string($_POST['name'])."' ",$db))){
-	    	$errors['name'] = "This domain name is already configured on this system." ;
+		if (mysql_num_rows(mysql_query("SELECT 1 FROM `".$mysql_table."` WHERE `name` = '".mysql_escape_string($_POST['name'])."' ",$db)) || 
+		    mysql_num_rows(mysql_query("SELECT 1 FROM `domains` WHERE `name` = '".mysql_escape_string($_POST['name'])."' ",$db))){
+	    	$errors['name'] = "This zone name is already configured on this system." ;
 	    } 
 	}
 	
-	$_POST['master'] = trim($_POST['master']);
-    if(!filter_var($_POST['master'], FILTER_VALIDATE_IP)){
-		$errors['master'] = "Invalid Master DNS IP Address";		
+	$_POST['masters'] = trim($_POST['masters']);
+	$masters = explode(",", $_POST['masters']);
+	$masters_q = '';
+	$masters_total = count($masters)-1; 
+	for ($i = 0; $i <= $masters_total; $i++) {
+		$master = trim($masters[$i]);
+		if(!filter_var($master, FILTER_VALIDATE_IP)){
+			$errors['masters'.$i] = "Invalid Master DNS IP Addresses";		
+		}else{
+			$masters_q .= $master;
+			if ($i < $masters_total){
+				$masters_q .= ",";
+			}
+		}
 	}
-    
     
     if (count($errors) == 0) {
         
-        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, master, type) VALUES (      
+        $INSERT = mysql_query("INSERT INTO `".$mysql_table."` (name, masters, active) VALUES (      
             '" . mysql_real_escape_string($_POST['name'], $db) . "',
-            '" . mysql_real_escape_string($_POST['master'], $db) . "',
-            'SLAVE'
+            '" . mysql_real_escape_string($masters_q, $db) . "',
+            '1'
         )", $db);
 
         if ($INSERT){
-        	
-        	//So far so good. Now create the domainmetadata for pushes to our slaves
-			$new_domain_id = mysql_insert_id($db);
-			$new_domain_time = time();
-			
-			//Insert root NS records
-			$SELECT_ROOT_NS = mysql_query("SELECT `name`, `ip`, `id` FROM `root_ns` WHERE `active` = '1' ORDER BY `name` ASC ", $db);
-			while($ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS)){
-				
-				//Insert the NS TSIG records for AXFR				
-				mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
-							'".$new_domain_id."', 
-							'TSIG-ALLOW-AXFR',
-							'".$ROOT_NS['name']."'
-							
-				)", $db);
-				
-   				//Insert the ALSO-NOTIFY records with Unicast IPs to notify meta-slaves for automatic provision of the new zone on the slaves. 				
-				$SELECT_UNICAST_NS = mysql_query("SELECT `ip` FROM root_ns_unicast WHERE parent_id = '".$ROOT_NS['id']."' ", $db);
-				while ($UNICAST_NS = mysql_fetch_array($SELECT_UNICAST_NS)){
-					mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
-								'".$new_domain_id."', 
-								'ALSO-NOTIFY',
-								'".addslashes($UNICAST_NS['ip'])."'
-								
-					)", $db);
-					mysql_query("INSERT INTO `domainmetadata` (`domain_id`, `kind`, `content` ) VALUES (
-								'".$new_domain_id."', 
-								'ALSO-NOTIFY',
-								'".addslashes($UNICAST_NS['ip']).":".$CONF['META_SLAVE_PORT']."'
-								
-					)", $db);
-				}
-													
-				
-				
-			}
-			        	
-			// Run pdns_control retrieve to fetch new slave zone
-			exec ($CONF['PDNS_CONTROL_PATH'] . " --remote-address=".$CONF['PDNS_CONTROL_IP']." --remote-port=".$CONF['PDNS_CONTROL_PORT']." --secret=".$CONF['PDNS_CONTROL_KEY']." retrieve " . escapeshellcmd($_POST['name']));
-        	
-        	sleep(3);
-        	
-            // Run pdns_control notify to push the new slave zone to our slaves
-			exec ($CONF['PDNS_CONTROL_PATH'] . " --remote-address=".$CONF['PDNS_CONTROL_IP']." --remote-port=".$CONF['PDNS_CONTROL_PORT']." --secret=".$CONF['PDNS_CONTROL_KEY']." notify " . escapeshellcmd($_POST['name']));
-        	
         	header("Location: index.php?section=".$SECTION."&saved_success=1");
             exit();
         }else{
@@ -201,7 +166,6 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     $id = mysql_real_escape_string(str_replace ("tr-", "", $_POST['id']), $db);
     
     $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
-    $DELETE = mysql_query("DELETE FROM `domainmetadata` WHERE `domain_id`= '".$DOMAIN['id']."' " ,$db);
     
     if ($DELETE){
         ob_end_clean();
@@ -213,11 +177,10 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     exit();
 } 
 
-/*
 // ENABLE/DISABLE RECORD
 if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option'])){
-    $id = addslashes($_POST['id']);
-    $option = addslashes($_POST['option']);
+    $id = mysql_real_escape_string($_POST['id']);
+    $option = mysql_real_escape_string($_POST['option']);
     
     $UPDATE = mysql_query("UPDATE `".$mysql_table."` SET `active` = '".$option."' WHERE `id`= '".$id."'",$db);
     
@@ -231,7 +194,6 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
     }
     exit();
 }
-*/
 
 ?>
 
@@ -269,7 +231,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     <?if (staff_help()){?>
                     //TIPSY for the ADD Form
                     $('#name').tipsy({trigger: 'focus', gravity: 'w', fade: true});
-                    $('#master').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#masters').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     <?}?>
                     
 
@@ -297,7 +259,6 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         }
                     });
 
-                    <?/*
                     //SET ACTIVE FLAG
                     $('a.toggle_active').click(function () {
                         if ($(this).hasClass('activated')){    
@@ -322,8 +283,6 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         });
                         return false;
                     });
-                    */?>
-    
                      
     
                 //CLOSE THE NOTIFICATION BAR
@@ -386,8 +345,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                         </div>
                                         <div class="colx2-right">
                                             <p>
-                                                <label for="master" class="required">Master DNS IP</label>
-                                                <input type="text" name="master" id="master" title="Enter the Master DNS IP Address" value="<? if($_POST['master']){ echo $_POST['master']; } ?>">
+                                                <label for="masters" class="required">Master DNS IPs</label>
+                                                <input type="text" name="masters" id="masters" title="Enter the Master DNS IP Addresses (separate with comas)" value="<? if($_POST['masters']){ echo $_POST['masters']; } ?>">
                                             </p>
                                         </div>
                                      </div>
@@ -444,24 +403,20 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <table width="100%" border="0" cellspacing="2" cellpadding="5">
                       <tr>
                         <th><?=create_sort_link("name","Slave Zone Name");?></th>
-                        <th><?=create_sort_link("master","Master Server IP");?></th>
-                        <th>Total Records Fetched</th>
-                        <?/*<th><?=create_sort_link("active", "Active");?></th>*/?>
+                        <th><?=create_sort_link("masters","Master Server IPs");?></th>
+                        <th><?=create_sort_link("active", "Active");?></th>
                         <th>Actions</th>
                       </tr>
                       <!-- RESULTS START -->
                       <?
                       while($LISTING = mysql_fetch_array($SELECT_RESULTS)){
-                      $TOTAL_RECORDS = mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE domain_id = '".$LISTING['id']."' ", $db));
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap align="center"><?=$LISTING['name'];?></td>
-                        <td nowrap align="center"><?=$LISTING['master'];?></td>
-                        <td nowrap align="center"><?=$TOTAL_RECORDS;?></td>
-                        <?/*<td align="center" >
+                        <td nowrap align="center"><?=str_replace(",", "<br />", $LISTING['masters']);?></td>
+                        <td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
                         </td>
-                        */?>
                         <td align="center" nowrap="nowrap">
                             <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete</span></a>
                         </td>

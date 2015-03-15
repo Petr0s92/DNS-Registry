@@ -70,7 +70,8 @@ Now we are ready to install and configure our services.
 
 ```
 apt-get install build-essential bind9 bind9utils bind9-host bash-completion dnsutils lrzsz telnet \
-iotop iptraf htop curl traceroute mtr-tiny nano whois libevent-dev libssl-dev screen rsync libnet-dns-perl
+iotop iptraf htop curl traceroute mtr-tiny nano whois libevent-dev libssl-dev screen rsync libnet-dns-perl \
+php5-cli php5-curl php5-sqlite php5-dev
 ```
 
 **Disable crond logging**

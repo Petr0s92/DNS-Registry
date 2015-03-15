@@ -481,7 +481,7 @@ if ($_GET['force_soa_update'] == '1' && $_SESSION['admin_level'] == 'admin' && $
 
 	$SELECT_DOMAINS = mysql_query("SELECT id, type FROM domains", $db);
 	while ($DOMAINS = mysql_fetch_array($SELECT_DOMAINS)){
-		if ($DOMAINS['id'] != '1' && $DOMAIN['type'] != 'SLAVE'){
+		if ($DOMAINS['id'] != '1' && $DOMAINS['type'] != 'SLAVE'){
 			$soa_update = update_soa_serial_byid($DOMAINS['id']);
 		}
 	}
@@ -489,6 +489,43 @@ if ($_GET['force_soa_update'] == '1' && $_SESSION['admin_level'] == 'admin' && $
 	header ("Location: " . urldecode($_GET['return']) . "&soa_updated=1");
 	exit();
 	
+}
+
+// SEND JSON WITH SLAVE AND TLD ZONES TO ROOT NS BIND CACHES
+if ($_GET['fetch_slaves_tlds'] == "1"){
+	    
+    $ROOT_NS = mysql_num_rows(mysql_query("SELECT 1 FROM root_ns_unicast WHERE ip = '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."' AND active = '1' ", $db));
+    if ($ROOT_NS == '1'){
+    	$o = 0;
+		$SELECT_SLAVES = mysql_query("SELECT name, masters FROM slave_zones WHERE active = '1' ", $db);
+		while($SLAVES = mysql_fetch_array($SELECT_SLAVES)){
+			$zones['slaves'][$o]['name'] = $SLAVES['name'];
+			$master = explode(",", $SLAVES['masters']);
+			for ($i = 0; $i <= count($master)-1; $i++) {
+				$zones['slaves'][$o]['masters'][] = $master[$i];
+			}
+			$o++;
+		}
+	
+		$o=0;
+		$SELECT_TLDs = mysql_query("SELECT name FROM tlds WHERE active = '1' ", $db);
+		while($TLDs = mysql_fetch_array($SELECT_TLDs)){
+			$zones['tlds'][$o]['name'] = $TLDs['name'];
+			$SELECT_ROOT_NS_IPS = mysql_query("SELECT ip FROM root_ns WHERE active = '1' ", $db);
+			while($ROOT_NS_IPS = mysql_fetch_array($SELECT_ROOT_NS_IPS)){
+				$zones['tlds'][$o]['masters'][] = $ROOT_NS_IPS['ip'];				
+			}
+			$o++;			
+		}
+	
+		ob_clean();		
+		echo json_encode($zones);
+    }else{
+    	ob_clean();
+		echo json_encode('access denied');
+    }
+    
+    exit();
 } 
   
 ?>

@@ -137,6 +137,18 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (28, 'WHOIS_SERVER', 'whois.tld', 'Whois server. It will appear on the left menu. Leave empty to disable', 'panel');
 
 
+CREATE TABLE IF NOT EXISTS `slave_zones` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `masters` varchar(255) DEFAULT NULL,
+  `active` enum('1','0') NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_index` (`name`),
+  KEY `active` (`active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
+
+
+
 DROP TABLE IF EXISTS `supermasters`;
 CREATE TABLE IF NOT EXISTS `supermasters` (
   `ip` varchar(25) NOT NULL,

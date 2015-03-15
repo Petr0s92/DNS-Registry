@@ -140,7 +140,7 @@ admin_auth();
 					<?if ($_SESSION['admin_level'] == 'admin'){?>
 					<tr>
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Slave Zones</td>
-					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM domains WHERE type ='SLAVE' ", $db));?></strong></td>
+					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM slave_zones WHERE active ='1' ", $db));?></strong></td>
 					</tr>
 					<tr>
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Root Nameservers</td>
