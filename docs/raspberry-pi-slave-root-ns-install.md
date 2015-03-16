@@ -184,9 +184,9 @@ remote-control:
 
 # Secret keys for TSIGs that secure zone transfers.
 key:
-        name: --YOUR--TSIG--KEY--NAME--
+        name: --YOUR--TSIG--KEY--NAME--HERE--
         algorithm: hmac-md5
-        secret: "--YOUR--TSIG--KEY--"
+        secret: "--YOUR--TSIG--KEY--HERE--"
 
 # Pattern for automatic provisioning of new slave zones
 pattern:

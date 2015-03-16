@@ -128,7 +128,16 @@ system("/usr/local/bin/raspi-expand-rootfs.sh");
 if (file_exists("/dev/sda")){
 		
 	//Delete all partitions and create a new linux one.	
-	system ('echo -e "o\nn\np\n1\n\n\nw" | fdisk /dev/sda');
+	//system ('echo -e "o\nn\np\n1\n\n\nw" | fdisk /dev/sda');
+	system("fdisk /dev/sda <<EOF
+o
+n
+p
+1
+
+
+w
+EOF");
 	
 	//Format new partition
 	system ('mkfs.ext4 /dev/sda1');
@@ -154,9 +163,9 @@ $NSD_CONF = file_get_contents("/etc/nsd/nsd.conf");
 $NSD_CONF = str_replace("--YOUR--ROOT-NS--ANYCAST--IP--HERE--", $ANYCAST_NS_IP, $NSD_CONF); 
 $NSD_CONF = str_replace("--YOUR--ROOT-NS--UNICAST--IP--HERE--", $UNICAST_NS_IP, $NSD_CONF); 
 $NSD_CONF = str_replace("--YOUR--MASTER--PDNS--IP--HERE--", $CP_IP, $NSD_CONF); 
-$NSD_CONF = str_replace("--YOUR--ROOT--NS--NAME--", $ROOT_NS_NAME, $NSD_CONF); 
-$NSD_CONF = str_replace("--YOUR--TSIG--KEY--NAME--", $ROOT_NS_NAME, $NSD_CONF); 
-$NSD_CONF = str_replace("--YOUR--TSIG--KEY--", $TSIG_KEY, $NSD_CONF);
+$NSD_CONF = str_replace("--YOUR--ROOT--NS--NAME--HERE--", $ROOT_NS_NAME, $NSD_CONF); 
+$NSD_CONF = str_replace("--YOUR--TSIG--KEY--NAME--HERE--", $ROOT_NS_NAME, $NSD_CONF); 
+$NSD_CONF = str_replace("--YOUR--TSIG--KEY--HERE--", $TSIG_KEY, $NSD_CONF);
 file_put_contents("/etc/nsd/nsd.conf", $NSD_CONF); 
 
 
