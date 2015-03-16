@@ -137,7 +137,8 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (28, 'WHOIS_SERVER', 'whois.tld', 'Whois server. It will appear on the left menu. Leave empty to disable', 'panel'),
 (29, 'MASTER_SSH_KEY_PRIVATE', '', 'SSH Private Key for automatic root ns provisioning', 'panel'),
 (30, 'MASTER_SSH_KEY_PUBLIC', '', 'SSH Public Key for automatic root ns provisioning', 'panel'),
-(31, 'ROOT_NS_SSH_PORT', '22', 'SSH Port for Root NS', 'panel');
+(31, 'ROOT_NS_SSH_PORT', '22', 'SSH Port for Root NS', 'panel'),
+(32, 'APP_IP', '10.1.1.25', 'The IP on which this system is running on.', 'panel');
 
 
 CREATE TABLE IF NOT EXISTS `slave_zones` (

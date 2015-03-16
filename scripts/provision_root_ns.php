@@ -24,7 +24,7 @@
 error_reporting(E_ALL ^ E_NOTICE);
 
 // Script arguments
-$SCRIPT_USAGE = "Usage: provision_root_ns.php \"ANYCAST_NS_IP\" \"UNICAST_NS_IP\" \"ANYCAST_CACHE_IP\" \"ROOT_NS_NAME\" \"CP_URL\" \"TSIG_KEY\" \"USER_SSH_KEY\"\n";
+$SCRIPT_USAGE = "Usage: provision_root_ns.php \"ANYCAST_NS_IP\" \"UNICAST_NS_IP\" \"ANYCAST_CACHE_IP\" \"ROOT_NS_NAME\" \"CP_URL\" \"CP_IP\" \"TSIG_KEY\" \"USER_SSH_KEY\"\n";
 
 //Assign script arguments to vars
 $ANYCAST_NS_IP    = trim($argv[1]);
@@ -32,8 +32,9 @@ $UNICAST_NS_IP    = trim($argv[2]);
 $ANYCAST_CACHE_IP = trim($argv[3]);
 $ROOT_NS_NAME     = trim($argv[4]);
 $CP_URL           = trim($argv[5]);
-$TSIG_KEY         = trim($argv[6]);
-$USER_SSH_KEY     = trim($argv[7]);
+$CP_IP            = trim($argv[6]);
+$TSIG_KEY         = trim($argv[7]);
+$USER_SSH_KEY     = trim($argv[8]);
 
 //Validate input
 if(!filter_var($ANYCAST_NS_IP, FILTER_VALIDATE_IP)){
@@ -54,6 +55,10 @@ if (!preg_match("/^(?!-)^(?!\.)[a-z0-9-\.]{1,63}(?<!-)(?<!\.)$/", $ROOT_NS_NAME)
 
 if (!$CP_URL) {
 	exit("Invalid Control Panel URL.\n".$SCRIPT_USAGE);
+}
+
+if(!filter_var($CP_IP, FILTER_VALIDATE_IP)){
+	exit("Invalid CP_IP\n".$SCRIPT_USAGE);
 }
 
 if (strlen($TSIG_KEY) <= 15) {
@@ -116,7 +121,8 @@ $HOSTS_FILE = file_get_contents("/etc/hosts");
 $HOSTS_FILE = str_replace("raspberrypi", $ROOT_NS_NAME . " " . $hostname , $HOSTS_FILE); 
 file_put_contents("/etc/hosts", $HOSTS_FILE); 
 
-
+//Expand rootfs to fill SD card
+system("/usr/local/bin/raspi-expand-rootfs.sh");
 
 //Check if USB Stick is present and create new partition
 if (file_exists("/dev/sda")){
@@ -147,6 +153,7 @@ system("/usr/sbin/dpkg-reconfigure openssh-server");
 $NSD_CONF = file_get_contents("/etc/nsd/nsd.conf");
 $NSD_CONF = str_replace("--YOUR--ROOT-NS--ANYCAST--IP--HERE--", $ANYCAST_NS_IP, $NSD_CONF); 
 $NSD_CONF = str_replace("--YOUR--ROOT-NS--UNICAST--IP--HERE--", $UNICAST_NS_IP, $NSD_CONF); 
+$NSD_CONF = str_replace("--YOUR--MASTER--PDNS--IP--HERE--", $CP_IP, $NSD_CONF); 
 $NSD_CONF = str_replace("--YOUR--ROOT--NS--NAME--", $ROOT_NS_NAME, $NSD_CONF); 
 $NSD_CONF = str_replace("--YOUR--TSIG--KEY--NAME--", $ROOT_NS_NAME, $NSD_CONF); 
 $NSD_CONF = str_replace("--YOUR--TSIG--KEY--", $TSIG_KEY, $NSD_CONF);
