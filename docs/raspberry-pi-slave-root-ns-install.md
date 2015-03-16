@@ -233,18 +233,21 @@ Copy init file `cp /root/nsd-4.1.1/contrib/nsd.init /etc/init.d/nsd`
 
 Edit init file and set `configfile="/etc/nsd/nsd.conf"`
 
+Update the line `sbindir="/usr/sbin"` to `sbindir="/usr/local/sbin"`
+
 Also replace first line `#!/bin/sh` with the following:
 
 ```
-
 #!/bin/sh
 #
 ### BEGIN INIT INFO
-# Provides:             nsd
-# Required-Start:       $remote_fs $syslog
-# Required-Stop:        $remote_fs $syslog
-# Default-Start:        2 3 4 5
-# Default-Stop:         0 1 6
+# Provides:          NSD
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Should-Start:      $network $syslog
+# Should-Stop:       $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
 # Short-Description:    NSD Authoritative Nameserver
 ### END INIT INFO
 ```

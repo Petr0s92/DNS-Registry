@@ -74,9 +74,10 @@ if (strlen($USER_SSH_KEY) > 1 && preg_match("/^(ssh-rsa|ssh-dss) AAAA[0-9A-Za-z+
 
 
 //First update system
-echo "\n\nUpdating system...\n";
-system ("/usr/bin/apt-get update");
-system ("/usr/bin/apt-get upgrade -y");
+//too slow, disabled for now
+//echo "\n\nUpdating system...\n";
+//system ("/usr/bin/apt-get update");
+//system ("/usr/bin/apt-get upgrade -y");
 
 
 //Configure interfaces file
@@ -262,7 +263,6 @@ system("/usr/sbin/update-rc.d cron defaults");
 //enable superslave on boot
 $SUPERSLAVE_BOOT = file_get_contents("/etc/rc.local");
 $SUPERSLAVE_BOOT = str_replace("#screen -dmS nsd_superslave /usr/local/bin/nsd_superslave.pl", "screen -dmS nsd_superslave /usr/local/bin/nsd_superslave.pl", $SUPERSLAVE_BOOT); 
-$SUPERSLAVE_BOOT = str_replace("#/etc/init.d/nsd start", "/etc/init.d/nsd start", $SUPERSLAVE_BOOT); 
 file_put_contents("/etc/rc.local", $SUPERSLAVE_BOOT);
 
  
