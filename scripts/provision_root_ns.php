@@ -73,7 +73,14 @@ if (strlen($USER_SSH_KEY) > 1 && preg_match("/^(ssh-rsa|ssh-dss) AAAA[0-9A-Za-z+
 //All input validated, let do this!
 
 
+//First update system
+echo "\n\nUpdating system...\n";
+system ("/usr/bin/apt-get update");
+system ("/usr/bin/apt-get upgrade -y");
+
+
 //Configure interfaces file
+echo "Configuring Networking...\n";
 $INTERFACES_FILE = "auto lo
 iface lo inet loopback
 
@@ -102,11 +109,14 @@ iface lo:3 inet static
 
 file_put_contents ("/etc/network/interfaces", $INTERFACES_FILE);
 
+
 //Bring up UNICAST IP to be able to fetch the SSH Keys from the control panel later on
+echo "Bringing up UNICAST IP...\n";
 system ("ifup lo:2");
 
 
 //Set hostname
+echo "Setting Hostname...\n";
 $hostname_parts = explode(".", $ROOT_NS_NAME);
 $hostname_parts_rev = array_reverse($hostname_parts);
 $hostname_parts_rev[0] = false;
@@ -117,15 +127,21 @@ file_put_contents ("/etc/hostname", $hostname . "\n");
 
 
 //Configure hosts file
+echo "Setting hosts file...\n";
 $HOSTS_FILE = file_get_contents("/etc/hosts");
 $HOSTS_FILE = str_replace("raspberrypi", $ROOT_NS_NAME . " " . $hostname , $HOSTS_FILE); 
 file_put_contents("/etc/hosts", $HOSTS_FILE); 
 
+
 //Expand rootfs to fill SD card
+echo "Exanding filesystem to fill the SD Card...\n";
 system("/usr/local/bin/raspi-expand-rootfs.sh");
+
 
 //Check if USB Stick is present and create new partition
 if (file_exists("/dev/sda")){
+		
+	echo "Formatting USB Flash...\n";
 		
 	//Delete all partitions and create a new linux one.	
 	//system ('echo -e "o\nn\np\n1\n\n\nw" | fdisk /dev/sda');
@@ -143,22 +159,29 @@ EOF");
 	system ('mkfs.ext4 /dev/sda1');
 	
 	//Add new partition to fstab
+	echo "Enabling USB Flash partition mount on boot...\n";
 	system ("echo \"/dev/sda1 /data ext4 errors=remount-ro,noatime 0 0\">> /etc/fstab");
 	
 	//Mount new partition
+	echo "Mounting USB Flash partition...\n";
 	system ("mount /data");
 	
 }
 
+
 //Copy data-skel to /data
+echo "Copying /data skeleton data...\n";
 system("cp -a /data-skel/* /data/");
 
+
 //Create new SSH Host Keys
+echo "Generating new SSH Host Keys...\n";
 system("rm -rf /etc/ssh/ssh_host_*");
 system("/usr/sbin/dpkg-reconfigure openssh-server");
 
 
 //Configure NSD
+echo "Configuring NSD...\n";
 $NSD_CONF = file_get_contents("/etc/nsd/nsd.conf");
 $NSD_CONF = str_replace("--YOUR--ROOT-NS--ANYCAST--IP--HERE--", $ANYCAST_NS_IP, $NSD_CONF); 
 $NSD_CONF = str_replace("--YOUR--ROOT-NS--UNICAST--IP--HERE--", $UNICAST_NS_IP, $NSD_CONF); 
@@ -170,6 +193,7 @@ file_put_contents("/etc/nsd/nsd.conf", $NSD_CONF);
 
 
 //Configure BIND
+echo "Configuring BIND...\n";
 $BIND_CONF = file_get_contents("/etc/bind/named.conf.options");
 $BIND_CONF = str_replace("--YOUR--ROOT-NS--CACHING--ANYCAST--IP--HERE--", $ANYCAST_CACHE_IP, $BIND_CONF); 
 $BIND_CONF = str_replace("--YOUR--ROOT-NS--CACHING--UNICAST--IP--HERE--", $UNICAST_NS_IP, $BIND_CONF); 
@@ -177,17 +201,20 @@ file_put_contents("/etc/bind/named.conf.options", $BIND_CONF);
 
 
 //Configure nsd_superslave.pl
+echo "Configuring Superslave...\n";
 $SUPERSLAVE_CONF = file_get_contents("/usr/local/bin/nsd_superslave.pl");
 $SUPERSLAVE_CONF = str_replace("--YOUR--ROOT-NS--UNICAST--IP--HERE--", $UNICAST_NS_IP, $SUPERSLAVE_CONF); 
 file_put_contents("/usr/local/bin/nsd_superslave.pl", $SUPERSLAVE_CONF); 
 
 
 //Configure nsd_cleanup_zones.php
+echo "Configuring nsd_cleanup_zones...\n";
 $CLEANUP_ZONES_CONF = file_get_contents("/usr/local/bin/nsd_cleanup_zones.php");
 $CLEANUP_ZONES_CONF = str_replace("--YOUR--ROOT-NS--UNICAST--IP--HERE--", $UNICAST_NS_IP, $CLEANUP_ZONES_CONF); 
 file_put_contents("/usr/local/bin/nsd_cleanup_zones.php", $CLEANUP_ZONES_CONF); 
 
 //Configure nsd_superslave.pl
+echo "Configuring bind_sync_zones...\n";
 $SYNC_ZONES_CONF = file_get_contents("/usr/local/bin/bind_sync_zones.php");
 $SYNC_ZONES_CONF = str_replace("--YOUR--ROOT-NS--UNICAST--IP--HERE--", $UNICAST_NS_IP, $SYNC_ZONES_CONF); 
 $SYNC_ZONES_CONF = str_replace("https://your.domain/path/to", $CP_URL, $SYNC_ZONES_CONF); 
@@ -216,27 +243,34 @@ if (isset($SSH_KEYS)){
 }
 
 //Add new keys to root
+echo "Adding root SSH Keys...\n";
 file_put_contents("/root/.ssh/authorized_keys", $formatted_keys, FILE_APPEND);
 
-//Add new user key to 'owner' account
-file_put_contents("/home/owner/.ssh/authorized_keys", $USER_SSH_KEY);
 
+//Add new user key to 'owner' account
+echo "Adding owner SSH Key...\n";
+file_put_contents("/home/owner/.ssh/authorized_keys", $USER_SSH_KEY . "\n");
 
 
 //All services configured, enable them on boot
+echo "Enabling services on boot...\n";
 system("/usr/sbin/update-rc.d nsd defaults");
 system("/usr/sbin/update-rc.d bind9 defaults");
 system("/usr/sbin/update-rc.d cron defaults");
 
+
 //enable superslave on boot
 $SUPERSLAVE_BOOT = file_get_contents("/etc/rc.local");
 $SUPERSLAVE_BOOT = str_replace("#screen -dmS nsd_superslave /usr/local/bin/nsd_superslave.pl", "screen -dmS nsd_superslave /usr/local/bin/nsd_superslave.pl", $SUPERSLAVE_BOOT); 
+$SUPERSLAVE_BOOT = str_replace("#/etc/init.d/nsd start", "/etc/init.d/nsd start", $SUPERSLAVE_BOOT); 
 file_put_contents("/etc/rc.local", $SUPERSLAVE_BOOT);
 
  
-echo "Root Namesever Provisioned OK! Rebooting to apply new configuration.\n";
+echo "\n\nRoot Namesever Provisioned OK! Rebooting to apply new configuration.\n\n";
+ 
  
 //Configuration Complete! Reboot to apply!
+echo "Rebooting...\n";
 system ("init 6");
 
 ?>

@@ -138,7 +138,7 @@ server:
 
         # log messages to file. Default to stderr and syslog (with
         # facility LOG_DAEMON).  stderr disappears when daemon goes to bg.
-        # logfile: "/data/nsd/var/log/nsd.log"
+        logfile: "/data/nsd/var/log/nsd.log"
 
         # File to store pid for nsd in.
         pidfile: "/var/run/nsd.pid"
