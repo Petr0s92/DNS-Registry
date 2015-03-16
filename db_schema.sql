@@ -138,7 +138,8 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (29, 'MASTER_SSH_KEY_PRIVATE', '', 'SSH Private Key for automatic root ns provisioning', 'panel'),
 (30, 'MASTER_SSH_KEY_PUBLIC', '', 'SSH Public Key for automatic root ns provisioning', 'panel'),
 (31, 'ROOT_NS_SSH_PORT', '22', 'SSH Port for Root NS', 'panel'),
-(32, 'APP_IP', '10.1.1.25', 'The IP on which this system is running on.', 'panel');
+(32, 'PROVISION_IP', '10.1.1.25', 'The IP on which the automatic provisioning script will contact the Control Panel.', 'panel'),
+(33, 'PROVISION_URL', 'http://www.your-domain.tld/registry', 'The URL on which the automatic provisioning script will contact the Control Panel. Without trailing slash(/)', 'panel');
 
 
 CREATE TABLE IF NOT EXISTS `slave_zones` (

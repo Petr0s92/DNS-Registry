@@ -177,7 +177,7 @@ if ($_POST['action'] == "add" && $_POST['parent_id']) {
 		if (count($errors) == 0) {
 		
 			// run ssh here
-			$ssh_command = "/usr/local/bin/provision_root_ns.php '" . $ROOT_NS['ip'] ."' '"  . $_POST['ip'] . "' '" . $_POST['cache_ip'] . "' '" . $ROOT_NS['name'] . "' '" . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . "' '".$CONF['APP_IP']."' '" . $TSIG['secret'] . "' '" . $_POST['owner_ssh_key'] . "' ";
+			$ssh_command = "/usr/local/bin/provision_root_ns.php '" . $ROOT_NS['ip'] ."' '"  . $_POST['ip'] . "' '" . $_POST['cache_ip'] . "' '" . $ROOT_NS['name'] . "' '" . $CONF['PROVISION_URL'] . "' '".$CONF['PROVISION_IP']."' '" . $TSIG['secret'] . "' '" . $_POST['owner_ssh_key'] . "' ";
 			
 			if ( ssh_client2($_POST['real_ip'], $ssh_command) == false){
 				$errors['provision'] = "Automatic Provisioning Failed :( Please configure the Root NS manually.";
