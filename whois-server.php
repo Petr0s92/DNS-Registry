@@ -103,13 +103,15 @@ function handle_client($allclient, $socket, $buf) {
 	if (mysql_num_rows($SELECT_TLD)){
 	
 		// Select domain and owner from database
-		$SELECT_DOMAIN = mysql_query("SELECT user_id, created, change_date, type, domain_id FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND ( type = 'NS' OR type = 'A' ) ORDER BY change_date DESC LIMIT 0,1 ", $db);
+		$SELECT_DOMAIN = mysql_query("SELECT user_id, created, change_date, type, domain_id FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND ( type = 'NS' OR type = 'A' ) LIMIT 0,1 ", $db);
 		$DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
 		$SELECT_OWNER = mysql_query("SELECT username, nodeid FROM users WHERE id = '".$DOMAIN['user_id']."' ", $db);
 		$OWNER = mysql_fetch_array($SELECT_OWNER);
 
-		//Domain exists, prepare reply
+		$SELECT_LAST_UPDATED  = mysql_query("SELECT `change_date` FROM `records` WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' ORDER BY change_date DESC LIMIT 0, 1",$db);
+		$LAST_UPDATED = mysql_fetch_array($SELECT_LAST_UPDATED);//Domain exists, prepare reply
+		
 		if (mysql_num_rows($SELECT_DOMAIN)){
 
 			$whois_reply .= "Domain: ".$DOMAIN_lookup." \n";
@@ -118,7 +120,7 @@ function handle_client($allclient, $socket, $buf) {
 			$whois_reply .= "\t".date("d-m-Y g:i a",$DOMAIN['created'])."\n";
 			$whois_reply .= "\n";
 			$whois_reply .= "Updated Date: \n";
-			$whois_reply .= "\t".date("d-m-Y g:i a",$DOMAIN['change_date'])."\n";
+			$whois_reply .= "\t".date("d-m-Y g:i a",$LAST_UPDATED['change_date'])."\n";
 			$whois_reply .= "\n";
 			
 			//Show user & nameservers only if domain is delegated.
