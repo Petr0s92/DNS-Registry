@@ -96,7 +96,7 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
             '" . mysql_escape_string(htmlspecialchars($_POST['wireless_community'])) . "',
             '" . mysql_real_escape_string($CONF['RECORDS_TTL']) . "',
             '" . mysql_real_escape_string($CONF['RECORDS_TTL']) . "',
-            '" . mysql_real_escape_string(htmlspecialchars($_POST['fullname']) . "',
+            '" . mysql_real_escape_string(htmlspecialchars($_POST['fullname'])) . "',
             'user',
             '1',
             '1',
