@@ -109,7 +109,7 @@ function handle_client($allclient, $socket, $buf) {
 		$SELECT_OWNER = mysql_query("SELECT username, nodeid FROM users WHERE id = '".$DOMAIN['user_id']."' ", $db);
 		$OWNER = mysql_fetch_array($SELECT_OWNER);
 
-		$SELECT_LAST_UPDATED  = mysql_query("SELECT `change_date` FROM `records` WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' ORDER BY change_date DESC LIMIT 0, 1",$db);
+		$SELECT_LAST_UPDATED  = mysql_query("SELECT `change_date` FROM `records` WHERE name LIKE '%".mysql_real_escape_string($DOMAIN_lookup)."' ORDER BY change_date DESC LIMIT 0, 1",$db);
 		$LAST_UPDATED = mysql_fetch_array($SELECT_LAST_UPDATED);//Domain exists, prepare reply
 		
 		if (mysql_num_rows($SELECT_DOMAIN)){

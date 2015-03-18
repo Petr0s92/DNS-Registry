@@ -133,8 +133,6 @@ $total_pages=$i; // sinolo selidon
 
 //Final Query for records listing
 $SELECT_RESULTS  = mysql_query("SELECT `".$mysql_table."`.* FROM `".$mysql_table."` ".$search_query." ".$order . " LIMIT ".$pageno.", ".$e ,$db);
-$SELECT_LAST_UPDATED  = mysql_query("SELECT `change_date` FROM `".$mysql_table."` ".$search_query." ORDER BY change_date DESC LIMIT 0, 1",$db);
-$LAST_UPDATED = mysql_fetch_array($SELECT_LAST_UPDATED);
 
 $url_vars = "action=".$_GET['action'] . $sort_vars . $search_vars;
 
@@ -1057,8 +1055,10 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 					  $SELECT_ISTLD = mysql_query("SELECT id FROM tlds WHERE name = '".$LISTING['name']."' ", $db);
 					  $TLDID = mysql_fetch_array($SELECT_ISTLD);
 					  $ISTLD = mysql_num_rows($SELECT_ISTLD);
-
-
+					  
+					  $SELECT_LAST_UPDATED  = mysql_query("SELECT `change_date` FROM `".$mysql_table."` WHERE name LIKE '%".$LISTING['name']."' ORDER BY change_date DESC LIMIT 0, 1",$db);
+					  $LAST_UPDATED = mysql_fetch_array($SELECT_LAST_UPDATED);
+                      
 					  $o=0;
 					  $ns='';
 					  $SELECT_ROOT_NS = mysql_query("SELECT name FROM root_ns WHERE active = '1' ", $db);
