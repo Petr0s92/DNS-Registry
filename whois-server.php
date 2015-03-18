@@ -84,13 +84,7 @@ function handle_client($allclient, $socket, $buf) {
 
 	$DOMAIN_lookup = trim($buf);
 
-	// Select domain and owner from database
-	$SELECT_DOMAIN = mysql_query("SELECT user_id, created, change_date, type, domain_id FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND ( type = 'NS' OR type = 'A' ) LIMIT 0,1 ", $db);
-	$DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
-
-	$SELECT_OWNER = mysql_query("SELECT username, nodeid FROM users WHERE id = '".$DOMAIN['user_id']."' ", $db);
-	$OWNER = mysql_fetch_array($SELECT_OWNER);
-
+	
 	//Prepare reply header
 	$whois_reply  = "% \n";
 	$whois_reply .= "% WHOIS Server for: ".$CONF['APP_NAME']."\n";
@@ -102,59 +96,84 @@ function handle_client($allclient, $socket, $buf) {
 	$whois_reply .= "% \n";
 	$whois_reply .= "\n";
 
-	//Domain exists, prepare reply
-	if (mysql_num_rows($SELECT_DOMAIN)){
+	
+	// Check if domain is under our managed TLDs
+	$SELECT_TLD = mysql_query("SELECT name FROM tlds WHERE '".mysql_real_escape_string($DOMAIN_lookup)."' LIKE CONCAT( '%', name ) AND active = '1' ", $db);
+	
+	if (mysql_num_rows($SELECT_TLD)){
+	
+		// Select domain and owner from database
+		$SELECT_DOMAIN = mysql_query("SELECT user_id, created, change_date, type, domain_id FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND ( type = 'NS' OR type = 'A' ) LIMIT 0,1 ", $db);
+		$DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
-		$whois_reply .= "Domain: ".$DOMAIN_lookup." \n";
-		$whois_reply .= "\n";
-		$whois_reply .= "Registration Date: \n";
-		$whois_reply .= "\t".date("d-m-Y g:i a",$DOMAIN['created'])."\n";
-		$whois_reply .= "\n";
-		$whois_reply .= "Updated Date: \n";
-		$whois_reply .= "\t".date("d-m-Y g:i a",$DOMAIN['change_date'])."\n";
-		$whois_reply .= "\n";
-		
-		//Show user & nameservers only if domain is delegated.
-		if ($DOMAIN['user_id'] > 0 ){
-			if ($OWNER['username'] || $OWNER['nodeid']){
-				$whois_reply .= "Registrant:\n";
-			}
-			if ($OWNER['username']){			
-				$whois_reply .= "\tUsername: ".$OWNER['username']."\n";
-			}
-			if ($OWNER['nodeid']){
-				$whois_reply .= "\tNode ID: #".$OWNER['nodeid']."\n";
-			}
-			if ($OWNER['username'] || $OWNER['nodeid']){
-				$whois_reply .= "\n";
-			}
-		
-			$whois_reply .= "Name Servers:\n";
+		$SELECT_OWNER = mysql_query("SELECT username, nodeid FROM users WHERE id = '".$DOMAIN['user_id']."' ", $db);
+		$OWNER = mysql_fetch_array($SELECT_OWNER);
 
-			//Select domain nameservers
-			$SELECT_NS = mysql_query("SELECT content FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND type='NS' ORDER BY content ASC", $db);
-			while ($NS = mysql_fetch_array($SELECT_NS)){
-				$SELECT_GLUE = mysql_query("SELECT content FROM records WHERE name = '".$NS['content']."' AND type='A' ");
-				$GLUE = mysql_fetch_array($SELECT_GLUE);
-				if ($GLUE['content']){
-					$glue = " (Glue: ".$GLUE['content'].")";
-				}else{
-					$glue = '';
+		//Domain exists, prepare reply
+		if (mysql_num_rows($SELECT_DOMAIN)){
+
+			$whois_reply .= "Domain: ".$DOMAIN_lookup." \n";
+			$whois_reply .= "\n";
+			$whois_reply .= "Registration Date: \n";
+			$whois_reply .= "\t".date("d-m-Y g:i a",$DOMAIN['created'])."\n";
+			$whois_reply .= "\n";
+			$whois_reply .= "Updated Date: \n";
+			$whois_reply .= "\t".date("d-m-Y g:i a",$DOMAIN['change_date'])."\n";
+			$whois_reply .= "\n";
+			
+			//Show user & nameservers only if domain is delegated.
+			if ($DOMAIN['user_id'] > 0 ){
+				if ($OWNER['username'] || $OWNER['nodeid']){
+					$whois_reply .= "Registrant:\n";
 				}
-				$whois_reply .= "\t".$NS['content'].$glue."\n";
+				if ($OWNER['username']){			
+					$whois_reply .= "\tUsername: ".$OWNER['username']."\n";
+				}
+				if ($OWNER['nodeid']){
+					$whois_reply .= "\tNode ID: #".$OWNER['nodeid']."\n";
+				}
+				if ($OWNER['username'] || $OWNER['nodeid']){
+					$whois_reply .= "\n";
+				}
+			
+				$whois_reply .= "Name Servers:\n";
+
+				//Select domain nameservers
+				$SELECT_NS = mysql_query("SELECT content FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND type='NS' ORDER BY content ASC", $db);
+				while ($NS = mysql_fetch_array($SELECT_NS)){
+					$SELECT_GLUE = mysql_query("SELECT content FROM records WHERE name = '".$NS['content']."' AND type='A' ");
+					$GLUE = mysql_fetch_array($SELECT_GLUE);
+					if ($GLUE['content']){
+						$glue = " (Glue: ".$GLUE['content'].")";
+					}else{
+						$glue = '';
+					}
+					$whois_reply .= "\t".$NS['content'].$glue."\n";
+				}
+			}else{
+				$whois_reply .= "This is a System domain.\n";
 			}
+
+			$whois_reply .= "\n";
+
 		}else{
-			$whois_reply .= "This is a System domain.\n";
+		//Domain does not exist
+
+			$whois_reply .= "Domain ".$DOMAIN_lookup." is not registered.\n";
+			$whois_reply .= "\n";
+
 		}
-
-		$whois_reply .= "\n";
-
+			
 	}else{
-	//Domain does not exist
-
-		$whois_reply .= "Domain ".$DOMAIN_lookup." is not registered.\n";
+		
 		$whois_reply .= "\n";
-
+		$whois_reply .= "This DNS Registry is responsible only for the following TLDs: \n";
+		$SELECT_TLDs = mysql_query("SELECT name FROM tlds WHERE active = '1' ORDER BY name ASC", $db);
+		while ($TLD = mysql_fetch_array($SELECT_TLDs)){
+			$whois_reply .= "\t" . $TLD['name'] . "\n";			
+		}
+		$whois_reply .= " \n";
+		
 	}
 
 	// send CR/LF to client	
