@@ -48,6 +48,10 @@ if(php_sapi_name() != "cli" && stristr($_SERVER['PHP_SELF'], "js.php") == FALSE 
 	session_start();
 }
 
+//Load SSH libraries
+require('Net/SSH2.php');
+require('Crypt/RSA.php');	
+
 
 //Set global var $SECTION
 if (isset($_GET['section'])){
@@ -593,9 +597,6 @@ if ($_GET['fetch_ssh_keys'] == "1"){
 function ssh_client2($IP,$COMMAND){
 	global $CONF;
 	
-	require('Net/SSH2.php');
-	require('Crypt/RSA.php');	
-
 	$ssh = new Net_SSH2($IP, $CONF['ROOT_NS_SSH_PORT']);
 	
 	$key = new Crypt_RSA();
