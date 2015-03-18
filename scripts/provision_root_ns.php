@@ -223,7 +223,7 @@ file_put_contents("/usr/local/bin/bind_sync_zones.php", $SYNC_ZONES_CONF);
 
 
 //Fetch SSH Public Keys
-$curl = curl_init($CP_URL . "?fetch_ssh_keys=1");
+$curl = curl_init($CP_URL . "/index.php?fetch_ssh_keys=1");
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 if (stristr($CP_URL,"https://")){
 	curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);

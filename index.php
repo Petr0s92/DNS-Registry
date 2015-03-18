@@ -91,11 +91,13 @@ admin_auth();
 				$SELECT_USERS = mysql_query("SELECT username, id FROM users WHERE active ='1' ORDER BY username ASC", $db);
 				while ($USERS = mysql_fetch_array($SELECT_USERS)){
 				?>                                                    
-                <option value="<?=$USERS['id'];?>"   <? if ($_SESSION['admin_id'] == $USERS['id']){ echo "selected=\"selected\""; }?> ><?=$USERS['username'];?></option>
+                <option value="<?=$USERS['id'];?>"   <? /*if ($_SESSION['admin_id'] == $USERS['id']){ echo "selected=\"selected\""; }*/?> ><?=$USERS['username'];?></option>
 				<?}?>                                                    
             </select>
-            <?}else{?>
-			User: <a href="index.php?section=user&action=edit&id=<?=$_SESSION['admin_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit account"><strong><?=$_SESSION['admin_username'];?></strong></a>
+            &nbsp;
+            Current User: <a href="index.php?section=user&action=edit&id=<?=$_SESSION['admin_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit account"><strong><?=$_SESSION['admin_username'];?></strong></a>
+			<?}else{?>
+			Welcome, <a href="index.php?section=user&action=edit&id=<?=$_SESSION['admin_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit account"><strong><?=$_SESSION['admin_username'];?></strong></a>
 			<?}?>
 			<a href="login.php?action=logout" class="logout <?if (staff_help()){?>tip_east<?}?>" title="Logout of the system">Logout</a>
 			</div>
@@ -188,8 +190,11 @@ admin_auth();
 					<br />
 					
 					<?if ($_SESSION['admin_level'] == 'admin'){?>
-						<h2 class="sidebar_title"></h2>
-						<a href="index.php?force_soa_update=1&return=<?=urlencode($_SERVER['REQUEST_URI']);?>" class="tip_south" title="This will force a SOA Serial Update to all Domains on the system to force slaves to sync their zones. Use only when nessescary.">Force SOA Serial Update</a>
+						<h2 class="sidebar_title">Admin Tools</h2>
+						<a href="index.php?force_soa_update=1&return=<?=urlencode($_SERVER['REQUEST_URI']);?>" class="tip_west" title="This will force a SOA Serial Update to all Domains on the system to force slaves to sync their zones. Use only when nessescary.">Force SOA Serial Update</a>
+						<br />
+						<br />
+						<a href="index.php?cache_flush=1&return=<?=urlencode($_SERVER['REQUEST_URI']);?>" class="tip_west" title="This will flush the DNS cache on all BIND servers. Use only when nessescary.">Flush DNS Cache</a>
 						<br />
 						<br />
 					<?}?>
@@ -232,6 +237,25 @@ admin_auth();
 				<div class="maintitle_bg">
 					<p class="success"><span style="float: right;"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_east<?}?> close_notification" rel="success" title="Close notification bar"><span>Close Notification Bar</span></a></span>
                         SOA Update was successful.</p>
+                </div>
+				<?}?>    
+
+				<?if ($_GET['cache_flushed'] == '1' && $_SESSION['admin_level'] == 'admin'){?>
+				<script>
+                $(function() {    
+	                //CLOSE THE SOA NOTIFICATION BAR
+	                $("a.close_notification").click(function() {
+	                    var bar_class = $(this).attr('rel');
+	                    //alert(bar_class);
+	                    $('.'+bar_class).hide();
+	                    return false;
+	                });
+				});
+                </script>
+                				
+				<div class="maintitle_bg">
+					<p class="success"><span style="float: right;"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_east<?}?> close_notification" rel="success" title="Close notification bar"><span>Close Notification Bar</span></a></span>
+                        Cache Flush was successful.</p>
                 </div>
 				<?}?>    
 

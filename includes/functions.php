@@ -490,7 +490,34 @@ if ($_GET['force_soa_update'] == '1' && $_SESSION['admin_level'] == 'admin' && $
 		}
 	}
 	
-	header ("Location: " . urldecode($_GET['return']) . "&soa_updated=1");
+	if (strstr($_GET['return'], "?")){
+		$return_url = urldecode($_GET['return']) . "&";
+	}else{
+		$return_url = $_SERVER['PHP_SELF'] . "?";
+	}
+	header ("Location: " . $return_url . "soa_updated=1");
+	exit();
+	
+}
+
+// Force Cache Flush to all BIND servers
+if ($_GET['cache_flush'] == '1' && $_SESSION['admin_level'] == 'admin' && $_GET['return']){
+
+	$SELECT_UNICAST_NS = mysql_query("SELECT ip FROM root_ns_unicast WHERE active = '1' ", $db);
+	while ($UNICAST_NS = mysql_fetch_array($SELECT_UNICAST_NS)){
+		if ($UNICAST_NS['ip']){
+			
+			// Connect via SSH to root ns and issue rndc flush/reload
+			ssh_client2($UNICAST_NS['ip'], "/usr/sbin/rndc flush ; /usr/sbin/rndc reload &");
+		}
+	}
+	
+	if (strstr($_GET['return'], "?")){
+		$return_url = urldecode($_GET['return']) . "&";
+	}else{
+		$return_url = $_SERVER['PHP_SELF'] . "?";
+	}
+	header ("Location: " . $return_url . "cache_flushed=1");
 	exit();
 	
 }
