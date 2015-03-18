@@ -103,7 +103,7 @@ function handle_client($allclient, $socket, $buf) {
 	if (mysql_num_rows($SELECT_TLD)){
 	
 		// Select domain and owner from database
-		$SELECT_DOMAIN = mysql_query("SELECT user_id, created, change_date, type, domain_id FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND ( type = 'NS' OR type = 'A' ) LIMIT 0,1 ", $db);
+		$SELECT_DOMAIN = mysql_query("SELECT user_id, created, change_date, type, domain_id FROM records WHERE name = '".mysql_real_escape_string($DOMAIN_lookup)."' AND ( type = 'NS' OR type = 'A' ) ORDER BY change_date DESC LIMIT 0,1 ", $db);
 		$DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
 		$SELECT_OWNER = mysql_query("SELECT username, nodeid FROM users WHERE id = '".$DOMAIN['user_id']."' ", $db);
@@ -172,8 +172,7 @@ function handle_client($allclient, $socket, $buf) {
 		while ($TLD = mysql_fetch_array($SELECT_TLDs)){
 			$whois_reply .= "\t" . $TLD['name'] . "\n";			
 		}
-		$whois_reply .= " \n";
-		
+	
 	}
 
 	// send CR/LF to client	
