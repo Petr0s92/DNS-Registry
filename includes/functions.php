@@ -189,7 +189,9 @@ function admin_logged(){
         $USER_SELECT = @mysql_query("SELECT * FROM `users` WHERE id='".$_SESSION['admin_id']."' AND username='".$_SESSION['admin_username']."' AND active='1' LIMIT 1",$db);
         $USER_CHECK = @mysql_num_rows($USER_SELECT);
         if ($USER_CHECK) {
-        		mysql_query("UPDATE users SET last_login = UNIX_TIMESTAMP() WHERE id='".$_SESSION['admin_id']."' AND username='".$_SESSION['admin_username']."'  ", $db);
+        		if (!$_SESSION['admin_orig']){
+        			mysql_query("UPDATE users SET last_login = UNIX_TIMESTAMP() WHERE id='".$_SESSION['admin_id']."' AND username='".$_SESSION['admin_username']."'  ", $db);
+				}
                 return true;
         } else {
             admin_logout();
