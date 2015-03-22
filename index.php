@@ -90,12 +90,14 @@ admin_auth();
             </script>    
             <div id="menu_properties" class="megamenu">
                 <ul>
-            		<li class="menu_tlds"><a href="index.php?section=tlds" title="Managed allowed TLDs" <? if ($SECTION=='tlds' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='tlds' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='tlds' && staff_help()){?>class="tip_east"<?}?> ><span>TLDs</span></a></li>
-					<li class="menu_root_ns"><a href="index.php?section=root_ns" title="Manage Root Nameservers" <? if ($SECTION=='root_ns' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='root_ns' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='root_ns' && staff_help()){?>class="tip_east"<?}?> ><span>Root Nameservers</span></a></li>
-					<li class="menu_slave_zones"><a href="index.php?section=slave_zones" title="Manage Slave DNS Zones" <? if ($SECTION=='slave_zones' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='slave_zones' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='slave_zones' && staff_help()){?>class="tip_east"<?}?> ><span>Slave Zones</span></a></li>
-					<li class="menu_communities"><a href="index.php?section=communities" title="Manage Wireless Communities" <? if ($SECTION=='communities' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='communities' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='communities' && staff_help()){?>class="tip_east"<?}?> ><span>Communities</span></a></li>
-					<li class="menu_users"><a href="index.php?section=users" title="Manage Users" <? if ($SECTION=='users' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='users' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='users' && staff_help()){?>class="tip_east"<?}?> ><span>Users Management</span></a></li>
-			        <li class="menu_settings"  ><a href="index.php?section=settings"title="Manage system settings" <? if ($SECTION=='settings' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='settings' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='settings' && staff_help()){?>class="tip_east"<?}?> ><span>System Settings</span></a></li>
+            		<li class="menu_tlds"><a href="index.php?section=tlds" title="Managed allowed TLDs" <? if (staff_help() ){?>class="tip_east"<?}?> ><span>TLDs</span></a></li>
+					<li class="menu_root_ns"><a href="index.php?section=root_ns" title="Manage Root Nameservers" <? if (staff_help() ){?>class="tip_east"<?}?> ><span>Root Nameservers</span></a></li>
+					<li class="menu_slave_zones"><a href="index.php?section=slave_zones" title="Manage Slave DNS Zones" <? if (staff_help() ){?>class="tip_east"<?}?> ><span>Slave Zones</span></a></li>
+					<li class="menu_communities"><a href="index.php?section=communities" title="Manage Wireless Communities" <? if (staff_help() ){?>class="tip_east"<?}?> ><span>Communities</span></a></li>
+					<li class="menu_users"><a href="index.php?section=users" title="Manage Users" <? if (staff_help() ){?>class="tip_east"<?}?> ><span>Users Management</span></a></li>
+			        <li class="menu_settings"><a href="index.php?section=settings" title="Manage system settings" <? if (staff_help() ){?>class="tip_east"<?}?> ><span>System Settings</span></a></li>
+                    <li class="menu_soa_update"><a href="index.php?force_soa_update=1&return=<?=urlencode($_SERVER['REQUEST_URI']);?>" title="This will force a SOA Serial Update to all Domains on the system to force slaves to sync their zones. Use only when nessescary." <? if (staff_help() ){?>class="tip_east"<?}?> ><span>Force SOA Serial Update</span></a></li>
+                    <li class="menu_cache_flush"><a href="index.php?cache_flush=1&return=<?=urlencode($_SERVER['REQUEST_URI']);?>" title="This will flush the DNS cache on all BIND servers. Use only when nessescary." <? if (staff_help() ){?>class="tip_east"<?}?> ><span>Flush DNS Cache</span></a></li>
                 </ul>
             </div>
             <!-- SUB MENUS END -->
@@ -212,15 +214,6 @@ admin_auth();
 					</table>
 					<br />
 					
-					<?if ($_SESSION['admin_level'] == 'admin'){?>
-						<h2 class="sidebar_title">Admin Tools</h2>
-						<a href="index.php?force_soa_update=1&return=<?=urlencode($_SERVER['REQUEST_URI']);?>" class="tip_west" title="This will force a SOA Serial Update to all Domains on the system to force slaves to sync their zones. Use only when nessescary.">Force SOA Serial Update</a>
-						<br />
-						<br />
-						<a href="index.php?cache_flush=1&return=<?=urlencode($_SERVER['REQUEST_URI']);?>" class="tip_west" title="This will flush the DNS cache on all BIND servers. Use only when nessescary.">Flush DNS Cache</a>
-						<br />
-						<br />
-					<?}?>
 					<?if ($CONF['TERMS_URL'] || $CONF['SUPPORT_URL'] || $CONF['WHOIS_SERVER']){?>
 						<h2 class="sidebar_title"></h2>
 					<?}?>

@@ -483,6 +483,32 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     exit();
 } 
 
+// NOTIFY ROOT NAMESERVERS
+if ($_GET['action'] == "notify" && $_POST['id'] && $_SESSION['admin_level'] == 'admin'){
+    $id = mysql_real_escape_string(str_replace ("tr-", "", $_POST['id']), $db);
+
+	$SELECT_DOMAINS = mysql_query("SELECT domain_id, name FROM `".$mysql_table."` WHERE id = '".$id."' ", $db);
+	$DOMAIN = mysql_fetch_array($SELECT_DOMAINS);
+	if ($DOMAIN['domain_id'] != '1' && $DOMAIN['name']){
+		$soa_update = update_soa_serial_byid($DOMAIN['domain_id']);
+		
+		// Run pdns_control notify to push the new SOA update to our slaves immediately. Fire and forget.
+		exec ($CONF['PDNS_CONTROL_PATH'] . " --remote-address=".$CONF['PDNS_CONTROL_IP']." --remote-port=".$CONF['PDNS_CONTROL_PORT']." --secret=".$CONF['PDNS_CONTROL_KEY']." notify " . $DOMAIN['domain_id'] . " > /dev/null 2>/dev/null &" );
+        
+	}
+	    
+	if ($DOMAIN['name'] && $soa_update){
+	    ob_end_clean();
+	    echo "ok";
+	} else {
+	    ob_end_clean();
+	    echo "An error has occured.";
+	}
+	
+    exit();
+} 
+
+
 /*
 // ENABLE/DISABLE RECORD
 if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option'])){
@@ -616,6 +642,26 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                                         var total_records = $('span#total_records').html();
                                          total_records--;
                                          $('span#total_records').html(total_records);
+                                    } else {
+                                        $("#notification_fail_response").html('An error occured.' );
+                                        $('.notification_fail').show();
+                                        //alert(response);
+                                    }
+                                });
+                            return false;
+                        }
+                    });
+
+                    //NOTIFY ROOT NS
+                    $('a.notify').click(function () {
+                        var record_id = $(this).attr('rel');
+                        if(confirm('Are you sure you want to notify all root nameservers for this domain?')){
+                            $.post("index.php?section=<?=$SECTION;?>&action=notify", {
+                                    id: record_id
+                                }, function(response){
+                                    if (response == "ok"){
+                                        $("#notification_success_response").html('Root nameservers notified!');
+                                        $('.notification_success').show();
                                     } else {
                                         $("#notification_fail_response").html('An error occured.' );
                                         $('.notification_fail').show();
@@ -1187,6 +1233,9 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         <td align="center" nowrap><?if ($LISTING['user_id'] > 0){?><a href="index.php?section=users&action=edit&id=<?=$LISTING['user_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="View User details"><?}?><?=$DOMAIN_USER['username'];?><?if ($LISTING['user_id'] > 0){?></a><?}?></td>
                         <?}?>
                         <td align="center" nowrap="nowrap">
+	                        <? if ($_SESSION['admin_level'] == 'admin'){?>
+	                        <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Send Notify to Root Nameservers" class="<?if (staff_help()){?>tip_south<?}?> notify"><span>Notify</span></a> &nbsp;
+	                        <?}?>
 	                        <?if (!$ISHOSTED){?>
 	                        <a href="validate_domain.php?domain=<?=$LISTING['name'];?>" rel="validate_group" title="Validate your DNS Server configuration to enable domain <?=$LISTING['name'];?>" class="<?if (staff_help()){?>tip_south<?}?> validate validate_domain"><span>Validate Domain</span></a> &nbsp;
 	                        <a href="index.php?section=domain_ns&amp;domain=<?=$LISTING['name'];?>" title="Configure Domain Nameserver" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Set Nameserver</span></a> &nbsp;

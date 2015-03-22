@@ -356,6 +356,16 @@ pre {
     padding:8px 5px 8px 25px 
 }
 
+.megamenu li.menu_soa_update a span { 
+    background: url(../images/nav_soa_update.png) 5px center no-repeat; 
+    padding:8px 5px 8px 25px 
+}
+
+.megamenu li.menu_cache_flush a span { 
+    background: url(../images/nav_cache_flush.png) 5px center no-repeat; 
+    padding:8px 5px 8px 25px 
+}
+
 
 
 
@@ -885,6 +895,11 @@ p.notification_fail    { background:#faf9f6 url(../images/ico_inactive.png) 5px 
 .deactivated { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_disabled.png); width:16px; height:16px; }
 .deactivated span { display:none }
 
+.reboot { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_reboot.png); width:16px; height:16px; }
+.reboot span { display:none }
+
+.notify { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_notify.png); width:16px; height:16px; }
+.notify span { display:none }
 
 .delete { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_delete.png); width:16px; height:16px; }
 .delete span { display:none }

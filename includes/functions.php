@@ -39,7 +39,7 @@ while ($SETTINGS = mysql_fetch_array($SELECT_SETTINGS)){
 	$CONF[$SETTINGS['Name']] = $SETTINGS['Value'];
 }
 
-$CONF['CREDITS'] = "<a href=\"https://github.com/Cha0sgr/DNS-Registry\" target=\"_blank\">DNS Registry Control Panel</a> &copy; ". date("Y");
+$CONF['CREDITS'] = "<a href=\"https://github.com/Cha0sgr/DNS-Registry\" target=\"_blank\">DNS Registry Control Panel</a> &copy; 2014 - ". date("Y");
 
 //Start gzip compression & session
 if(php_sapi_name() != "cli" && stristr($_SERVER['PHP_SELF'], "js.php") == FALSE  && stristr($_SERVER['PHP_SELF'], "css.php") == FALSE ) {
@@ -189,6 +189,7 @@ function admin_logged(){
         $USER_SELECT = @mysql_query("SELECT * FROM `users` WHERE id='".$_SESSION['admin_id']."' AND username='".$_SESSION['admin_username']."' AND active='1' LIMIT 1",$db);
         $USER_CHECK = @mysql_num_rows($USER_SELECT);
         if ($USER_CHECK) {
+        		mysql_query("UPDATE users SET last_login = UNIX_TIMESTAMP() WHERE id='".$_SESSION['admin_id']."' AND username='".$_SESSION['admin_username']."'  ", $db);
                 return true;
         } else {
             admin_logout();

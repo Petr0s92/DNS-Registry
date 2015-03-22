@@ -263,6 +263,28 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     exit();
 } 
 
+
+// REBOOT ROOT NS
+if ($_GET['action'] == "reboot" && $_POST['id']){
+    $id = mysql_real_escape_string(str_replace ("tr-", "", $_POST['id']), $db);
+    
+    $SELECT_ROOT_NS = mysql_query("SELECT `ip` FROM `".$mysql_table."`  WHERE id = '".$id."' ");
+    $ROOT_NS = mysql_fetch_array($SELECT_ROOT_NS);
+    
+    if ($ROOT_NS['ip']){
+    	ssh_client2($ROOT_NS['ip'], "/sbin/shutdown -r now");
+	}
+    
+    if ($ROOT_NS['ip']){
+        ob_end_clean();
+        echo "ok";
+    }else{
+        ob_end_clean();
+        echo "An error has occured.";
+    }
+    exit();
+}
+
 /*
 // ENABLE/DISABLE RECORD
 if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option'])){
@@ -342,6 +364,26 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                     var total_records = $('span#total_records').html();
                                      total_records--;
                                      $('span#total_records').html(total_records);
+                                }else{
+                                    $("#notification_fail_response").html('An error occured.' );
+                                    $('.notification_fail').show();
+                                    //alert(response);
+                                }
+                            });
+                            return false;
+                        }
+                    });
+
+                    //REBOOT ROOT NS
+                    $('a.reboot').click(function () {
+                        var record_id = $(this).attr('rel');
+                        if(confirm('Are you sure you want to reboot this root nameserver?')){
+                            $.post("index.php?section=<?=$SECTION;?>&action=reboot<?=$pid_vars;?>", {
+                                id: record_id
+                            }, function(response){
+                                if (response == "ok"){
+                                    $("#notification_success_response").html('Reboot command issued successfully.');
+                                    $('.notification_success').show();
                                 }else{
                                     $("#notification_fail_response").html('An error occured.' );
                                     $('.notification_fail').show();
@@ -548,6 +590,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <tr>
                         <th><?=create_sort_link("name","Name");?></th>
                         <th><?=create_sort_link("ip","Unicast NOTIFY IP");?></th>
+                        <th>Manage</th>
                         <?/*<th><?=create_sort_link("active", "Active");?></th>*/?>
                         <th>Actions</th>
                       </tr>
@@ -558,6 +601,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap align="center"><?=$LISTING['name'];?></td>
                         <td nowrap align="center"><?=$LISTING['ip'];?></td>
+                        <td nowrap align="center"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_reboot reboot" rel="<?=$LISTING['id']?>" title="Issue a reboot command to this root nameserver"><span>Reboot Root Nameserver</span></a></td>
                         <?/*<td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
                         </td>*/?>
