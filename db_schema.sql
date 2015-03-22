@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS `root_ns_unicast` (
   `parent_id` int(10) NOT NULL,
   `name` varchar(255) NOT NULL,
   `ip` varchar(15) NOT NULL,
+  `last_ping` int(10) NOT NULL,
   `active` enum('1','0') NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_index` (`name`),

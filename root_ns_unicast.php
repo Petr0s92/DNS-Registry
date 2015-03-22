@@ -591,6 +591,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <th><?=create_sort_link("name","Name");?></th>
                         <th><?=create_sort_link("ip","Unicast NOTIFY IP");?></th>
                         <th>Manage</th>
+                        <th>Status</th>
                         <?/*<th><?=create_sort_link("active", "Active");?></th>*/?>
                         <th>Actions</th>
                       </tr>
@@ -602,6 +603,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <td nowrap align="center"><?=$LISTING['name'];?></td>
                         <td nowrap align="center"><?=$LISTING['ip'];?></td>
                         <td nowrap align="center"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_reboot reboot" rel="<?=$LISTING['id']?>" title="Issue a reboot command to this root nameserver"><span>Reboot Root Nameserver</span></a></td>
+                        <td nowrap align="center"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> <?if ($LISTING['last_ping'] > (time() - 450) ){?>healthy<?}else{?>unhealthy<?}?>" title="<?if ($LISTING['last_ping'] > 0 ){?>Last heartbeat received on: <?=date("d-m-Y g:i a",$LISTING['last_ping']);?><?}else{?>This Root Nameserver has never been up<?}?>"><span><?if ($LISTING['last_ping'] > 0 ){?>Last heartbeat received on: <?=date("d-m-Y g:i a",$LISTING['last_ping']);?><?}else{?>This Root Nameserver has never been up<?}?></span></a></td>
                         <?/*<td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? }else{ ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
                         </td>*/?>

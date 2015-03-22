@@ -898,6 +898,12 @@ p.notification_fail    { background:#faf9f6 url(../images/ico_inactive.png) 5px 
 .reboot { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_reboot.png); width:16px; height:16px; }
 .reboot span { display:none }
 
+.healthy { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_active.png); width:16px; height:16px; }
+.healthy span { display:none }
+
+.unhealthy { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_inactive.png); width:16px; height:16px; }
+.unhealthy span { display:none }
+
 .notify { display: inline-block; margin-left: 5px; height:16px; background-repeat:no-repeat; background:url(../images/ico_notify.png); width:16px; height:16px; }
 .notify span { display:none }
 

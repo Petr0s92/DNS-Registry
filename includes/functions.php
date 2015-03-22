@@ -571,6 +571,9 @@ if ($_GET['fetch_slaves_tlds'] == "1"){
 			}
 			$o++;			
 		}
+		
+		//Update last root ns access time
+		mysql_query("UPDATE root_ns_unicast SET last_ping = UNIX_TIMESTAMP() WHERE ip = '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."' AND active = '1' ", $db);
 	
 		ob_clean();		
 		echo json_encode($zones);
