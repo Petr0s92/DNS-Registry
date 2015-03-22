@@ -247,7 +247,7 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap><a href="index.php?section=<?=$SECTION;?>&action=edit&id=<?=$LISTING['id'];?>" title="Edit setting" class="<?if (staff_help()){?>tip_south<?}?>"><?=$LISTING['Name'];?></a></td>
-                        <td ><?=wordwrap($LISTING['Value'], 80, "\n", true);?></td>
+                        <td ><?if (strlen($LISTING['Value']) > 80){ echo substr(wordwrap($LISTING['Value'], 20, "\n", true),0, 80) . "..." ; }else{ echo $LISTING['Value']; };?></td>
                         <td><?=$LISTING['Description'];?></td>
                         <td align="center" nowrap="nowrap"><a href="index.php?section=<?=$SECTION;?>&amp;action=edit&amp;id=<?=$LISTING['id'];?>" title="Edit" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Edit</span></a></td>
 					  </tr>

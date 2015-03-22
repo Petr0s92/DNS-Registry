@@ -117,6 +117,9 @@ $(function() {
         <?if ($_GET['saved_success'] == '1'){?>
 			<p id="login_message">Your account details have been updated.<br/>Please login again.</p>			
         <?}?>
+        <?if ($_GET['deleted'] == '1'){?>
+			<p id="login_message">Your account and domains have been permanently deleted.</p>			
+        <?}?>
         <? if (isset ($msg)) { ?><p id="login_message"><?=$msg?></p><? } ?>
 
         <label for="username">Username:</label>

@@ -64,7 +64,7 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
     
     $_POST['wireless_community'] = trim($_POST['wireless_community']);    
     if (!$_POST['wireless_community']){ 
-    	$errors['wireless_community'] = "Please enter your Wireless Community Name" ; 
+    	$errors['wireless_community'] = "Please select your Wireless Community" ; 
     }        
     
     $_POST['email'] = trim($_POST['email']);
@@ -93,7 +93,7 @@ if (isset ($_GET['action']) && $_GET['action'] == "register") {
             '" . sha1($_POST['password']) . "',
             '" . mysql_real_escape_string($_POST['email']) . "',
             '" . mysql_real_escape_string($_POST['nodeid']) . "',
-            '" . mysql_escape_string(htmlspecialchars($_POST['wireless_community'])) . "',
+            '" . mysql_escape_string($_POST['wireless_community']) . "',
             '" . mysql_real_escape_string($CONF['RECORDS_TTL']) . "',
             '" . mysql_real_escape_string($CONF['RECORDS_TTL']) . "',
             '" . mysql_real_escape_string(htmlspecialchars($_POST['fullname'])) . "',
@@ -167,9 +167,17 @@ $(function() {
         <input name="username" id="username" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['username']?>" />
         <label for="nodeid" class="required">NodeID #:</label>
         <input name="nodeid" id="nodeid" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['nodeid']?>" />
-        <label for="wireless_community" class="required">Wireless Community:</label>
-        <input name="wireless_community" id="wireless_community" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['wireless_community']?>" />
-        <label for="fullname">Fullname:</label>
+        <label for="wireless_community" class="required">Wireless Community</label>
+		<select name="wireless_community" id="wireless_community" title="Select your Wireless Community. eg: AWMN" >
+			<option value="" selected="selected">--Select--</option>
+			<? 
+			$SELECT_COMMUNITIES = mysql_query("SELECT id, name, region FROM communities WHERE active ='1' ORDER BY name ASC", $db);
+			while ($COMMUNITIES = mysql_fetch_array($SELECT_COMMUNITIES)){
+			?>                                                    
+			<option value="<?=$COMMUNITIES['id'];?>"   <? if ($_POST['wireless_community'] == $COMMUNITIES['id']){ echo "selected=\"selected\""; }elseif ($_GET['action'] == 'edit' && $RESULT['wireless_community'] == $COMMUNITIES['id']){ echo "selected=\"selected\"";}?> ><?=$COMMUNITIES['name'];?> <?if ($COMMUNITIES['region']){?>(<?=$COMMUNITIES['region'];?> )<?}?></option>
+			<?}?>
+			</select>
+		<label for="fullname">Fullname:</label>
         <input name="fullname" id="fullname" type="text" size="20" maxlength="20" class="input_field" value="<?=$_POST['fullname']?>" />
         <label for="password" class="required">Password: </label>
         <input name="password" id="password" type="password" size="20" maxlength="20" class="input_field" />

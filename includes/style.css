@@ -269,6 +269,11 @@ pre {
     padding:0 5px 0 25px 
 }
 
+#navigation li.menu_transfers a span { 
+    background: url(../images/nav_transfers.png) 5px center no-repeat; 
+    padding:0 5px 0 25px 
+}
+
 #navigation li.menu_whois a span { 
     background: url(../images/nav_whois.png) 5px center no-repeat; 
     padding:0 5px 0 25px 
@@ -279,30 +284,80 @@ pre {
     padding:0 5px 0 25px 
 }
 
-#navigation li.menu_tlds a span { 
+#navigation li.menu_properties a span { 
+	background: url(../images/nav_properties.png) 5px center no-repeat; 
+	padding:0 5px 0 25px;  
+}
+
+.megamenu{
+	position: absolute;
+	display: none;
+	left: 0;
+	top: 0;
+	z-index: 100;
+	border:1px solid #dad7c8; 
+    background:#f8f7f3; 
+    border-radius: 5px;
+    -moz-border-radius: 5px; 
+    -webkit-border-radius: 5px; 
+    color:#686761;                       
+    padding: 5px;                         
+}
+
+.megamenu ul {}
+
+.megamenu ul li {
+    
+}
+
+.megamenu ul li a { 
+	display:block; 
+	border-top:1px solid #e9e7db;  
+	color:#8a887c; 
+}
+
+.megamenu ul li a span { 
+	display:block; 
+	cursor:pointer; 
+	padding:5px; 
+}
+
+.megamenu ul li a:hover {  
+	color:#333 
+}
+
+.megamenu li.menu_tlds a span { 
     background: url(../images/nav_tlds.png) 5px center no-repeat; 
-    padding:0 5px 0 25px 
+    padding:8px 5px 8px 25px 
 }
 
-#navigation li.menu_root_ns a span { 
+.megamenu li.menu_root_ns a span { 
     background: url(../images/nav_root_ns.png) 5px center no-repeat; 
-    padding:0 5px 0 25px 
+    padding:8px 5px 8px 25px 
 }
 
-#navigation li.menu_slave_zones a span { 
+.megamenu li.menu_slave_zones a span { 
     background: url(../images/nav_slaves.png) 5px center no-repeat; 
-    padding:0 5px 0 25px 
+    padding:8px 5px 8px 25px 
 }
 
-#navigation li.menu_users a span { 
+.megamenu li.menu_communities a span { 
+    background: url(../images/nav_communities.png) 5px center no-repeat; 
+    padding:8px 5px 8px 25px 
+}
+
+.megamenu li.menu_users a span { 
     background: url(../images/nav_staff.png) 5px center no-repeat; 
-    padding:0 5px 0 25px 
+    padding:8px 5px 8px 25px 
 }
 
-#navigation li.menu_settings a span { 
+.megamenu li.menu_settings a span { 
     background: url(../images/nav_settings.png) 5px center no-repeat; 
-    padding:0 5px 0 25px 
+    padding:8px 5px 8px 25px 
 }
+
+
+
 
 #user_panel { 
     float:right; 
@@ -319,7 +374,7 @@ pre {
 #sidebar { 
 	background:#fff; 
 	width:150px; 
-	padding:15px 10px 25px 25px; 
+	padding:15px 10px 50px 25px; 
 }
 
 .sidebar_title { 
@@ -356,6 +411,16 @@ pre {
 	font-size: 20px;
 	color:#686761;
 	padding: 15px 15px 15px 28px;
+	text-align: center;
+    
+}
+
+.maintitle_lowres {
+	background:#FF9B9B;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color:#686761;
+	padding: 3px;
 	text-align: center;
     
 }
@@ -425,6 +490,19 @@ pre {
     
 }
 
+.maintitle_transfers {
+    background: url(../images/nav_transfers.png) 8px center no-repeat; 
+    font-family: Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
+    font-size: 20px;
+    border:1px solid #dad7c8; 
+    border-radius: 5px;
+    -moz-border-radius: 5px; 
+    -webkit-border-radius: 5px; 
+    color:#686761; 
+    padding: 5px 5px 5px 28px;
+    
+}
+
 .maintitle_whois {
     background: url(../images/nav_whois.png) 8px center no-repeat; 
     font-family: Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
@@ -479,6 +557,19 @@ pre {
 
 .maintitle_slave_zones {
     background: url(../images/nav_slaves.png) 8px center no-repeat; 
+    font-family: Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
+    font-size: 20px;
+    border:1px solid #dad7c8; 
+    border-radius: 5px;
+    -moz-border-radius: 5px; 
+    -webkit-border-radius: 5px; 
+    color:#686761; 
+    padding: 5px 5px 5px 28px;
+    
+}
+
+.maintitle_communities {
+    background: url(../images/nav_communities.png) 8px center no-repeat; 
     font-family: Georgia, "Times New Roman", "Bitstream Charter", Times, serif;
     font-size: 20px;
     border:1px solid #dad7c8; 

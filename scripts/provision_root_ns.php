@@ -192,6 +192,10 @@ $NSD_CONF = str_replace("--YOUR--TSIG--KEY--NAME--HERE--", $ROOT_NS_NAME, $NSD_C
 $NSD_CONF = str_replace("--YOUR--TSIG--KEY--HERE--", $TSIG_KEY, $NSD_CONF);
 file_put_contents("/etc/nsd/nsd.conf", $NSD_CONF); 
 
+//Create new NSD Control Keys
+echo "Generating new NSD Control Keys...\n";
+system("/usr/local/sbin/nsd-control-setup");
+
 
 //Configure BIND
 echo "Configuring BIND...\n";

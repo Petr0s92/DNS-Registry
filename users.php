@@ -166,7 +166,12 @@ if ($_POST['action'] == "add" ) {
     if (strlen($_POST['ssh_key']) > 1 && preg_match("/^(ssh-rsa|ssh-dss) AAAA[0-9A-Za-z+\\/]+[=]{0,3}/", $_POST['ssh_key']) != 1 ){ 
     	$errors['ssh_key'] = "Enter a valid SSH Public Key" ; 
     }
-    
+
+    $_POST['wireless_community'] = trim($_POST['wireless_community']);    
+    if (!$_POST['wireless_community']){ 
+    	$errors['wireless_community'] = "Please select your Wireless Community" ; 
+    }
+        
     $_POST['email'] = trim($_POST['email']);
     if ($_POST['email']){
         if (!preg_match("/^([a-zA-Z0-9]+([\.+_-][a-zA-Z0-9]+)*)@(([a-zA-Z0-9]+((\.|[-]{1,2})[a-zA-Z0-9]+)*)\.[a-zA-Z]{2,7})$/", $_POST['email'])) {
@@ -248,7 +253,7 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
     
     $_POST['wireless_community'] = trim($_POST['wireless_community']);    
     if (!$_POST['wireless_community']){ 
-    	$errors['wireless_community'] = "Please enter your Wireless Community Name" ; 
+    	$errors['wireless_community'] = "Please select your Wireless Community" ; 
     }
     
     $_POST['default_ttl_domains'] = (int)$_POST['default_ttl_domains'];    
@@ -282,7 +287,7 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
             Admin_level = '" . addslashes($_POST['Admin_level']) . "',
             nodeid = '" . addslashes($_POST['nodeid']) . "',
             ssh_key = '" . addslashes($_POST['ssh_key']) . "',
-            wireless_community  = '" . mysql_escape_string(htmlspecialchars($_POST['wireless_community']))  . "',
+            wireless_community  = '" . mysql_escape_string($_POST['wireless_community'])  . "',
             default_ttl_domains  = '" . mysql_escape_string($_POST['default_ttl_domains'])  . "',
             default_ttl_records = '" . mysql_escape_string($_POST['default_ttl_records'])  . "',
             Help = '" . addslashes($_POST['Help']) . "'
@@ -312,9 +317,23 @@ if ($_POST['action'] == "edit" && $_POST['id']) {
 if ($_GET['action'] == "delete" && $_POST['id']){
     $id = addslashes(str_replace ("tr-", "", $_POST['id']));
     
-    $DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `id`= '".$id."' " ,$db);
-    $DELETE = mysql_query("DELETE FROM records WHERE `user_id`= '".$id."' " ,$db);
     
+	//Delete user hosted domains
+	$SELECT_USER_DOMAINS = mysql_query("SELECT domain_id FROM records WHERE user_id = '".$id."' AND type = 'SOA' ", $db);
+	while ($USER_DOMAINS = mysql_fetch_array($SELECT_USER_DOMAINS)){
+		mysql_query("DELETE FROM domains WHERE id = '".$USER_DOMAINS['domain_id']."' ", $db);
+	}
+	
+	//Delete user delegated domains
+	$DELETE = mysql_query("DELETE FROM records WHERE user_id = '".$id."' ", $db);
+	
+	//Delete user account
+	$DELETE = mysql_query("DELETE FROM users WHERE id = '".$id."' ", $db);
+	
+	//Delete user notifications
+	$DELETE = mysql_query("DELETE FROM users_notifications WHERE user_id = '".$id."' ", $db);
+	
+	
     if ($DELETE){
         ob_end_clean();
         echo "ok";
@@ -324,6 +343,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     }
     exit();
 } 
+
 
 // ENABLE/DISABLE RECORD
 if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option'])){
@@ -421,8 +441,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                             return false;
                         }
                     });
-
-                    
+    
+    
                     //SET ACTIVE FLAG
                     $('a.toggle_active').click(function () {
                         if ($(this).hasClass('activated')){    
@@ -522,9 +542,17 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                                             </p>
                                             
                                             <p>
-                                                <label for="wireless_community" class="required">Wireless Community Name</label>
-                                                <input type="text" name="wireless_community" id="wireless_community" title="Enter your Wireless Community Name. eg: AWMN" value="<? if($_POST['wireless_community']){ echo $_POST['wireless_community']; }else{ echo stripslashes($RESULT['wireless_community']);} ?>">
-                                            </p>
+                                                <label for="wireless_community" class="required">Wireless Community</label>
+                                                <select name="wireless_community" id="wireless_community" title="Select your Wireless Community. eg: AWMN" >
+                                                    <option value="" selected="selected">--Select--</option>
+												    <? 
+													$SELECT_COMMUNITIES = mysql_query("SELECT id, name, region FROM communities ORDER BY name ASC", $db);
+													while ($COMMUNITIES = mysql_fetch_array($SELECT_COMMUNITIES)){
+													?>                                                    
+                                                    <option value="<?=$COMMUNITIES['id'];?>"   <? if ($_POST['wireless_community'] == $COMMUNITIES['id']){ echo "selected=\"selected\""; }elseif ($_GET['action'] == 'edit' && $RESULT['wireless_community'] == $COMMUNITIES['id']){ echo "selected=\"selected\"";}?> ><?=$COMMUNITIES['name'];?> <?if ($COMMUNITIES['region']){?>(<?=$COMMUNITIES['region'];?> )<?}?></option>
+													<?}?>
+												</select>
+                                            </p>                                            
                                             
                                             <p>
                                                 <label for="fullname">Fullname</label>
@@ -658,14 +686,13 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <th><?=create_sort_link("username","Username");?></th>
                         <th><?=create_sort_link("nodeid","NodeID");?></th>
                         <th><?=create_sort_link("wireless_community","Wireless Community");?></th>
-                        <th><?=create_sort_link("fullname", "Fullname");?></th>
                         <th>Total Domains</th>
                         <th><?=create_sort_link("email", "Email");?></th>
-                        <th><?=create_sort_link("registered", "Registered");?></th>
-                        <th><?=create_sort_link("last_login", "Last Login");?></th>
+                        <th><?=create_sort_link("registered", "Registered");?><br /><?=create_sort_link("last_login", "Last Login");?></th>
                         <th><?=create_sort_link("last_ip", "Last IP");?></th>
                         <?/*<th><?=create_sort_link("ssh_key", "SSH Key");?></th>*/?>
                         <th><?=create_sort_link("Admin_level", "Admin_level");?></th>
+                        <th><?=create_sort_link("suspended", "Supended");?></th>
                         <th><?=create_sort_link("active", "Active");?></th>
                         <th>Actions</th>
                       </tr>
@@ -673,20 +700,24 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                       <?
                       $i=-1;
                       while($LISTING = mysql_fetch_array($SELECT_RESULTS)){
-                      $i++;  
+                      $i++;
+                      
+                      $SELECT_COMMUNITY = mysql_query("SELECT name, region FROM communities WHERE id = '".$LISTING['wireless_community']."' ", $db);
+                      $COMMUNITY = mysql_fetch_array($SELECT_COMMUNITY);  
                       ?>      
                       <tr onmouseover="this.className='on' " onmouseout="this.className='off' " id="tr-<?=$LISTING['id'];?>">
                         <td nowrap><a href="index.php?section=<?=$SECTION;?>&action=edit&id=<?=$LISTING['id'];?>" title="Edit user" class="<?if (staff_help()){?>tip_south<?}?>"><?=$LISTING['username'];?></a></td>
                         <td >#<?=$LISTING['nodeid'];?></td>
-                        <td ><?=$LISTING['wireless_community'];?></td>
-                        <td ><?=$LISTING['fullname'];?></td>
+                        <td ><?=$COMMUNITY['name'];?><?if ($COMMUNITY['region']){echo " (".$COMMUNITY['region'] . ")";}?></td>
                         <td  align="center"><?= mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'NS' AND user_id = '".$LISTING['id']."' GROUP BY name ", $db));?></td>
                         <td align="center"><a href="mailto:<?=$LISTING['email'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Send Email to user"><?=$LISTING['email'];?></a></td>
-                        <td nowrap align="center" ><?=date("d-m-Y g:i a", $LISTING['registered']);?></td>
-                        <td nowrap align="center" ><?if ($LISTING['last_login']){ echo date("d-m-Y g:i a", $LISTING['last_login']); }else{ echo "Never"; }?></td>
+                        <td nowrap align="center" ><strong>R: <?=date("d-m-Y g:i a", $LISTING['registered']);?></strong><br />L: <?if ($LISTING['last_login']){ echo date("d-m-Y g:i a", $LISTING['last_login']); }else{ echo "Never"; }?></td>
                         <td align="center" ><?if ($LISTING['last_ip']){ echo $LISTING['last_ip'];}else{ echo 'None'; }?></td>
                         <?/*<td align="center" ><?if ($LISTING['ssh_key']){ echo $LISTING['ssh_key'];}else{ echo 'None'; }?></td>*/?>
                         <td align="center" ><?=$LISTING['Admin_level'];?></td>
+                        <td align="center" >
+                            <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> <? if ($LISTING['suspended'] > '0') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Account is <? if ($LISTING['suspended'] > '0') { ?>Suspended. Date: <?=date("d-m-Y g:i a", $LISTING['suspended']);?><?}else{?>Not Suspended<?}?>"><span><? if ($LISTING['suspended'] > '0') { ?>Suspended. Date: <?=date("d-m-Y g:i a", $LISTING['suspended']);?><?}else{?>Not Suspended<?}?>"></span></a>
+                        </td>
                         <td align="center" >
                             <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['active'] == '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
                         </td>

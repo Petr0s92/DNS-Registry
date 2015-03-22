@@ -63,9 +63,9 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
     	$errors['admin_level'] = "Please enter your NodeID #" ; 
     }
         
-    $_POST['wireless_community'] = trim($_POST['wireless_community']);    
+    $_POST['wireless_community'] = (int)$_POST['wireless_community'];    
     if (!$_POST['wireless_community']){ 
-    	$errors['wireless_community'] = "Please enter your Wireless Community Name" ; 
+    	$errors['wireless_community'] = "Please select your Wireless Community" ; 
     }
     
     $_POST['default_ttl_domains'] = (int)$_POST['default_ttl_domains'];    
@@ -98,7 +98,7 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
             fullname = '" . mysql_escape_string(htmlspecialchars($_POST['fullname'])) . "',
             description  = '" . mysql_escape_string(htmlspecialchars($_POST['description']))  . "',
             nodeid  = '" . mysql_escape_string($_POST['nodeid'])  . "',
-            wireless_community  = '" . mysql_escape_string(htmlspecialchars($_POST['wireless_community']))  . "',
+            wireless_community  = '" . mysql_escape_string($_POST['wireless_community'])  . "',
             default_ttl_domains  = '" . mysql_escape_string($_POST['default_ttl_domains'])  . "',
             default_ttl_records = '" . mysql_escape_string($_POST['default_ttl_records'])  . "'
             
@@ -112,6 +112,56 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
             session_unset();
             setcookie ($CONF['COOKIE_NAME'], "",time()-60*60*24*15, "/");
             header("Location: login.php?saved_success=1");
+            exit();
+        }else{
+            $error_occured = TRUE;
+        }
+        
+    }
+    
+}
+
+
+//DELETE RECORD
+if ($_POST['action'] == "delete" && $_SESSION['admin_id']) {
+    
+    $id = $_SESSION['admin_id'] = (int)$_SESSION['admin_id'];
+    
+    $errors = array();
+    
+    
+    if (!$_POST['confirm']){ 
+    	$errors['confirm'] = "To delete your account you must check 'Confirm'." ; 
+    }
+        
+    if ($id == '1'){ 
+    	$errors['userid'] = "You cannot delete the admin user." ; 
+    }
+        
+        
+    if (count($errors) == 0) {
+        
+
+		//Delete user hosted domains
+		$SELECT_USER_DOMAINS = mysql_query("SELECT domain_id FROM records WHERE user_id = '".$id."' AND type = 'SOA' ", $db);
+		while ($USER_DOMAINS = mysql_fetch_array($SELECT_USER_DOMAINS)){
+			mysql_query("DELETE FROM domains WHERE id = '".$USER_DOMAINS['domain_id']."' ", $db);
+		}
+		
+		//Delete user delegated domains
+		$DELETE = mysql_query("DELETE FROM records WHERE user_id = '".$id."' ", $db);
+		
+		//Delete user account
+		$DELETE = mysql_query("DELETE FROM users WHERE id = '".$id."' ", $db);
+		
+		//Delete user notifications
+		$DELETE = mysql_query("DELETE FROM users_notifications WHERE user_id = '".$id."' ", $db);
+		
+        
+        if ($DELETE){
+            session_unset();
+            setcookie ($CONF['COOKIE_NAME'], "",time()-60*60*24*15, "/");
+            header("Location: login.php?deleted=1");
             exit();
         }else{
             $error_occured = TRUE;
@@ -140,17 +190,25 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
                     $('#password2').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#default_ttl_domains').tipsy({trigger: 'focus', gravity: 'w', fade: true});
                     $('#default_ttl_records').tipsy({trigger: 'focus', gravity: 'w', fade: true});
+                    $('#confirm').tipsy({gravity: 's', fade: true});
+                    $('#delete').tipsy({gravity: 'w', fade: true});
                     <?}?>
                     
     
+                    //ALERT ON DELETE
+                    $('#delete').click(function () {
+                        if (!confirm('Are you 100% sure that you wish to DELETE your Account and Domains?\n\r\n\rThis action CANNOT be undone!')){
+                        	return false;
+						}
+                    });
     
-                //CLOSE THE NOTIFICATION BAR
-                $("a.close_notification").click(function() {
-                    var bar_class = $(this).attr('rel');
-                    //alert(bar_class);
-                    $('.'+bar_class).hide();
-                    return false;
-                });
+	                //CLOSE THE NOTIFICATION BAR
+	                $("a.close_notification").click(function() {
+	                    var bar_class = $(this).attr('rel');
+	                    //alert(bar_class);
+	                    $('.'+bar_class).hide();
+	                    return false;
+	                });
 
                 
                 });
@@ -202,10 +260,18 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
                                             </p>
                                             
                                             <p>
-                                                <label for="wireless_community" class="required">Wireless Community Name</label>
-                                                <input type="text" name="wireless_community" id="wireless_community" title="Enter your Wireless Community Name. eg: AWMN" value="<? if($_POST['wireless_community']){ echo $_POST['wireless_community']; }else{ echo stripslashes($RESULT['wireless_community']);} ?>">
+                                                <label for="wireless_community" class="required">Wireless Community</label>
+                                                <select name="wireless_community" id="wireless_community" title="Select your Wireless Community. eg: AWMN" >
+                                                    <option value="" selected="selected">--Select--</option>
+												    <? 
+													$SELECT_COMMUNITIES = mysql_query("SELECT id, name, region FROM communities ORDER BY name ASC", $db);
+													while ($COMMUNITIES = mysql_fetch_array($SELECT_COMMUNITIES)){
+													?>                                                    
+                                                    <option value="<?=$COMMUNITIES['id'];?>"   <? if ($_POST['wireless_community'] == $COMMUNITIES['id']){ echo "selected=\"selected\""; }elseif ($_GET['action'] == 'edit' && $RESULT['wireless_community'] == $COMMUNITIES['id']){ echo "selected=\"selected\"";}?> ><?=$COMMUNITIES['name'];?> <?if ($COMMUNITIES['region']){?>(<?=$COMMUNITIES['region'];?> )<?}?></option>
+													<?}?>
+												</select>
                                             </p>
-                                            
+                                                                                        
                                             <p>
                                                 <label for="fullname">Fullname</label>
                                                 <input type="text" name="fullname" id="fullname" title="Enter the Fullname" value="<? if($_POST['fullname']){ echo $_POST['fullname']; }else{ echo stripslashes($RESULT['fullname']);} ?>">
@@ -260,6 +326,16 @@ if ($_POST['action'] == "edit" && $_SESSION['admin_id']) {
                                 &nbsp;&nbsp;&nbsp;After changing your account details you will be logged out from the system automatically for the changes to take effect.
                            </fieldset>
                         </form>                    
+                        
+                        <form id="form" method="post" action="index.php?section=<?=$SECTION;?>&action=delete">
+                           <fieldset>
+                                <legend>&raquo; Delete Account</legend>
+                                <label for="confirm"><span class="red">Yes I want to permanently delete my account and my domains.</span></label>
+                                <input type="checkbox" name="confirm" id="confirm" style="width:12px; margin:7px;" title="Confirm account delete." value="1" /> Confirm &nbsp; &nbsp;
+                                <button type="submit" id="delete" title="This will DELETE your account! Are you sure?" >Delete</button>
+                                <input  type="hidden" name="action" id="action" value="delete" />
+                           </fieldset>
+                        </form>
                         
                         <!-- EDIT ACCOUNT END -->
                         

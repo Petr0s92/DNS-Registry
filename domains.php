@@ -142,6 +142,17 @@ if ($_POST['action'] == "add" ) {
     
     $errors = array();
     
+    //Check if user has reached daily limit of new domain registrations
+    if ($_SESSION['admin_level'] == "user"){
+	    $SELECT_DOMAINS_TODAY = mysql_query("SELECT created FROM records WHERE type = 'NS' ". $user_id . " AND created >= '".(time() - 86400 )."'  GROUP BY `name` ORDER BY created DESC", $db);
+	    $TOTAL_DOMAINS_TODAY = mysql_num_rows($SELECT_DOMAINS_TODAY);
+	    $DOMAINS_TODAY = mysql_fetch_array($SELECT_DOMAINS_TODAY);
+	    
+	    if ($TOTAL_DOMAINS_TODAY >= $CONF['NEW_DOMAINS_PER_DAY'] && $DOMAINS_TODAY['created'] > (time() - 86400 )){
+			$errors['domains_per_day'] = "You have reached the daily limit (".$CONF['NEW_DOMAINS_PER_DAY'].") of new domain registrations. Please try again tomorrow.";
+	    }    
+	} 
+    
     if ($_POST['tld'] < 1) {
         $errors['tld'] = "Please choose a TLD.";
         $tld = "";
@@ -307,7 +318,7 @@ if ($_POST['action'] == "add" ) {
 			            '".$new_domain_time."',
 			            '".mysql_escape_string($_POST['user_id'])."',
 			            NULL,
-			            '1'
+			            '0'
 			        )", $db);
 					
 					if (!$INSERT){
@@ -449,6 +460,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     if (mysql_num_rows($SELECT_DOMAIN)){
 		$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `name`= '".$DOMAIN['name']."' AND type = 'NS' ". $user_id ,$db);
 		$DELETE = mysql_query("DELETE FROM `".$mysql_table."` WHERE `name` LIKE '%.".$DOMAIN['name']."' AND type = 'A' ". $user_id ,$db);
+		$DELETE = mysql_query("DELETE FROM `users_notifications` WHERE `name`= '".$DOMAIN['name']."' ". $user_id ,$db);
 		
 		if ($ISHOSTED){
 			$DELETE = mysql_query("DELETE FROM `domains` WHERE `id`= '".$HOSTEDID['id']."' ",$db);
@@ -471,6 +483,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     exit();
 } 
 
+/*
 // ENABLE/DISABLE RECORD
 if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option'])){
     $id = mysql_real_escape_string($_POST['id'], $db);
@@ -505,7 +518,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 	}
     exit();
 }
-
+*/
 
 // FIND NAMESERVER GLUE
 if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
@@ -534,6 +547,11 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 ?>
 
                 <script>
+                
+                $(document).bind('cbox_closed', function(){
+    				location.reload();
+				});
+                
                 $(function() {
                 	
                 	
@@ -608,7 +626,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         }
                     });
 
-                
+                    <?/*
                     //ENABLE/DISABLE
                     $('a.toggle_active').click(function () {
                     	var dochange = '0';
@@ -641,6 +659,7 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
 						}
 	                    return false;
 	            	});
+	            	*/?>
     
     
                 //CLOSE THE NOTIFICATION BAR
@@ -1149,17 +1168,17 @@ if ($_GET['action'] == "fetch_glue" && $_POST['nameserver']){
                         <?
                         if (!$ISTLD){
                         	
-                        if ($_SESSION['admin_level'] == 'admin'){
-                        	$status_title = 'Enable/Disable';
-                        	$toggle = true;
-						}else{
+                        //if ($_SESSION['admin_level'] == 'admin'){
+                        //	$status_title = 'Enable/Disable';
+                        //	$toggle = true;
+						//}else{
 							if ($LISTING['disabled'] != '1') {
 								$status_title = 'Active';	
 							}else{
 								$status_title = 'Inactive';
 							}
 							$toggle = false;							 
-						}   
+						//}   
                         ?>
                         <a href="javascript:void(0)" class="<?if (staff_help()){?>tip_south<?}?> <?if ($toggle){?>toggle_active<?}?> <? if ($LISTING['disabled'] != '1') { ?>activated<? } else { ?>deactivated<? } ?>" <?if ($toggle){?>rel="<?=$LISTING['id']?>"<?}?> title="<?=$status_title;?>"><span><?=$status_title;?></span></a>
                         <?}?>

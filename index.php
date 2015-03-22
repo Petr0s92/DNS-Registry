@@ -48,6 +48,10 @@ admin_auth();
 	</noscript>
 	<!-- NO JAVASCRIPT NOTIFICATION END -->
 
+	<!-- LOW RESOLUTION NOTIFICATION START -->
+		<div class="maintitle_lowres">For your best user experience please use a screen resolution greater than 1280 x 720!</div>
+	<!-- LOW RESOLUTION NOTIFICATION END -->
+
 	<div id="wrapper">
 
 		<!-- HEADER START -->
@@ -66,14 +70,11 @@ admin_auth();
 			<li class="menu_home"><a href="index.php" <? if ($SECTION=='' || !$SECTION) echo " class=\"selected\""; ?>><span>Dashboard</span></a></li>
 			<li class="menu_domains"><a href="index.php?section=domains" title="Manage your Domain Names" <? if ($SECTION=='domains' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='domains' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='domains' && staff_help()){?>class="tip_south"<?}?> ><span>My Domain Names</span></a></li>
 			<li class="menu_nameservers"><a href="index.php?section=nameservers" title="Manage your Nameservers & Glue records" <? if ($SECTION=='nameservers' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='nameservers' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='nameservers' && staff_help()){?>class="tip_south"<?}?> ><span>My Nameservers</span></a></li>
+			<li class="menu_transfers"><a href="index.php?section=transfers" title="Manage your Domain Transfer Requests" <? if ($SECTION=='transfers' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='transfers' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='transfers' && staff_help()){?>class="tip_south"<?}?> ><span>Domain Transfers</span></a></li>
 			<li class="menu_whois"><a href="index.php?section=whois" title="WHOIS Lookup" <? if ($SECTION=='whois' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='whois' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='whois' && staff_help()){?>class="tip_south"<?}?> ><span>Web Whois</span></a></li>
             <? 
 			if ($_SESSION['admin_level'] == 'admin'){
-			?><li class="menu_tlds"><a href="index.php?section=tlds" title="Managed allowed TLDs" <? if ($SECTION=='tlds' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='tlds' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='tlds' && staff_help()){?>class="tip_south"<?}?> ><span>TLDs</span></a></li>
-			<li class="menu_root_ns"><a href="index.php?section=root_ns" title="Manage Root Nameservers" <? if ($SECTION=='root_ns' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='root_ns' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='root_ns' && staff_help()){?>class="tip_south"<?}?> ><span>Root Nameservers</span></a></li>
-			<li class="menu_slave_zones"><a href="index.php?section=slave_zones" title="Manage Slave DNS Zones" <? if ($SECTION=='slave_zones' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='slave_zones' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='slave_zones' && staff_help()){?>class="tip_south"<?}?> ><span>Slave Zones</span></a></li>
-			<li class="menu_users"><a href="index.php?section=users" title="Manage Users" <? if ($SECTION=='users' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='users' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='users' && staff_help()){?>class="tip_south"<?}?> ><span>Users</span></a></li>
-			<li class="menu_settings"><a href="index.php?section=settings" title="Manage system settings" <? if ($SECTION=='settings' && staff_help() ){?>class="tip_south selected"<?}elseif($SECTION=='settings' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='settings' && staff_help()){?>class="tip_south"<?}?> ><span>Settings</span></a></li>
+			?><li class="menu_properties"><a id="anchor_properties" href="javascript: void(0)" title="Administrator Options" <? if ( ($SECTION=='tlds' || $SECTION=='root_ns' || $SECTION=='root_ns_unicast' || $SECTION=='slave_zones' || $SECTION=='communities' || $SECTION=='users' || $SECTION=='settings' ) && staff_help() ){?>class="tip_south selected"<?}elseif( ($SECTION=='tlds' || $SECTION=='root_ns' || $SECTION=='root_ns_unicast' || $SECTION=='slave_zones' || $SECTION=='communities' || $SECTION=='users' || $SECTION=='settings' )  && !staff_help() ){?>class="selected"<?}elseif(staff_help()){?>class="tip_south"<?}?> ><span>Administrative Settings <img src="images/arrow_down.gif" align="absmiddle" border="0" /></span></a></li>
 			<?
 			}
 			if ($CONF['PORTAL_URL']){
@@ -82,6 +83,24 @@ admin_auth();
 			</ul>
 			<!-- MAIN MENU END -->
 
+            <?if ($_SESSION['admin_level'] == 'admin'){?>
+			<!-- SUB MENUS START -->
+            <script type="text/javascript">
+            jkmegamenu.definemenu("anchor_properties", "menu_properties", "mouseover"); 
+            </script>    
+            <div id="menu_properties" class="megamenu">
+                <ul>
+            		<li class="menu_tlds"><a href="index.php?section=tlds" title="Managed allowed TLDs" <? if ($SECTION=='tlds' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='tlds' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='tlds' && staff_help()){?>class="tip_east"<?}?> ><span>TLDs</span></a></li>
+					<li class="menu_root_ns"><a href="index.php?section=root_ns" title="Manage Root Nameservers" <? if ($SECTION=='root_ns' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='root_ns' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='root_ns' && staff_help()){?>class="tip_east"<?}?> ><span>Root Nameservers</span></a></li>
+					<li class="menu_slave_zones"><a href="index.php?section=slave_zones" title="Manage Slave DNS Zones" <? if ($SECTION=='slave_zones' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='slave_zones' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='slave_zones' && staff_help()){?>class="tip_east"<?}?> ><span>Slave Zones</span></a></li>
+					<li class="menu_communities"><a href="index.php?section=communities" title="Manage Wireless Communities" <? if ($SECTION=='communities' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='communities' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='communities' && staff_help()){?>class="tip_east"<?}?> ><span>Communities</span></a></li>
+					<li class="menu_users"><a href="index.php?section=users" title="Manage Users" <? if ($SECTION=='users' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='users' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='users' && staff_help()){?>class="tip_east"<?}?> ><span>Users Management</span></a></li>
+			        <li class="menu_settings"  ><a href="index.php?section=settings"title="Manage system settings" <? if ($SECTION=='settings' && staff_help() ){?>class="tip_east selected"<?}elseif($SECTION=='settings' && !staff_help() ){?>class="selected"<?}elseif($SECTION!='settings' && staff_help()){?>class="tip_east"<?}?> ><span>System Settings</span></a></li>
+                </ul>
+            </div>
+            <!-- SUB MENUS END -->
+            <?}?>
+            			
 			<!-- USER MENU START -->
 			<div id="user_panel">
 			<?if ($_SESSION['admin_level'] == 'admin' || $_SESSION['admin_orig']){?>
@@ -97,7 +116,7 @@ admin_auth();
             &nbsp;
             Current User: <a href="index.php?section=user&action=edit&id=<?=$_SESSION['admin_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit account"><strong><?=$_SESSION['admin_username'];?></strong></a>
 			<?}else{?>
-			Welcome, <a href="index.php?section=user&action=edit&id=<?=$_SESSION['admin_id'];?>" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit account"><strong><?=$_SESSION['admin_username'];?></strong></a>
+			Welcome, <a href="index.php?section=user&action=edit" <?if (staff_help()){?>class="tip_south"<?}?> title="Edit account"><strong><?=$_SESSION['admin_username'];?></strong></a>
 			<?}?>
 			<a href="login.php?action=logout" class="logout <?if (staff_help()){?>tip_east<?}?>" title="Logout of the system">Logout</a>
 			</div>
@@ -165,6 +184,10 @@ admin_auth();
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Nameservers</td>
 					<td class="smalltahoma"><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM records WHERE type = 'A' AND user_id > '0' " . $tldsq, $db));?></strong></td>
 					</tr>
+					<tr>
+					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Wireless Communities</td>
+					<td class="smalltahoma" nowrap="nowrap" ><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM communities WHERE 1", $db));?></strong></td>
+					</tr>                  
 					<tr>
 					<td align="right" nowrap="nowrap" height="25" class="smalltahoma">Total Users</td>
 					<td class="smalltahoma" nowrap="nowrap" ><strong><?=mysql_num_rows(mysql_query("SELECT 1 FROM users WHERE 1", $db));?></strong></td>

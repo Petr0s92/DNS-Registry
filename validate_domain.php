@@ -303,12 +303,17 @@ if ($_GET['domain']){
 			    $id = addslashes($_POST['id']);
 			    $option = addslashes($_POST['option']);
 			    
-			    $SELECT_DOMAIN = mysql_query("SELECT name, domain_id, disabled FROM records WHERE name = '".$d."' AND type = 'NS' ". $user_id, $db);
+			    $SELECT_DOMAIN = mysql_query("SELECT name, domain_id, disabled, user_id FROM records WHERE name = '".$d."' AND type = 'NS' ". $user_id, $db);
 			    $DOMAIN = mysql_fetch_array($SELECT_DOMAIN);
 
 			    if ($DOMAIN['disabled'] == '1'){
 				    $UPDATE  = mysql_query("UPDATE records SET `disabled` = '0' WHERE `name` = '".$DOMAIN['name']."' ".$user_id,$db);
 					$UPDATE2 = mysql_query("UPDATE records SET `disabled` = '0' WHERE `name` LIKE '%.".$DOMAIN['name']."' ".$user_id,$db);
+					$DELETE = mysql_query("DELETE FROM users_notifications WHERE user_id = '".$DOMAIN['user_id']."' AND domain = '".$DOMAIN['name']."' AND type = 'DOMAIN_REP_FAILED_VAL' ", $db);
+					$DELETE = mysql_query("DELETE FROM users_notifications WHERE user_id = '".$DOMAIN['user_id']."' AND domain = '".$DOMAIN['name']."' AND type = 'DOMAIN_REP_FAILED_VAL_DIS_PER' ", $db);
+					
+					//Delete any user_notifications about this domain
+					mysql_query("DELETE FROM users_notifications WHERE domain = '".$DOMAIN['name']."' ".$user_id, $db);
 					
 					$soa_update = update_soa_serial_byid($DOMAIN['domain_id']);
 

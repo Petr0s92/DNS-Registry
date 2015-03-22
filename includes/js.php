@@ -32,6 +32,7 @@ $js_files = array(
 	'./jquery/tipsy/javascripts/jquery.tipsy.js',
 	'./jquery/colorbox/jquery.colorbox-min.js',
     './jquery/jquery.easing.1.2.js',
+    './jquery/jkmegamenu/jkmegamenu.js'
 );
 
 
@@ -62,7 +63,28 @@ $(function() {
 			location.reload();
 		});		
 		
-	});    
+	});
+	
+	
+	//Show alert on low screen resolution 
+	var width = $(window).width();
+    
+    if (width < 1200){
+		$('.maintitle_lowres').show();
+	}else{
+		$('.maintitle_lowres').hide();
+	}
+		
+	//show warning on window resize
+	$(window).resize(function() {
+	    var width = $(window).width();
+		if (width < 1200){
+			$('.maintitle_lowres').show();
+		}else{
+			$('.maintitle_lowres').hide();
+		}
+  		
+	});	    
     
         
 });   

@@ -71,6 +71,9 @@ if (isset($SECTION) && $SECTION == 'domains'){
 }elseif (isset($SECTION) && $SECTION == 'nameservers'){
     $maintitle_class = 'maintitle_nameservers';
     $maintitle_title = 'Nameservers Registration (Glue Records)';
+}elseif (isset($SECTION) && $SECTION == 'transfers'){
+    $maintitle_class = 'maintitle_transfers';
+    $maintitle_title = 'Manage Domain Transfer Requests';
 }elseif (isset($SECTION) && $SECTION == 'whois'){
     $maintitle_class = 'maintitle_whois';
     $maintitle_title = 'Web WHOIS Lookup';
@@ -86,9 +89,15 @@ if (isset($SECTION) && $SECTION == 'domains'){
 }elseif (isset($SECTION) && $SECTION == 'slave_zones'){
     $maintitle_class = 'maintitle_slave_zones';
     $maintitle_title = 'Slave Zones';
+}elseif (isset($SECTION) && $SECTION == 'communities'){
+    $maintitle_class = 'maintitle_communities';
+    $maintitle_title = 'Wireless Communities Management';
 }elseif (isset($SECTION) && $SECTION == 'users'){
     $maintitle_class = 'maintitle_users';
     $maintitle_title = 'User Management';
+}elseif (isset($SECTION) && $SECTION == 'user'){
+    $maintitle_class = 'maintitle_users';
+    $maintitle_title = 'My Account Settings';
 }elseif (isset($SECTION) && $SECTION == 'settings'){
     $maintitle_class = 'maintitle_settings';
     $maintitle_title = 'System Settings';
@@ -130,6 +139,15 @@ function admin_create_sessions($id,$username,$password,$remember, $help, $level,
     if (!$_SESSION['admin_orig']){
 		mysql_query("UPDATE users SET last_login = UNIX_TIMESTAMP(), last_ip = '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'  WHERE id = '" . $id ."'", $db);		
     }
+    
+    $IS_SUSPENDED = mysql_num_rows(mysql_query("SELECT 1 FROM users WHERE suspended > '0' AND id = '" . $id ."' AND active = '1' ", $db ));
+    if ($IS_SUSPENDED){
+		//Enable account, user came back!
+		mysql_query("UPDATE users SET suspended = '0' WHERE id = '" . $id ."'", $db);
+		mysql_query("UPDATE records SET disabled = '0' WHERE user_id = '" . $id ."'", $db);
+		mysql_query("DELETE FROM users_notifications WHERE user_id = '".$id."' AND type = 'LAST_LOGIN_MAX_SUSPEND' ", $db);
+		mysql_query("DELETE FROM users_notifications WHERE user_id = '".$id."' AND type = 'LAST_LOGIN_MAX_START_ALERTS' ", $db);
+	}
     	    
     if(isset($remember)){
         setcookie($CONF['COOKIE_NAME'], $_SESSION['admin_id'] . "||" . $_SESSION['admin_username']  ."||" . $_SESSION['admin_sha1part']. "||" . $_SESSION['admin_help'] . "||" . $_SESSION['admin_default_ttl_domains'] . "||" . $_SESSION['admin_default_ttl_records'], time()+60*60*24*15, "/");

@@ -240,7 +240,10 @@ if ($_POST['action'] == "add" && $_POST['domain_id']) {
         //Enable domain
         if ($DOMAIN_INACTIVE==0){
         	mysql_query("UPDATE `".$mysql_table."` SET disabled='0' WHERE type = 'SOA' OR content IN (".$ns.") ", $db);
-        }
+        
+        	//Delete any user_notifications about this domain
+			mysql_query("DELETE FROM users_notifications WHERE domain = '".$DOMAIN['name']."' ".$user_id, $db);
+		}
 
 		$soa_update = update_soa_serial_byid($DOMAIN['id']);
 		               
@@ -333,6 +336,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     exit();
 } 
 
+/*
 // ENABLE/DISABLE RECORD
 if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option'])){
     $id = addslashes($_POST['id']);
@@ -366,6 +370,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 	}
     exit();
 }
+*/
 
 ?>
 
@@ -443,7 +448,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         }
                     });
 
-                
+                    <?/*
                     //ENABLE/DISABLE
                     $('a.toggle_active').click(function () {
                     	var dochange = '0';
@@ -476,6 +481,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 						}
 	                    return false;
 	            	});
+	            	*/?>
     
     
                 //CLOSE THE NOTIFICATION BAR
@@ -646,7 +652,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <th><?=create_sort_link("content","Content");?></th>
                         <th><?=create_sort_link("prio","Priority");?></th>
                         <th><?=create_sort_link("ttl","TTL");?></th>
-                        <th><?=create_sort_link("disabled","Enabled");?></th>
+                        <?/*<th><?=create_sort_link("disabled","Enabled");?></th>*/?>
                         <th><a href="javascript:void(0)" <?if (staff_help()){?>class="tip_south"<?}?> title="Use the icons bellow manage your Domain.">Actions</a></th>
                       </tr>
                       <!-- RESULTS START -->
@@ -661,7 +667,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         <td align="left" nowrap><?=$LISTING['content'];?></td>
                         <td align="center" nowrap><?=$LISTING['prio'];?></td>
                         <td align="center" nowrap><?=$LISTING['ttl'];?></td>
-                        <td align="center" nowrap><a href="javascript:void(0)" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['disabled'] != '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a></td>
+                        <?/*<td align="center" nowrap><a href="javascript:void(0)" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['disabled'] != '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a></td>*/?>
                         <td align="center" nowrap="nowrap">
                             <a href="index.php?section=domain&action=edit&id=<?=$LISTING['id'];?><?=$search_vars;?><?=$sort_vars;?>" title="Edit Record" class="<?if (staff_help()){?>tip_south<?}?> edit"><span>Edit Record</span></a> &nbsp; 
                             <a href="javascript:void(0)" rel="tr-<?=$LISTING['id']?>" title="Delete Record" class="<?if (staff_help()){?>tip_south<?}?> delete"><span>Delete Record</span></a>

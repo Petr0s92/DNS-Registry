@@ -347,6 +347,7 @@ if ($_GET['action'] == "delete" && $_POST['id']){
     exit();
 } 
 
+/*
 // ENABLE/DISABLE RECORD
 if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option'])){
     $id = addslashes($_POST['id']);
@@ -369,7 +370,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
     }
     exit();
 }
-
+*/
 
 ?>
 
@@ -447,7 +448,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         }
                     });
 
-                    
+                    <?/*
                     //ENABLE/DISABLE
                     $('a.toggle_active').click(function () {
                     	var dochange = '0';
@@ -480,6 +481,7 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
 						}
 	                    return false;
 	            	});
+	            	*/?>
     
     
                 //CLOSE THE NOTIFICATION BAR
@@ -682,7 +684,8 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                         </td>													
                         <?if ($_SESSION['admin_level'] == 'admin'){?>
                         <td align="center" >
-                            <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['disabled'] != '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>
+                            <?/*<a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> toggle_active <? if ($LISTING['disabled'] != '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Enable/Disable"><span>Enable/Disable</span></a>*/?>
+                            <a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_south<?}?> <? if ($LISTING['disabled'] != '1') { ?>activated<? } else { ?>deactivated<? } ?>" rel="<?=$LISTING['id']?>" title="Active/Inactive"><span>Active/Inactive</span></a>
                         </td>
                         <?}?>
                         <td align="center" nowrap="nowrap">

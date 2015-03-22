@@ -1,3 +1,14 @@
+CREATE TABLE `communities` (
+	`id` INT( 10 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+	`name` VARCHAR( 255 ) NOT NULL ,
+	`region` VARCHAR( 255 ) NOT NULL ,
+	`description` TEXT NOT NULL ,
+	`email` VARCHAR( 255 ) NOT NULL ,
+	`active` ENUM( '1', '0' ) NOT NULL DEFAULT '0',
+	INDEX ( `active` ) ,
+	UNIQUE ( `name` )
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
 DROP TABLE IF EXISTS `cryptokeys`;
 CREATE TABLE IF NOT EXISTS `cryptokeys` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -139,8 +150,18 @@ INSERT INTO `settings` (`id`, `Name`, `Value`, `Description`, `Type`) VALUES
 (30, 'MASTER_SSH_KEY_PUBLIC', '', 'SSH Public Key for automatic root ns provisioning', 'panel'),
 (31, 'ROOT_NS_SSH_PORT', '22', 'SSH Port for Root NS', 'panel'),
 (32, 'PROVISION_IP', '10.1.1.25', 'The IP on which the automatic provisioning script will contact the Control Panel.', 'panel'),
-(33, 'PROVISION_URL', 'http://www.your-domain.tld/registry', 'The URL on which the automatic provisioning script will contact the Control Panel. Without trailing slash(/)', 'panel');
-
+(33, 'PROVISION_URL', 'http://www.your-domain.tld/registry', 'The URL on which the automatic provisioning script will contact the Control Panel. Without trailing slash(/)', 'panel'),
+(34, 'LAST_LOGIN_MAX', '365', 'Maximum allowed time for a user\s last login. In days. After that many days without any login the account will be suspended for LAST_LOGIN_MAX_SUSPEND', 'panel'),
+(35, 'LAST_LOGIN_MAX_START_ALERTS', '90', 'When to start sending email notifications for users that are reaching LAST_LOGIN_MAX. This value is in days.', 'panel'),
+(36, 'LAST_LOGIN_MAX_SUSPEND', '30', 'For how long to suspend an account after LAST_LOGIN_MAX. Value in days. After that much days, the account will be permanently deleted', 'panel'),
+(37, 'LAST_LOGIN_MAX_SUSPEND_ALERT_INTERVAL', '7', 'After the account is suspended how often to send email notifications to the user. Value in days', 'panel'),
+(38, 'NEW_DOMAIN_ENABLE_PERIOD', '30', 'How many days the user has for any new domain to get validaed and enabled. If this limit is passed without it being enabled then the domain is automatically deleted.', 'panel'),
+(39, 'NEW_DOMAIN_ENABLE_PERIOD_START_ALERT', '7', 'How many days before NEW_DOMAIN_ENABLE_PERIOD is passed an email notification should be sent to the user.', 'panel'),
+(40, 'DOMAIN_REP_FAILED_VAL', '30', 'If a domain does not pass validation (after being enabled) for that many days in a row it will get disabled', 'panel'),
+(41, 'DOMAIN_REP_FAILED_VAL_DIS_PER', '330', 'If a domain gets disabled because of DOMAIN_REPEATED_FAILED_VALIDATION then for how long it should stay disabled before it automatically gets deleted. Value in days', 'panel'),
+(42, 'DOMAIN_REP_FAILED_VAL_DIS_PER_ALERT_INTERVAL', '7', 'After the domain is disabled how often to send email notifications to the user. Value in days', 'panel'),
+(43, 'NEW_DOMAINS_PER_DAY', '5', 'How many domains per day a user should be able to register', 'panel'),
+(44, 'LAST_LOGIN_MAX_START_ALERTS_INTERVAL', '30', 'After the account has passed LAST_LOGIN_MAX_START_ALERTS how often to send email notifications to the user. Value in days', 'panel');
 
 CREATE TABLE IF NOT EXISTS `slave_zones` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -198,7 +219,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `description` varchar(1024) NOT NULL,
   `perm_templ` int(1) NOT NULL,
   `active` int(1) NOT NULL,
-  `use_ldap` int(1) NOT NULL,
+  `suspended` int(11) NOT NULL,
   `Admin_level` enum('admin','user') NOT NULL DEFAULT 'user',
   `Help` enum('1','0') NOT NULL DEFAULT '1',
   `registered` int(10) NOT NULL,
@@ -206,7 +227,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `last_ip` varchar(15) NOT NULL,
   `ssh_key` text,
   `nodeid` int(10) NOT NULL,
-  `wireless_community` VARCHAR(100) NOT NULL,
+  `wireless_community` int(10) NOT NULL,
   `default_ttl_domains` int(10) NOT NULL DEFAULT '86400',
   `default_ttl_records` int(10) NOT NULL DEFAULT '86400',
   PRIMARY KEY (`id`),
@@ -214,8 +235,19 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
 
 -- Default admin user
-INSERT INTO `users` (`id`, `username`, `password`, `fullname`, `email`, `description`, `perm_templ`, `active`, `use_ldap`, `Admin_level`, `Help`, `registered`, `last_login`, `last_ip`, `nodeid`) VALUES
+INSERT INTO `users` (`id`, `username`, `password`, `fullname`, `email`, `description`, `perm_templ`, `active`, `suspended`, `Admin_level`, `Help`, `registered`, `last_login`, `last_ip`, `nodeid`) VALUES
 (1, 'admin', 'd033e22ae348aeb5660fc2140aec35850c4da997', 'Administrator - TLD Owner', 'admin@your-domain.tld', 'Administrator with full rights', 1, 1, 0, 'admin', '1', UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), '0.0.0.0', 1);
+
+
+CREATE TABLE `users_notifications` (
+`id` INT( 10 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+`user_id` INT( 10 ) NOT NULL ,
+`domain` VARCHAR( 255 ) NOT NULL ,
+`type` VARCHAR( 255 ) NOT NULL ,
+`time` INT( 10 ) NOT NULL ,
+INDEX ( `user_id` , `type` , `time` )
+) ENGINE = InnoDB  DEFAULT CHARSET=utf8 ;
+
 
 -- Create meta-zone for slaves automatic zones delete
 INSERT INTO `domains` (`id`, `name`, `master`, `last_check`, `type`, `notified_serial`, `account` ) VALUES (1, 'meta.meta', NULL, NULL, 'MASTER', NULL, NULL);
