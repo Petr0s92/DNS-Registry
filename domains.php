@@ -490,8 +490,8 @@ if ($_GET['action'] == "notify" && $_POST['id'] && $_SESSION['admin_level'] == '
 	$SELECT_DOMAINS = mysql_query("SELECT domain_id, name FROM `".$mysql_table."` WHERE id = '".$id."' ", $db);
 	$DOMAIN = mysql_fetch_array($SELECT_DOMAINS);
 	
-	if ($DOMAIN['id'] != '1' && $DOMAIN['name']){
-		$soa_update = update_soa_serial_byid($DOMAIN['id']);
+	if ($DOMAIN['domain_id'] != '1' && $DOMAIN['name']){
+		$soa_update = update_soa_serial_byid($DOMAIN['domain_id']);
 		
 		// Run pdns_control notify to push the new SOA update to our slaves immediately. Fire and forget.
 		exec ($CONF['PDNS_CONTROL_PATH'] . " --remote-address=".$CONF['PDNS_CONTROL_IP']." --remote-port=".$CONF['PDNS_CONTROL_PORT']." --secret=".$CONF['PDNS_CONTROL_KEY']." notify " . $DOMAIN['name'] . " > /dev/null 2>/dev/null &" );
