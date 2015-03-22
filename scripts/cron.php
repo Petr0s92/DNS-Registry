@@ -27,7 +27,7 @@ if(php_sapi_name() != "cli"){
 	exit(-1);
 }
 
-error_reporting(E_ALL ^ E_NOTICE);
+error_reporting(E_ALL ^ E_NOTICE ^ E_STRICT);
 
 //Include system files
 require_once(dirname(__FILE__)."/../includes/config.php");
