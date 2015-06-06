@@ -174,8 +174,7 @@ if ($_POST['action'] == "add" && $_POST['parent_id']) {
 	    }
 	    
 	    $PROVISION = TRUE;
-	    
-		
+	
 	}							
     
     
@@ -194,7 +193,7 @@ if ($_POST['action'] == "add" && $_POST['parent_id']) {
 			if ($PROVISION == TRUE) {
 			
 				// run ssh here
-				$ssh_command = "/usr/local/bin/provision_root_ns.php '" . $ROOT_NS['ip'] ."' '"  . $_POST['ip'] . "' '" . $_POST['cache_ip'] . "' '" . $ROOT_NS['name'] . "' '" . $CONF['PROVISION_URL'] . "' '".$CONF['PROVISION_IP']."' '" . $TSIG['secret'] . "' '" . $_POST['owner_ssh_key'] . "'  > /dev/null 2>/dev/null &";
+				$ssh_command = "/usr/local/bin/provision_root_ns.php '" . $ROOT_NS['ip'] ."' '"  . $_POST['ip'] . "' '" . $_POST['cache_ip'] . "' '" . $ROOT_NS['name'] . "' '" . $CONF['PROVISION_URL'] . "' '".$CONF['PROVISION_IP']."' '" . $TSIG['secret'] . "' '" . $_POST['owner_ssh_key'] . "' ";
 				
 				if ( ssh_client2($_POST['real_ip'], $ssh_command) == false){
 					$provision_error = "0";
