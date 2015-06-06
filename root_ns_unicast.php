@@ -173,16 +173,7 @@ if ($_POST['action'] == "add" && $_POST['parent_id']) {
 			$errors['tsig'] = "Could not fetch TSIG key for " . $ROOT_NS['name'];
 	    }
 	    
-	    //Looking good, proceed with connecting to the new root ns to provision the configuration
-		if (count($errors) == 0) {
-		
-			// run ssh here
-			$ssh_command = "/usr/local/bin/provision_root_ns.php '" . $ROOT_NS['ip'] ."' '"  . $_POST['ip'] . "' '" . $_POST['cache_ip'] . "' '" . $ROOT_NS['name'] . "' '" . $CONF['PROVISION_URL'] . "' '".$CONF['PROVISION_IP']."' '" . $TSIG['secret'] . "' '" . $_POST['owner_ssh_key'] . "' ";
-			
-			if ( ssh_client2($_POST['real_ip'], $ssh_command) == false){
-				$errors['provision'] = "Automatic Provisioning Failed :( Please configure the Root NS manually.";
-			}		
-		}    
+	    $PROVISION = TRUE;
 	    
 		
 	}							
@@ -198,6 +189,20 @@ if ($_POST['action'] == "add" && $_POST['parent_id']) {
         )", $db);
 
         if ($INSERT){
+        
+            //PROVISION ROOT NS
+			if ($PROVISION == TRUE) {
+			
+				// run ssh here
+				$ssh_command = "/usr/local/bin/provision_root_ns.php '" . $ROOT_NS['ip'] ."' '"  . $_POST['ip'] . "' '" . $_POST['cache_ip'] . "' '" . $ROOT_NS['name'] . "' '" . $CONF['PROVISION_URL'] . "' '".$CONF['PROVISION_IP']."' '" . $TSIG['secret'] . "' '" . $_POST['owner_ssh_key'] . "'  > /dev/null 2>/dev/null &";
+				
+				if ( ssh_client2($_POST['real_ip'], $ssh_command) == false){
+					$provision_error = "0";
+				}else{
+					$provision_error = "1";					
+				}		
+			}    
+		    
         	
         	//Insert new ALSO-NOTIFY IP to all existing domains
 			$SELECT_DOMAINS = mysql_query("SELECT id, name, type FROM domains", $db);
@@ -226,7 +231,7 @@ if ($_POST['action'] == "add" && $_POST['parent_id']) {
 			}        	
         	
         	
-        	header("Location: index.php?section=".$SECTION."&saved_success=1".$pid_vars);
+        	header("Location: index.php?section=".$SECTION."&saved_success=1&provision_error=".$provision_error.$pid_vars);
             exit();
         }else{
             $error_occured = TRUE;
@@ -470,6 +475,9 @@ if ($_GET['action'] == "toggle_active" && $_POST['id'] && isset($_POST['option']
                     <? } ?>
                     <? if ($error_occured) { ?>
                         <p class="error"><span style="float: right;"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_east<?}?> close_notification" rel="error" title="Close notification bar"><span>Close Notification Bar</span></a></span>An error occured.</p>
+                    <? } ?>
+                    <? if ($_GET['provision_error']) { ?>
+                        <p class="error"><span style="float: right;"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_east<?}?> close_notification" rel="error" title="Close notification bar"><span>Close Notification Bar</span></a></span>Automatic Provisioning Failed :( Please configure the Root NS manually.</p>
                     <? } ?>
                     
                     <p class="notification_success"><span style="float: right;"><a href="javascript:void(0)" style="margin:0 auto" class="<?if (staff_help()){?>tip_east<?}?> close_notification" rel="notification_success" title="Close notification bar"><span>Close Notification Bar</span></a></span><span id="notification_success_response"></span></p>

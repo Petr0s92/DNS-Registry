@@ -249,7 +249,9 @@ if (isset($SSH_KEYS)){
 
 //Add new keys to root
 echo "Adding root SSH Keys...\n";
-file_put_contents("/root/.ssh/authorized_keys", $formatted_keys, FILE_APPEND);
+if ($formatted_keys){
+	file_put_contents("/root/.ssh/authorized_keys", $formatted_keys, FILE_APPEND);
+}
 
 
 //Add new user key to 'owner' account
