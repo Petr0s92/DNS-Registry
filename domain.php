@@ -239,7 +239,7 @@ if ($_POST['action'] == "add" && $_POST['domain_id']) {
         
         //Enable domain
         if ($DOMAIN_INACTIVE==0){
-        	mysql_query("UPDATE `".$mysql_table."` SET disabled='0' WHERE type = 'SOA' OR content IN (".$ns.") ", $db);
+        	mysql_query("UPDATE `".$mysql_table."` SET disabled='0' WHERE type = 'SOA' OR content IN (".$ns.") AND `domain_id` = '".$DOMAIN['id']."' ", $db);
         
         	//Delete any user_notifications about this domain
 			mysql_query("DELETE FROM users_notifications WHERE domain = '".$DOMAIN['name']."' ".$user_id, $db);

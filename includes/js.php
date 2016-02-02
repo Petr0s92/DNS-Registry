@@ -57,7 +57,7 @@ $(function() {
 		//alert( "Handler for .change() called." );
 		
 		var user_id = $(this).find(":selected").val();
-		$.post("index.php?section=<?=$SECTION;?>&action=switch_user", {
+		$.post("index.php?action=switch_user", {
             user_id: user_id		    
 		}, function(response){
 			location.reload();
